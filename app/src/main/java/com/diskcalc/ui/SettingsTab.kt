@@ -80,6 +80,7 @@ fun SettingsTab(
     val tokens = LocalGlassTokens.current
     val context = LocalContext.current
     var showPrivacy by remember { mutableStateOf(false) }
+    var showAbout by remember { mutableStateOf(false) }
 
     Column(
         modifier = modifier
@@ -191,29 +192,36 @@ fun SettingsTab(
         }
 
         GlassPanel(
-            title = "About",
-            subtitle = "Disk Partition Calculator v${BuildConfig.VERSION_NAME}",
+            title = "More",
+            subtitle = "Privacy, sharing, and app information",
             icon = Icons.Rounded.AutoAwesome
         ) {
             SettingsAction(
                 icon = Icons.Rounded.PrivacyTip,
-                title = "Privacy policy",
+                title = "Privacy Policy",
                 subtitle = "Everything runs on-device — nothing leaves your phone",
                 onClick = { showPrivacy = true }
             )
             GlassDivider()
             SettingsAction(
                 icon = Icons.Rounded.StarRate,
-                title = "Rate us",
+                title = "Rate Us",
                 subtitle = "Open the Play Store listing",
                 onClick = { openPlayStore(context) }
             )
             GlassDivider()
             SettingsAction(
                 icon = Icons.Rounded.Share,
-                title = "Share app",
+                title = "Share App",
                 subtitle = "Tell a friend who reinstalls Windows often",
                 onClick = { shareApp(context) }
+            )
+            GlassDivider()
+            SettingsAction(
+                icon = Icons.Rounded.AutoAwesome,
+                title = "About",
+                subtitle = "Disk Partition Calculator v${BuildConfig.VERSION_NAME}",
+                onClick = { showAbout = true }
             )
             GlassDivider()
             SettingsAction(
@@ -259,6 +267,9 @@ fun SettingsTab(
 
     if (showPrivacy) {
         PrivacyDialog(onDismiss = { showPrivacy = false })
+    }
+    if (showAbout) {
+        AboutDialog(onDismiss = { showAbout = false })
     }
 }
 
@@ -323,7 +334,7 @@ private fun PrivacyDialog(onDismiss: () -> Unit) {
         LiquidGlassSurface(shape = RoundedCornerShape(tokens.cornerLarge)) {
             Column(Modifier.padding(tokens.spaceLg)) {
                 Text(
-                    text = "Privacy policy",
+                    text = "Privacy Policy",
                     style = MaterialTheme.typography.titleLarge,
                     color = palette.contentPrimary
                 )
@@ -333,6 +344,37 @@ private fun PrivacyDialog(onDismiss: () -> Unit) {
                         "permission, contains no analytics, no ads and no trackers. Your conversion " +
                         "history and preferences are stored locally in the app's private storage and " +
                         "are removed when you uninstall the app or clear its data.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = palette.contentSecondary
+                )
+                Spacer(Modifier.height(tokens.spaceLg))
+                GlassButton(text = "Got it", onClick = onDismiss)
+            }
+        }
+    }
+}
+
+@Composable
+private fun AboutDialog(onDismiss: () -> Unit) {
+    val palette = LocalLiquidPalette.current
+    val tokens = LocalGlassTokens.current
+    Dialog(onDismissRequest = onDismiss) {
+        LiquidGlassSurface(shape = RoundedCornerShape(tokens.cornerLarge)) {
+            Column(Modifier.padding(tokens.spaceLg)) {
+                Text(
+                    text = "Disk Partition Calculator",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = palette.contentPrimary
+                )
+                Spacer(Modifier.height(tokens.spaceSm))
+                Text(
+                    text = "Version ${BuildConfig.VERSION_NAME}",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = palette.contentSecondary
+                )
+                Spacer(Modifier.height(tokens.spaceSm))
+                Text(
+                    text = "Calculate partition sizes for Windows Setup and split disk space into equal parts.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = palette.contentSecondary
                 )
@@ -368,5 +410,5 @@ private fun shareApp(context: Context) {
                 "https://play.google.com/store/apps/details?id=${context.packageName}"
         )
     }
-    context.startActivity(Intent.createChooser(share, "Share app"))
+    context.startActivity(Intent.createChooser(share, "Share App"))
 }
