@@ -1,367 +1,480 @@
-# Disk Partition Calculator - Complete Logic Documentation
+# Disk Partition Calculator — Kotlin লজিক ডকুমেন্টেশন
 
-This document describes the complete business logic of the Disk Partition Calculator app. An AI agent can use this to recreate the application with identical behavior.
-
----
-
-## Overview
-
-The app calculates exact partition sizes for Windows disk setup. Users enter the **visible GB** they want after formatting, and the app returns the **required MB** to enter in the Windows diskpart/disk setup dialog.
-
-Two calculation modes:
-1. **Calc Tab** — Single partition: visible GB → required MB (with optional Windows Setup overhead)
-2. **Split Tab** — Multiple equal partitions: total disk MB → per-partition MB (display vs creation sizes)
+এই ডকুমেন্টে অ্যাপের পুরো লজিক Kotlin (Android) এর জন্য গুছিয়ে লেখা হয়েছে। আগের Dart ভার্সনের সমস্যাগুলো (বিশেষ করে Split ট্যাব) ঠিক করা হয়েছে। একজন ডেভেলপার বা AI এজেন্ট এটা দেখে একই আচরণের অ্যাপ বানাতে পারবে।
 
 ---
 
-## Core Constants
+## ১. অ্যাপের উদ্দেশ্য
 
-```dart
-// PartitionCalculator (lib/utils/partition_calculator.dart)
-static const int hiddenWindowsSetupOverheadMb = 566;  // System Reserved partition overhead
-static const int mbPerGb = 1024;                       // Base conversion: 1 GB = 1024 MiB
-static const int overheadMbPerPartition = 4;           // Fixed 4 MiB per partition overhead
+Windows সেটআপের সময় পার্টিশন সাইজ **MB**-তে লিখতে হয়, কিন্তু ফরম্যাটের পর Explorer-এ **GB** দেখায়। অ্যাপটি এই রূপান্তর সঠিকভাবে করে দেয়।
 
-// SplitPartitionCalculator (lib/utils/split_partition_calculator.dart)
-static const int perPartitionOverheadMB = 4;           // Same 4 MiB overhead per partition
-```
+| মোড | ইনপুট | আউটপুট |
+|---|---|---|
+| **Calc** (একটি পার্টিশন) | চাওয়া Visible GB | সেটআপে যে MB টাইপ করতে হবে |
+| **Split** (সমান ভাগ) | ডিস্কের মোট MB + পার্টিশন সংখ্যা | প্রতিটি পার্টিশনে যে MB টাইপ করতে হবে |
+
+> সব হিসাব **MiB** (1 GB = 1024 MB) ভিত্তিক। Windows Explorer বাইনারি (1024³) ব্যবহার করে কিন্তু "GB" লেখে।
 
 ---
 
-## Data Models
+## ২. ধ্রুবক (Constants)
 
-### FileSystemType Enum
-```dart
-enum FileSystemType { ntfs, fat32 }
-```
-
-### PartitionCalculationResult
-```dart
-class PartitionCalculationResult {
-  final int partitionSizeMb;           // MB sent to diskpart (includes 4 MB overhead)
-  final int requiredInputMb;           // Total MB user must enter (partitionSizeMb + 566 if Windows Setup)
-  final double displayedGb;            // What Windows Explorer will show after format
-  final bool usesWindowsSetupOverhead; // Whether 566 MB was added
-  final FileSystemType filesystem;     // NTFS or FAT32
+```kotlin
+object PartitionConstants {
+    const val MB_PER_GB = 1024
+    const val OVERHEAD_MB_PER_PARTITION = 4      // প্রতি পার্টিশনে ৪ MB (অনুমান, বাস্তব ডিস্কে যাচাই করুন)
+    const val WINDOWS_SETUP_OVERHEAD_MB = 566    // 100 (EFI) + 16 (MSR) + 450 (Recovery) — Windows 10 UEFI/GPT
+    const val FAT32_MAX_PARTITION_MB = 32 * 1024 // Windows ফরম্যাট টুলের ৩২ GB সীমা
+    const val FAT32_MAX_FILE_GB = 4
+    const val MAX_HISTORY = 100
+    const val MAX_SPLIT_COUNT = 8
 }
 ```
 
-### ConversionHistory (for persistence)
-```dart
-class ConversionHistory {
-  final String id;
-  final double inputValue;             // User input (GB for Calc, total MB for Split)
-  final String fromUnit;               // "Visible GB" or "Total MB"
-  final String toUnit;                 // "Required MB" or "Per Partition MB"
-  final FileSystemType filesystem;
-  final int requiredInputMb;           // Primary result value
-  final String result;                 // Human-readable summary
-  final DateTime timestamp;
-  // Split-specific (nullable):
-  final int? splitCount;
-  final double? splitPartitionGb;
-  final int? splitPartitionMb;
-  final double? splitPartitionDisplayMb;
+> **সীমাবদ্ধতা:** 566 MB শুধু Windows 10 UEFI/GPT-এর জন্য। Windows 11 বা BIOS/MBR-এ ভিন্ন হয়। তাই সেটিংসে এটা পরিবর্তনযোগ্য রাখা ভালো (নিচে `WindowsSetupProfile` দেখুন)।
+
+---
+
+## ৩. ডেটা মডেল
+
+```kotlin
+enum class FileSystemType(val label: String) {
+    NTFS("NTFS"),
+    FAT32("FAT32")
+}
+
+/** Windows Setup ওভারহেডের প্রিসেট। Custom হলে ইউজার নিজে মান দেবে। */
+enum class WindowsSetupProfile(val overheadMb: Int, val label: String) {
+    WIN10_UEFI(566, "Windows 10 (UEFI/GPT)"),
+    CUSTOM(0, "Custom")
+}
+
+data class PartitionCalculationResult(
+    val visibleGb: Double,               // ইউজার যা চেয়েছে
+    val partitionSizeMb: Int,            // diskpart-এ যাওয়া সাইজ (visible + 4)
+    val requiredInputMb: Int,            // ইউজার যা টাইপ করবে (Setup হলে +566)
+    val expectedVisibleMb: Int,          // ফরম্যাটের পর প্রত্যাশিত সাইজ (partition − 4)
+    val usesWindowsSetupOverhead: Boolean,
+    val setupOverheadMb: Int,
+    val filesystem: FileSystemType,
+    val warnings: List<String>
+)
+
+data class SplitPartition(
+    val index: Int,                      // ১ থেকে শুরু
+    val typeMb: Int,                     // এই মানটাই টাইপ করতে হবে (পূর্ণসংখ্যা)
+    val expectedVisibleMb: Int           // ফরম্যাটের পর প্রত্যাশিত (typeMb − 4)
+)
+
+data class SplitResult(
+    val totalMb: Long,
+    val usableMb: Long,                  // Setup ওভারহেড বাদে
+    val partitions: List<SplitPartition>,
+    val filesystem: FileSystemType,
+    val warnings: List<String>
+)
+
+data class ConversionHistory(
+    val id: String,                      // UUID ব্যবহার করুন (timestamp নয়, ডুপ্লিকেট এড়াতে)
+    val mode: Mode,
+    val inputValue: Double,              // Calc: GB, Split: মোট MB
+    val fromUnit: String,                // "Visible GB" | "Total MB"
+    val toUnit: String,                  // "Required MB" | "Per Partition MB"
+    val filesystem: FileSystemType,
+    val primaryResultMb: Int,
+    val summary: String,
+    val timestampMillis: Long,
+    val splitCount: Int? = null
+) {
+    enum class Mode { CALC, SPLIT }
 }
 ```
 
 ---
 
-## Calc Tab Logic (Single Partition)
+## ৪. Calc ট্যাব লজিক
 
-### Input
-- `visibleGb` (double): Desired visible size in GB (what Windows Explorer shows after format)
-- `filesystem` (FileSystemType): NTFS or FAT32
-- `simulateWindowsSetup` (bool): Whether to add 566 MB System Reserved overhead
+### ইনপুট
+- `visibleGb: Double` — চাওয়া সাইজ (> 0, finite)
+- `filesystem: FileSystemType`
+- `simulateWindowsSetup: Boolean`
+- `setupOverheadMb: Int` — ডিফল্ট 566
 
-### Calculations
+### সূত্র
 
-```dart
-// 1. Convert visible GB to partition MB (internal size sent to diskpart)
-int partitionSizeMb = (visibleGb * 1024).round() + 4;
-
-// 2. Required input MB (what user types in Windows setup)
-int requiredInputMb = simulateWindowsSetup
-    ? partitionSizeMb + 566
-    : partitionSizeMb;
-
-// 3. Displayed GB (what Windows Explorer will show - verification)
-double displayedGb = (partitionSizeMb - 4) / 1024.0;
+```
+partitionSizeMb   = round(visibleGb × 1024) + 4
+requiredInputMb   = partitionSizeMb + (simulateWindowsSetup ? setupOverheadMb : 0)
+expectedVisibleMb = partitionSizeMb − 4
 ```
 
-### FAT32 Validation
-```dart
-bool isFat32SizeValid(double visibleGb) => visibleGb <= 32;
-// Shows warning if > 32 GB, plus 4 GB file size limit note
+- NTFS ও FAT32 এর জন্য **হিসাব একই**; ফাইলসিস্টেম শুধু সতর্কতা দেয়।
+- 566 MB শুধু `requiredInputMb`-তে যোগ হয়, `partitionSizeMb`-তে নয়।
+- `expectedVisibleMb` স্বাধীন যাচাই নয়, শুধু ইউজারকে দেখানোর জন্য।
+
+### Kotlin কোড
+
+```kotlin
+object PartitionCalculator {
+
+    fun calculate(
+        visibleGb: Double,
+        filesystem: FileSystemType,
+        simulateWindowsSetup: Boolean = false,
+        setupOverheadMb: Int = PartitionConstants.WINDOWS_SETUP_OVERHEAD_MB
+    ): PartitionCalculationResult {
+        require(visibleGb.isFinite() && visibleGb > 0) { "Enter a valid positive GB value" }
+        require(setupOverheadMb >= 0) { "Overhead cannot be negative" }
+
+        val partitionSizeMb = visibleGbToPartitionMb(visibleGb)
+        val appliedOverhead = if (simulateWindowsSetup) setupOverheadMb else 0
+        val requiredInputMb = partitionSizeMb + appliedOverhead
+
+        return PartitionCalculationResult(
+            visibleGb = visibleGb,
+            partitionSizeMb = partitionSizeMb,
+            requiredInputMb = requiredInputMb,
+            expectedVisibleMb = partitionSizeMb - PartitionConstants.OVERHEAD_MB_PER_PARTITION,
+            usesWindowsSetupOverhead = simulateWindowsSetup,
+            setupOverheadMb = appliedOverhead,
+            filesystem = filesystem,
+            warnings = buildWarnings(partitionSizeMb, filesystem, simulateWindowsSetup, appliedOverhead)
+        )
+    }
+
+    fun visibleGbToPartitionMb(visibleGb: Double): Int =
+        Math.round(visibleGb * PartitionConstants.MB_PER_GB).toInt() +
+            PartitionConstants.OVERHEAD_MB_PER_PARTITION
+
+    /** পার্টিশন সাইজ (visible + 4) ৩২ GB (32768 MB) এর মধ্যে আছে কি না */
+    fun isFat32SizeValid(partitionSizeMb: Int): Boolean =
+        partitionSizeMb <= PartitionConstants.FAT32_MAX_PARTITION_MB
+
+    private fun buildWarnings(
+        partitionSizeMb: Int,
+        fs: FileSystemType,
+        setup: Boolean,
+        overhead: Int
+    ): List<String> = buildList {
+        if (setup) add("Windows Setup creates system partitions (~$overhead MB). The value above includes this overhead.")
+        if (fs == FileSystemType.FAT32) {
+            if (!isFat32SizeValid(partitionSizeMb))
+                add("Warning: Partition size exceeds the 32 GB limit of the Windows FAT32 format tool.")
+            add("Note: FAT32 has a ${PartitionConstants.FAT32_MAX_FILE_GB} GB maximum file size limit.")
+        }
+        add("Actual visible size may differ by 1–2 MB depending on the Windows version.")
+    }
+}
 ```
 
-### Key Behaviors
-- **Same conversion for NTFS and FAT32** — The GB→MiB math is identical; filesystem only affects validation/warnings
-- **Rounding** — `visibleGb * 1024` is rounded to nearest integer before adding 4 MB overhead
-- **Windows Setup simulation** — Adds 566 MB only to `requiredInputMb`, not to `partitionSizeMb`
-- **Diagnostic logging** — Calculates simulated bytes and Explorer display for verification
+### উদাহরণ
 
-### Example
-```
-Input: 100 GB, NTFS, no Windows Setup
-partitionSizeMb = (100 * 1024).round() + 4 = 102404 MB
-requiredInputMb = 102404 MB
-displayedGb = (102404 - 4) / 1024 = 100.0 GB
-
-Input: 100 GB, NTFS, WITH Windows Setup
-partitionSizeMb = 102404 MB
-requiredInputMb = 102404 + 566 = 102970 MB
-displayedGb = 100.0 GB
-```
+| ইনপুট | partitionSizeMb | requiredInputMb |
+|---|---|---|
+| 1 GB, NTFS | 1028 | 1028 |
+| 2.5 GB, NTFS | 2564 | 2564 |
+| 10 GB, NTFS | 10244 | 10244 |
+| 10 GB, Setup ON | 10244 | 10810 |
+| 100 GB, NTFS | 102404 | 102404 |
+| 100 GB, Setup ON | 102404 | 102970 |
 
 ---
 
-## Split Tab Logic (Multiple Equal Partitions)
+## ৫. Split ট্যাব লজিক (সংশোধিত)
 
-### Input
-- `totalSizeMB` (double): Total disk capacity in MB (e.g., 476923 MB for 456 GB disk)
-- `partitionCount` (int): Number of equal partitions (1-8)
-- `filesystem` (FileSystemType): NTFS or FAT32 (for warnings only)
+### আগের ভার্সনের সমস্যা
+- `display = base + 4` আসলে `মোট ÷ n` এর সমান ছিল (৪ MB বিয়োগ-যোগে বাতিল)।
+- ভগ্নাংশ MB (119230.75) Windows-এ টাইপ করা যায় না।
+- রাউন্ডিংয়ের পর মোট সাইজ ডিস্ক ছাড়িয়ে যেতে পারত।
+- Setup ওভারহেড হিসাবে ছিল না।
 
-### Calculations
+### নতুন নিয়ম
+1. ইনপুট মোট MB **পূর্ণসংখ্যা** (Long)।
+2. Setup চালু থাকলে `usable = total − setupOverhead`, নইলে `usable = total`।
+3. `base = usable / n` (পূর্ণসংখ্যা ভাগ, floor), `remainder = usable − base × n`।
+4. প্রতিটি পার্টিশনে `typeMb = base`, **শেষটায় `base + remainder`**। ফলে মোট ঠিক `usable` হয়, ডিস্ক ছাড়ায় না।
+5. `expectedVisibleMb = typeMb − 4` (Calc-এর সাথে একই অর্থ: টাইপ করা মান = visible + 4)।
 
-```dart
-// 1. Total overhead for all partitions
-int totalOverheadMB = partitionCount * 4;
+> এখানে **৪ MB বিয়োগ হয় শুধু প্রত্যাশিত visible বের করতে**, টাইপ করার মান থেকে নয়। এতে Calc ও Split-এর অর্থ এক থাকে।
 
-// 2. Validate capacity
-if (totalSizeMB <= totalOverheadMB) throw ArgumentError('Too small for partition count');
+### Kotlin কোড
 
-// 3. Adjusted capacity (what's left for actual data after overhead)
-double adjustedCapacityMB = totalSizeMB - totalOverheadMB;
+```kotlin
+object SplitPartitionCalculator {
 
-// 4. Base size per partition (fractional, INTERNAL - never displayed)
-double basePerPartitionMB = adjustedCapacityMB / partitionCount;
+    fun split(
+        totalMb: Long,
+        partitionCount: Int,
+        filesystem: FileSystemType,
+        simulateWindowsSetup: Boolean = false,
+        setupOverheadMb: Int = PartitionConstants.WINDOWS_SETUP_OVERHEAD_MB
+    ): SplitResult {
+        require(partitionCount in 1..PartitionConstants.MAX_SPLIT_COUNT) {
+            "Partition count must be between 1 and ${PartitionConstants.MAX_SPLIT_COUNT}"
+        }
+        require(totalMb > 0) { "Enter a valid positive MB value" }
 
-// 5. Display size per partition (what user sees in result table)
-double displayPerPartitionMB = basePerPartitionMB + 4;
+        val appliedOverhead = if (simulateWindowsSetup) setupOverheadMb else 0
+        val usableMb = totalMb - appliedOverhead
+        val minRequired = partitionCount.toLong() * PartitionConstants.OVERHEAD_MB_PER_PARTITION
+        require(usableMb > minRequired) { "Total size too small for $partitionCount partitions" }
 
-// 6. Creation size per partition (what to send to diskpart, rounded to nearest MB)
-int createPerPartitionMB = basePerPartitionMB.round();
+        val base = usableMb / partitionCount
+        val remainder = usableMb - base * partitionCount
+
+        val partitions = (1..partitionCount).map { i ->
+            val typeMb = (if (i == partitionCount) base + remainder else base).toInt()
+            SplitPartition(
+                index = i,
+                typeMb = typeMb,
+                expectedVisibleMb = typeMb - PartitionConstants.OVERHEAD_MB_PER_PARTITION
+            )
+        }
+
+        val warnings = buildList {
+            if (simulateWindowsSetup) add("Setup overhead ($appliedOverhead MB) was subtracted from the total before splitting.")
+            if (filesystem == FileSystemType.FAT32) {
+                if (partitions.any { it.typeMb > PartitionConstants.FAT32_MAX_PARTITION_MB })
+                    add("Warning: Some partitions exceed the 32 GB limit of the Windows FAT32 format tool.")
+                add("Note: FAT32 has a ${PartitionConstants.FAT32_MAX_FILE_GB} GB maximum file size limit.")
+            }
+            if (partitionCount >= 4)
+                add("MBR disks allow only 4 primary partitions (system partitions count too). Use GPT for more.")
+        }
+
+        return SplitResult(totalMb, usableMb, partitions, filesystem, warnings)
+    }
+}
 ```
 
-### Split Plan Output
-Returns a list of `{displayMB, createMB}` pairs for each partition:
-- `displayMB` = fractional value including overhead (for UI)
-- `createMB` = fractional base value (for diskpart, rounded at creation boundary)
+### উদাহরণ
 
-### Key Behaviors
-- **Fractional MB kept internal** — Only rounded when passing to diskpart
-- **Display vs Create separation** — UI shows `displayMB` (includes 4 MB); diskpart receives `createMB.round()`
-- **Equal partitions** — All partitions get identical sizes
-- **Validation** — Rejects partitionCount ≤ 0 or totalSizeMB ≤ totalOverheadMB
-
-### Example
-```
-Input: 476923 MB total, 4 partitions
-totalOverheadMB = 16 MB
-adjustedCapacityMB = 476907 MB
-basePerPartitionMB = 119226.75 MB (internal)
-displayPerPartitionMB = 119230.75 MB (shown in UI)
-createPerPartitionMB = 119227 MB (sent to diskpart, rounded)
-
-Each of 4 partitions:
-  Display: 119230.75 MB
-  Create:  119227 MB
-```
+| ইনপুট | ফলাফল |
+|---|---|
+| 476923 MB, 4 টি | 119230, 119230, 119230, **119233** (মোট 476923) |
+| 100000 MB, 5 টি | 20000 × 5 (মোট 100000) |
+| 476923 MB, 4 টি, Setup ON | usable = 476357 → 119089, 119089, 119089, **119090** |
 
 ---
 
-## History Management
+## ৬. ইতিহাস (History)
 
-### Persistence
-- Uses `shared_preferences` with key `'conversion_history'`
-- JSON array of `ConversionHistory.toMap()` objects
-- Max 100 entries (oldest removed when exceeded)
+- **সংরক্ষণ:** `DataStore` (Preferences) বা `SharedPreferences`, key = `conversion_history`, মান = JSON অ্যারে।
+- **সর্বোচ্চ ১০০ এন্ট্রি**; বেশি হলে সবচেয়ে পুরনোটা বাদ।
+- **id:** `UUID.randomUUID().toString()` (timestamp নয়)।
+- নতুন এন্ট্রি তালিকার শুরুতে বসবে।
 
-### History Entry Creation
+```kotlin
+class HistoryManager(private val store: HistoryStore) {
 
-**Calc Tab:**
-```dart
-ConversionHistory(
-  id: timestamp.toString(),
-  inputValue: visibleGb,
-  fromUnit: 'Visible GB',
-  toUnit: 'Required MB',
-  filesystem: result.filesystem,
-  requiredInputMb: result.requiredInputMb,
-  result: '$filesystemLabel - ${result.requiredInputMb} MB',
-  timestamp: DateTime.now(),
+    suspend fun add(entry: ConversionHistory) {
+        val updated = (listOf(entry) + store.load()).take(PartitionConstants.MAX_HISTORY)
+        store.save(updated)
+    }
+
+    suspend fun clear() = store.save(emptyList())
+    suspend fun all(): List<ConversionHistory> = store.load()
+}
+
+interface HistoryStore {
+    suspend fun load(): List<ConversionHistory>
+    suspend fun save(list: List<ConversionHistory>)
+}
+```
+
+### এন্ট্রি তৈরি
+
+```kotlin
+fun PartitionCalculationResult.toHistory() = ConversionHistory(
+    id = UUID.randomUUID().toString(),
+    mode = ConversionHistory.Mode.CALC,
+    inputValue = visibleGb,
+    fromUnit = "Visible GB",
+    toUnit = "Required MB",
+    filesystem = filesystem,
+    primaryResultMb = requiredInputMb,
+    summary = "${filesystem.label} - $requiredInputMb MB",
+    timestampMillis = System.currentTimeMillis()
+)
+
+fun SplitResult.toHistory() = ConversionHistory(
+    id = UUID.randomUUID().toString(),
+    mode = ConversionHistory.Mode.SPLIT,
+    inputValue = totalMb.toDouble(),
+    fromUnit = "Total MB",
+    toUnit = "Per Partition MB",
+    filesystem = filesystem,
+    primaryResultMb = partitions.first().typeMb,
+    summary = "${partitions.size} partitions: " + partitions.joinToString(", ") { "${it.typeMb} MB" },
+    timestampMillis = System.currentTimeMillis(),
+    splitCount = partitions.size
 )
 ```
 
-**Split Tab:**
-```dart
-ConversionHistory(
-  id: timestamp.toString(),
-  inputValue: totalSizeMb,
-  fromUnit: 'Total MB',
-  toUnit: 'Per Partition MB',
-  filesystem: _filesystem,
-  requiredInputMb: results.first.displayMb.round(),
-  result: '${count} partitions × ${formatMb(displayMb)} MB each',
-  timestamp: DateTime.now(),
-  splitCount: count,
-  splitPartitionDisplayMb: results.first.displayMb,
-)
+---
+
+## ৭. UI আচরণ
+
+### Calc ট্যাব
+- **প্রিসেট চিপ:** 20, 50, 100, 250, 500, 1024 GB (1024 কে "1 TB" দেখান)।
+- **ইনপুট:** দশমিকসহ সংখ্যা কীবোর্ড।
+- **ফাইলসিস্টেম টগল:** NTFS / FAT32 (ডিফল্ট সেটিংসে সংরক্ষিত)।
+- **Windows Setup সুইচ:** চালু/বন্ধ (সংরক্ষিত), সাথে প্রোফাইল ও কাস্টম MB ফিল্ড।
+- **Calculate বাটন:** হিসাবের সময় লোডিং স্পিনার।
+- **রেজাল্ট ডায়ালগ:** সারিগুলো + সতর্কতা + Copy বাটন।
+
+### Split ট্যাব
+- মোট MB ইনপুট (শুধু পূর্ণসংখ্যা), পার্টিশন সংখ্যার স্টেপার (১–৮)।
+- ফাইলসিস্টেম টগল (এই ট্যাবে স্থানীয়) ও Windows Setup সুইচ।
+- রেজাল্টে প্রতিটি পার্টিশনের "টাইপ করার মান" ও "প্রত্যাশিত visible" টেবিল আকারে।
+
+### Settings ট্যাব
+- থিম (Light / Dark / System), ডিফল্ট ফাইলসিস্টেম, ডিফল্ট Setup সুইচ ও প্রোফাইল।
+- হিস্ট্রি মুছুন, Privacy Policy, Rate Us, Share, Quit।
+
+### রেজাল্ট ডায়ালগের সারি
+
+**Calc:**
+
+| সারি | মান |
+|---|---|
+| Visible Size | `${visibleGb} GB` |
+| Filesystem | NTFS / FAT32 |
+| Partition Size | `${partitionSizeMb} MB` |
+| Required Input | `${requiredInputMb} MB` ← এটাই টাইপ করতে হবে |
+| Windows Setup | `Yes (+566 MB)` / `No` |
+
+**Split:** প্রতি পার্টিশনে `Partition N → ${typeMb} MB (visible ≈ ${expectedVisibleMb} MB)`
+
+---
+
+## ৮. ভ্যালিডেশন ও এরর মেসেজ
+
+| ক্ষেত্র | শর্ত | মেসেজ |
+|---|---|---|
+| Calc | খালি | Enter a visible partition size in GB |
+| Calc | অসংখ্যা, ≤ 0, NaN/Infinity | Enter a valid positive GB value |
+| Calc | FAT32 + partition > 32768 MB | সতর্কতা (হিসাব চলবে) |
+| Split | খালি | Enter a total disk size in MB |
+| Split | অসংখ্যা বা ≤ 0 | Enter a valid positive MB value |
+| Split | count ∉ 1..8 | Partition count must be between 1 and 8 |
+| Split | usable ≤ count × 4 | Total size too small for N partitions |
+
+---
+
+## ৯. ইউনিট টেস্ট
+
+```kotlin
+class PartitionCalculatorTest {
+    @Test fun gbToMb() {
+        assertEquals(1028, PartitionCalculator.visibleGbToPartitionMb(1.0))
+        assertEquals(10244, PartitionCalculator.visibleGbToPartitionMb(10.0))
+        assertEquals(2564, PartitionCalculator.visibleGbToPartitionMb(2.5))
+    }
+
+    @Test fun withSetup() {
+        val r = PartitionCalculator.calculate(10.0, FileSystemType.NTFS, simulateWindowsSetup = true)
+        assertEquals(10244, r.partitionSizeMb)
+        assertEquals(10810, r.requiredInputMb)
+    }
+
+    @Test fun fat32Limit() {
+        assertTrue(PartitionCalculator.isFat32SizeValid(32768))
+        assertFalse(PartitionCalculator.isFat32SizeValid(32772)) // 32 GB visible + 4
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun zeroInvalid() { PartitionCalculator.calculate(0.0, FileSystemType.NTFS) }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun nanInvalid() { PartitionCalculator.calculate(Double.NaN, FileSystemType.NTFS) }
+}
+
+class SplitPartitionCalculatorTest {
+    @Test fun remainderGoesToLast() {
+        val r = SplitPartitionCalculator.split(476923, 4, FileSystemType.NTFS)
+        assertEquals(listOf(119230, 119230, 119230, 119233), r.partitions.map { it.typeMb })
+        assertEquals(476923L, r.partitions.sumOf { it.typeMb.toLong() })
+    }
+
+    @Test fun evenSplit() {
+        val r = SplitPartitionCalculator.split(100000, 5, FileSystemType.NTFS)
+        assertTrue(r.partitions.all { it.typeMb == 20000 })
+    }
+
+    @Test fun sumNeverExceedsDisk() {
+        for (n in 1..8) {
+            val r = SplitPartitionCalculator.split(476923, n, FileSystemType.NTFS)
+            assertEquals(476923L, r.partitions.sumOf { it.typeMb.toLong() })
+        }
+    }
+
+    @Test fun withSetupSubtractsOverhead() {
+        val r = SplitPartitionCalculator.split(476923, 4, FileSystemType.NTFS, simulateWindowsSetup = true)
+        assertEquals(476357L, r.usableMb)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun tooSmall() { SplitPartitionCalculator.split(10, 4, FileSystemType.NTFS) }
+}
 ```
 
 ---
 
-## UI Behavior Specifications
-
-### Calc Tab
-- **Quick Presets**: 20, 50, 100, 250, 500, 1024 GB (1 TB shown as "1 TB")
-- **Input**: TextField with number keyboard, decimal allowed
-- **Filesystem Toggle**: NTFS/FAT32 chips, persisted to SharedPreferences
-- **Windows Setup Simulation**: Switch card, persisted to SharedPreferences
-- **Calculate Button**: Shows loading spinner during calculation
-- **Result Dialog**: Shows result rows + explanation + copy button
-
-### Split Tab
-- **Input**: Total disk size in MB (TextField)
-- **Partition Count**: Stepper (1-8) with +/- buttons
-- **Filesystem Toggle**: NTFS/FAT32 (not persisted, local to tab)
-- **Calculate Button**: Shows loading spinner
-- **Result Dialog**: Table with one row per partition showing display MB
-
-### Settings Tab
-- Theme toggle (Light/Dark/System)
-- Default filesystem persistence
-- Default Windows Setup simulation persistence
-- History clear button
-- Privacy Policy, Rate Us, Share, Quit actions
-
----
-
-## Result Dialog Content
-
-### Build Result Rows (shared_controls.dart logic)
-```dart
-// For Calc Tab - shows multiple rows:
-Row 1: "Visible Size"     → "${visibleGb.toFormattedString()} GB"
-Row 2: "Filesystem"       → "NTFS" or "FAT32"
-Row 3: "Partition Size"   → "${partitionSizeMb} MB"  (what diskpart sees)
-Row 4: "Required Input"   → "${requiredInputMb} MB"  (what user types)
-Row 5: "Windows Setup"    → "Yes (+566 MB)" or "No"  (if simulated)
-
-// For Split Tab - one row per partition:
-Row N: "Partition N:"     → "${displayMb.toFormattedString()} MB"
-```
-
-### Explanations
-- **Windows Setup ON**: "Windows Setup creates a 566 MB System Reserved partition. The value above includes this overhead."
-- **FAT32 > 32 GB**: "Warning: Partition size exceeds 32 GB limit for FAT32."
-- **FAT32 always**: "Note: FAT32 has a 4 GB maximum file size limit."
-
----
-
-## Edge Cases & Validation
-
-### Calc Tab
-- Empty input → Toast: "Enter a visible partition size in GB"
-- Non-numeric/negative → Toast: "Enter a valid positive GB value"
-- FAT32 > 32 GB → Warning in explanation (calculation still proceeds)
-
-### Split Tab
-- Empty input → Toast: "Enter a total disk size in MB"
-- Non-numeric/negative → Toast: "Enter a valid positive MB value"
-- partitionCount ≤ 0 → ArgumentError
-- totalSizeMB ≤ partitionCount * 4 → ArgumentError: "Total size too small..."
-
----
-
-## Platform-Specific Notes
-
-- **Android only** — Uses `in_app_update_android` for Play Store updates
-- **diskpart expects MB** — All calculations target MiB (1024×1024 bytes)
-- **Windows Explorer shows GB** — Uses decimal GB (1000³) for display, but our `displayedGb` uses binary (1024) for accuracy
-- **4 MB overhead** — Accounts for partition table/alignment overhead in Windows
-
----
-
-## Testing Expectations
-
-### PartitionCalculator Tests
-```dart
-// visibleGbToPartitionMb(1, NTFS) = 1028  // (1*1024).round() + 4
-// visibleGbToPartitionMb(10, NTFS) = 10244
-// visibleGbToPartitionMb(2.5, NTFS) = 2564  // (2.5*1024=2560).round() + 4
-
-// calculate(10, NTFS) → partitionSizeMb=10244, requiredInputMb=10244
-// calculate(10, NTFS, simulateWindowsSetup:true) → requiredInputMb=10810
-
-// isFat32SizeValid(32) = true, isFat32SizeValid(32.1) = false
-```
-
-### SplitPartitionCalculator Tests
-```dart
-// basePerPartitionMB(476923, 4) = 119226.75
-// displayedPerPartitionMB(476923, 4) = 119230.75
-// basePerPartitionMB(100000, 5) = 19996
-// displayedPerPartitionMB(100000, 5) = 20000
-
-// splitPlan(476923, 4) → 4 entries of {displayMB: 119230.75, createMB: 119226.75}
-```
-
----
-
-## File Structure Reference
+## ১০. প্রস্তাবিত প্রজেক্ট কাঠামো
 
 ```
-lib/
-├── main.dart                          # App entry
-├── app_theme.dart                     # Material 3 light/dark themes
-├── constants/app_constants.dart       # App name, version helper
-├── core/theme_reveal/                 # Circular reveal animation
-├── managers/history_manager.dart      # SharedPreferences persistence
-├── models/partition_models.dart       # Enums, result classes, history model
-├── pages/calculator_page.dart         # Main screen with 3 tabs
-├── services/update_service.dart       # In-app updates (Play Core)
-├── utils/
-│   ├── partition_calculator.dart      # Calc Tab logic (SINGLE PARTITION)
-│   └── split_partition_calculator.dart # Split Tab logic (MULTI PARTITION)
-├── widgets/
-│   ├── about_page.dart
-│   ├── history_panel.dart             # Bottom sheet history viewer
-│   ├── privacy_policy_page.dart
-│   ├── quit_dialog.dart
-│   ├── result_dialog.dart             # Calculation result modal
-│   ├── shared_controls.dart           # FilesystemToggle, SimulationCard, SectionCard
-│   ├── settings_tab.dart
-│   └── split_tab.dart                 # Split Tab UI + calculation trigger
+app/src/main/java/com/diskcalc/
+├── MainActivity.kt
+├── ui/
+│   ├── theme/Theme.kt                 # Material 3 light/dark
+│   ├── CalculatorScreen.kt            # ৩ ট্যাবের হোস্ট
+│   ├── CalcTab.kt
+│   ├── SplitTab.kt
+│   ├── SettingsTab.kt
+│   ├── ResultDialog.kt
+│   ├── HistorySheet.kt
+│   └── components/                    # FilesystemToggle, SimulationCard, SectionCard
+├── domain/
+│   ├── PartitionConstants.kt
+│   ├── Models.kt
+│   ├── PartitionCalculator.kt
+│   └── SplitPartitionCalculator.kt
+├── data/
+│   ├── HistoryManager.kt
+│   └── SettingsRepository.kt          # DataStore
+└── update/UpdateService.kt            # Play In-App Update
 ```
 
----
-
-## Reproduction Checklist
-
-To recreate this app with identical logic:
-
-- [ ] Implement `PartitionCalculator` class with exact constants and methods
-- [ ] Implement `SplitPartitionCalculator` class with exact constants and methods
-- [ ] Define `FileSystemType` enum and `PartitionCalculationResult` class
-- [ ] Define `ConversionHistory` with JSON serialization
-- [ ] Implement `HistoryManager` with SharedPreferences (max 100 entries)
-- [ ] Build Calc Tab: input GB → calculate → show result dialog
-- [ ] Build Split Tab: input total MB + partition count → calculate → show partition table
-- [ ] Add FAT32 validation (32 GB limit + 4 GB file size warning)
-- [ ] Add Windows Setup simulation (566 MB overhead toggle)
-- [ ] Persist default filesystem and simulation preference
-- [ ] Implement history panel with clear capability
-- [ ] Add Material 3 theming with light/dark support
-- [ ] Add quick presets (20, 50, 100, 250, 500, 1024 GB)
-- [ ] Match result dialog format exactly (rows, explanations, copy)
+**নির্ভরতা:** Jetpack Compose + Material 3, DataStore Preferences, kotlinx.serialization (history JSON), Play In-App Updates (`com.google.android.play:app-update-ktx`)।
 
 ---
 
-## Version Info
-- **App Version**: 1.1.3
-- **Flutter**: 3.11+
-- **Platform**: Android
-- **Package ID**: `com.diskcalc`
+## ১১. চেকলিস্ট
+
+- [ ] `PartitionConstants`, মডেল ও enum তৈরি
+- [ ] `PartitionCalculator` (Calc লজিক + সতর্কতা)
+- [ ] `SplitPartitionCalculator` (পূর্ণসংখ্যা ভাগ, remainder শেষ পার্টিশনে)
+- [ ] ইনপুট ভ্যালিডেশন (খালি, ≤ 0, NaN, Infinity)
+- [ ] FAT32 সতর্কতা (৩২ GB সীমা + ৪ GB ফাইল সীমা)
+- [ ] Windows Setup ওভারহেড (প্রোফাইল বা কাস্টম মান)
+- [ ] HistoryManager (সর্বোচ্চ ১০০, UUID id)
+- [ ] ডিফল্ট ফাইলসিস্টেম ও Setup পছন্দ DataStore-এ সংরক্ষণ
+- [ ] প্রিসেট চিপ (20, 50, 100, 250, 500, 1024 GB)
+- [ ] রেজাল্ট ডায়ালগ + Copy বাটন
+- [ ] Material 3 থিম (Light/Dark/System)
+- [ ] ইউনিট টেস্ট (উপরের সবগুলো)
+- [ ] **বাস্তব ডিস্কে ম্যানুয়াল টেস্ট:** ১০, ৫০, ১০০ GB দিয়ে ৪ MB ও 566 MB যাচাই
+
+---
+
+## ১২. পরিচিত সীমাবদ্ধতা
+
+1. ৪ MB ও 566 MB অনুমানভিত্তিক; Windows সংস্করণ ও বুট মোড অনুযায়ী বদলায়। ফলাফলে ±১–২ MB পার্থক্য সম্ভব, তাই "প্রায়" শব্দ ব্যবহার করুন।
+2. Windows 11-এ Recovery পার্টিশন বড় হয়, তাই কাস্টম ওভারহেড দরকার হতে পারে।
+3. MBR ডিস্কে সর্বোচ্চ ৪টি primary পার্টিশন।
+4. ৩২ GB সীমা FAT32 স্পেসিফিকেশনের নয়, Windows ফরম্যাট টুলের।
+
+---
+
+**সংস্করণ:** Kotlin পোর্ট 1.0 (Dart v1.1.3 লজিকের সংশোধিত রূপ) · **প্ল্যাটফর্ম:** Android · **Package ID:** `com.diskcalc`
