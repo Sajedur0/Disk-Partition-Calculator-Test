@@ -84,6 +84,11 @@ android {
 }
 
 kotlin {
+    // Compiles both the Kotlin and the Java sources with JDK 17, no matter which JDK
+    // runs Gradle itself. The foojay resolver in settings.gradle.kts downloads a JDK 17
+    // when the machine does not have one installed.
+    jvmToolchain(17)
+
     compilerOptions {
         jvmTarget.set(JvmTarget.JVM_17)
     }

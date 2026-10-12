@@ -24,8 +24,9 @@ All notable changes to Disk Partition Calculator are documented here.
   testable storage seam, and a dependency-free JSON codec
 - Unit test suite rewritten in JUnit (72 tests) covering the calculator math, validation,
   persistence, migration compatibility and every result/history string
-- Project tooling: Gradle 9.6 + AGP 9.2.1 + Kotlin 2.4.0, R8 minification/shrinking for release
-  builds, `tools/generate_icons.py` to regenerate the icon set, `.editorconfig`
+- Project tooling: Gradle 9.6 + AGP 9.2.1 + Kotlin 2.4.0 on JDK 17 (the Java/Kotlin toolchain is
+  pinned to 17 and auto-provisioned), R8 minification/shrinking for release builds,
+  `tools/generate_icons.py` to regenerate the icon set, `.editorconfig`
 
 ## [1.1.3]
 - Flexible updates no longer cause the app to restart mid-download when resuming

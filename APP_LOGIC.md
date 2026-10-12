@@ -505,6 +505,6 @@ To recreate this app with identical logic:
 - **App Version**: 1.1.3 (versionCode 14)
 - **Language**: Kotlin 2.4.0
 - **UI**: Jetpack Compose (BOM 2025.09.01), Material 3
-- **Build**: Gradle 9.6, AGP 9.2.1, JDK 21
+- **Build**: Gradle 9.6, AGP 9.2.1, JDK 17 (Java 17 bytecode, JDK 17 toolchain)
 - **Platform**: Android (minSdk 26, target/compile SDK 36)
 - **Package ID**: `com.diskcalc`

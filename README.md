@@ -68,14 +68,21 @@ FAT32 with optional Windows Setup overhead simulation.
 | Serialization | Hand-rolled, unit-tested JSON codec (`core/json`) |
 | Icons | Google Material Symbols compiled to vector drawables (`tools/generate_icons.py`) |
 | Updates | Google Play In-App Updates (`com.google.android.play:app-update`) |
-| Build | Gradle 9.6 + AGP 9.2.1 + Kotlin 2.4.0, R8 minification/shrinking |
+| Build | Gradle 9.6 + AGP 9.2.1 + Kotlin 2.4.0 on JDK 17, R8 minification/shrinking |
 
 </details>
 
 <details>
 <summary>## Getting Started</summary>
 
-Requires **JDK 21** (Android Studio Ladybug or newer) and the Android SDK with API 36.
+Requires **JDK 17** and the Android SDK with API 36. The build targets Java 17 bytecode and the
+Gradle build pins the JDK 17 toolchain, so a newer JDK running Gradle (for example the JDK 21
+that ships with recent Android Studio versions) works too — Gradle downloads a JDK 17 toolchain
+automatically if none is installed.
+
+Point Android Studio at JDK 17 in
+**Settings → Build, Execution, Deployment → Build Tools → Gradle → Gradle JDK**, or set
+`JAVA_HOME` to a JDK 17 installation for command line builds.
 
 ```bash
 # Clone the repo
