@@ -1,6 +1,5 @@
 package com.diskcalc.ui
 
-import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -22,7 +21,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material.icons.rounded.DarkMode
-import androidx.compose.material.icons.rounded.ExitToApp
 import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.PrivacyTip
 import androidx.compose.material.icons.rounded.RestoreFromTrash
@@ -222,13 +220,6 @@ fun SettingsTab(
                 title = "About",
                 subtitle = "Disk Partition Calculator v${BuildConfig.VERSION_NAME}",
                 onClick = { showAbout = true }
-            )
-            GlassDivider()
-            SettingsAction(
-                icon = Icons.Rounded.ExitToApp,
-                title = "Quit",
-                subtitle = "Close the app",
-                onClick = { (context as? Activity)?.finish() }
             )
         }
 
