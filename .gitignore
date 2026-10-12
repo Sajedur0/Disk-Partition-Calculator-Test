@@ -1,0 +1,67 @@
+# Flutter/Dart
+.dart_tool/
+.packages
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+pubspec.lock
+*.iml
+
+# Dart generated files
+*.g.dart
+*.freezed.dart
+*.gr.dart
+flutter_export_*.dart
+
+# Android
+android/.gradle/
+android/build/
+android/local.properties
+android/app/build/
+android/captures/
+android/.externalNativeBuild/
+android/.cxx/
+android/app/*.keystore
+android/app/keystore.properties
+
+# iOS
+ios/.symlinks/
+ios/Pods/
+ios/build/
+ios/Flutter/.last_build_id
+ios/Flutter/Generated.xcconfig
+ios/Flutter/ephemeral/
+
+# Web
+web/favicon.png
+web/icons/
+web/manifest.json
+
+# macOS
+macos/Pods/
+macos/Flutter/ephemeral/
+macos/Flutter/GeneratedPluginRegistrant.swift
+macos/Flutter/.last_build_id
+
+# Linux
+linux/flutter/ephemeral/
+
+# Windows
+windows/flutter/ephemeral/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*.lock
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Misc
+.metadata
+coverage/
+pubspec_overrides.yaml
