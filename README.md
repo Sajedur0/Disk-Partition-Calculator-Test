@@ -11,7 +11,7 @@ interface built on Jetpack Compose.
 ```
 ┌────────────────────────────────────────────┐
 │  Disk Partition                            │
-│  Calculator      [1 GB = 1024 MB]   (☀)(⏱) │
+│  Calculator                          (☀)(⏱) │
 │                                            │
 │  ╭────────────── solid surface ──────────╮ │
 │  │ Required input                        │ │

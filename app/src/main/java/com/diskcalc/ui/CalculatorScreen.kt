@@ -1,7 +1,6 @@
 package com.diskcalc.ui
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -39,7 +38,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.diskcalc.domain.ThemeMode
-import com.diskcalc.ui.components.GlassBadge
 import com.diskcalc.ui.components.GlassIconButton
 import com.diskcalc.ui.components.GlassTabBar
 import com.diskcalc.ui.components.GlassTabItem
@@ -234,11 +232,6 @@ private fun AppHeader(
                 style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.SemiBold),
                 color = palette.contentPrimary
             )
-            Spacer(Modifier.height(6.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                GlassBadge(text = "1 GB = 1024 MB")
-                GlassBadge(text = "Windows Setup ready")
-            }
         }
         GlassIconButton(
             icon = if (isDark) Icons.Rounded.LightMode else Icons.Rounded.DarkMode,
