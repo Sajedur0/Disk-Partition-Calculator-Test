@@ -36,7 +36,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.diskcalc.domain.ConversionHistory
 import com.diskcalc.ui.components.GlassIconButton
-import com.diskcalc.ui.components.LiquidGlassSurface
 import com.diskcalc.ui.components.glassLite
 import com.diskcalc.ui.theme.LocalGlassTokens
 import com.diskcalc.ui.theme.LocalLiquidPalette
@@ -61,76 +60,76 @@ fun HistorySheet(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        containerColor = Color.Transparent,
-        scrimColor = Color.Black.copy(alpha = 0.45f),
+        shape = RoundedCornerShape(topStart = tokens.cornerXl, topEnd = tokens.cornerXl),
+        containerColor = palette.glassTint,
+        contentColor = palette.contentPrimary,
+        scrimColor = Color.Black.copy(alpha = 0.55f),
         dragHandle = {
             Box(
                 Modifier
                     .padding(top = 12.dp, bottom = 6.dp)
                     .size(width = 46.dp, height = 4.dp)
-                    .background(palette.contentTertiary.copy(alpha = 0.5f), RoundedCornerShape(percent = 50))
+                    .background(palette.glassBorderStart, RoundedCornerShape(percent = 50))
             )
         }
     ) {
-        LiquidGlassSurface(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(topStart = tokens.cornerXl, topEnd = tokens.cornerXl),
-            elevation = tokens.elevation
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = tokens.spaceMd, vertical = tokens.spaceSm)
         ) {
-            Column(Modifier.padding(horizontal = tokens.spaceMd, vertical = tokens.spaceSm)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Rounded.History,
-                        contentDescription = null,
-                        tint = palette.accent,
-                        modifier = Modifier.size(20.dp)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Rounded.History,
+                    contentDescription = null,
+                    tint = palette.accent,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(Modifier.width(tokens.spaceSm))
+                Text(
+                    text = "History",
+                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold),
+                    color = palette.contentPrimary,
+                    modifier = Modifier.weight(1f)
+                )
+                if (history.isNotEmpty()) {
+                    GlassIconButton(
+                        icon = Icons.Rounded.RestoreFromTrash,
+                        contentDescription = "Clear history",
+                        onClick = onClear,
+                        size = 38.dp,
+                        tint = palette.dangerContent
                     )
-                    Spacer(Modifier.width(tokens.spaceSm))
-                    Text(
-                        text = "History",
-                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold),
-                        color = palette.contentPrimary,
-                        modifier = Modifier.weight(1f)
-                    )
-                    if (history.isNotEmpty()) {
-                        GlassIconButton(
-                            icon = Icons.Rounded.RestoreFromTrash,
-                            contentDescription = "Clear history",
-                            onClick = onClear,
-                            size = 38.dp,
-                            tint = palette.dangerContent
-                        )
-                    }
                 }
-                Spacer(Modifier.height(tokens.spaceSm))
+            }
+            Spacer(Modifier.height(tokens.spaceSm))
 
-                if (history.isEmpty()) {
-                    Box(
-                        Modifier
-                            .fillMaxWidth()
-                            .heightIn(min = 180.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "No conversions yet.\nEvery calculation you make lands here.",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = palette.contentSecondary
+            if (history.isEmpty()) {
+                Box(
+                    Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 180.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "No conversions yet.\nEvery calculation you make lands here.",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = palette.contentSecondary
+                    )
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier.heightIn(max = 460.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(history, key = { it.id }) { entry ->
+                        HistoryRow(
+                            entry = entry,
+                            onCopy = { onCopy(entry) },
+                            onRemove = { onRemove(entry.id) }
                         )
                     }
-                } else {
-                    LazyColumn(
-                        modifier = Modifier.heightIn(max = 460.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        items(history, key = { it.id }) { entry ->
-                            HistoryRow(
-                                entry = entry,
-                                onCopy = { onCopy(entry) },
-                                onRemove = { onRemove(entry.id) }
-                            )
-                        }
-                        item { Spacer(Modifier.height(tokens.spaceMd)) }
-                    }
+                    item { Spacer(Modifier.height(tokens.spaceMd)) }
                 }
             }
         }
@@ -150,7 +149,7 @@ private fun HistoryRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .glassLite(shape = RoundedCornerShape(tokens.cornerMedium))
+            .glassLite(shape = RoundedCornerShape(tokens.cornerMedium), tint = palette.controlSurface)
             .padding(horizontal = tokens.spaceMd, vertical = tokens.spaceSm),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -160,18 +159,15 @@ private fun HistoryRow(
                     Modifier
                         .glassLite(
                             shape = RoundedCornerShape(percent = 50),
-                            tint = if (entry.mode == ConversionHistory.Mode.CALC) {
-                                palette.accent.copy(alpha = 0.22f)
-                            } else {
-                                palette.accentSecondary.copy(alpha = 0.22f)
-                            }
+                            tint = palette.accentContainer,
+                            borderColor = palette.glassBorderStart
                         )
                         .padding(horizontal = 8.dp, vertical = 2.dp)
                 ) {
                     Text(
                         text = if (entry.mode == ConversionHistory.Mode.CALC) "CALC" else "SPLIT",
                         style = MaterialTheme.typography.labelMedium,
-                        color = palette.contentPrimary
+                        color = palette.accent
                     )
                 }
                 Spacer(Modifier.width(8.dp))

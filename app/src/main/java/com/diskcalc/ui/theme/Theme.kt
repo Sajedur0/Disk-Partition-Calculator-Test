@@ -11,7 +11,7 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.TextStyle
@@ -77,9 +77,7 @@ private val DiskCalcTypography = Typography(
 )
 
 /**
- * App theme. Colours come from the liquid-glass palette rather than Material dynamic colour so
- * the glass recipe stays predictable on every device; Material 3 is still used for behaviour
- * (ripples, text fields, dialogs).
+ * App theme with solid Dark Mode and Light Mode colour schemes.
  */
 @Composable
 fun DiskCalcTheme(
@@ -97,32 +95,40 @@ fun DiskCalcTheme(
         darkColorScheme(
             primary = palette.accent,
             onPrimary = palette.onAccent,
+            primaryContainer = palette.accentContainer,
+            onPrimaryContainer = palette.contentPrimary,
             secondary = palette.accentSecondary,
             onSecondary = palette.onAccent,
-            background = Color.Transparent,
+            background = palette.backdropBase,
             onBackground = palette.contentPrimary,
-            surface = Color.Transparent,
+            surface = palette.glassTint,
             onSurface = palette.contentPrimary,
-            surfaceVariant = palette.glassTint,
+            surfaceVariant = palette.controlSurface,
             onSurfaceVariant = palette.contentSecondary,
             error = palette.dangerContent,
             onError = palette.onAccent,
+            errorContainer = palette.dangerContainer,
+            onErrorContainer = palette.dangerContent,
             outline = palette.glassBorderStart
         )
     } else {
         lightColorScheme(
             primary = palette.accent,
             onPrimary = palette.onAccent,
+            primaryContainer = palette.accentContainer,
+            onPrimaryContainer = palette.contentPrimary,
             secondary = palette.accentSecondary,
             onSecondary = palette.onAccent,
-            background = Color.Transparent,
+            background = palette.backdropBase,
             onBackground = palette.contentPrimary,
-            surface = Color.Transparent,
+            surface = palette.glassTint,
             onSurface = palette.contentPrimary,
-            surfaceVariant = palette.glassTint,
+            surfaceVariant = palette.controlSurface,
             onSurfaceVariant = palette.contentSecondary,
             error = palette.dangerContent,
             onError = palette.onAccent,
+            errorContainer = palette.dangerContainer,
+            onErrorContainer = palette.dangerContent,
             outline = palette.glassBorderStart
         )
     }
@@ -132,6 +138,10 @@ fun DiskCalcTheme(
         val activity = LocalContext.current.findActivity()
         SideEffect {
             activity?.window?.let { window ->
+                @Suppress("DEPRECATION")
+                window.statusBarColor = palette.backdropBase.toArgb()
+                @Suppress("DEPRECATION")
+                window.navigationBarColor = palette.backdropBase.toArgb()
                 WindowCompat.getInsetsController(window, view).apply {
                     isAppearanceLightStatusBars = !dark
                     isAppearanceLightNavigationBars = !dark

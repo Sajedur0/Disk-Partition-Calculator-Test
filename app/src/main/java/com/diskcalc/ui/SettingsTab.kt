@@ -62,7 +62,7 @@ import com.diskcalc.ui.theme.LocalGlassTokens
 import com.diskcalc.ui.theme.LocalLiquidPalette
 
 /**
- * Settings tab — theme, defaults and the informational actions required by APP_LOGIC.md §7.
+ * Settings tab — theme (System / Light / Dark), defaults and informational actions.
  */
 @Composable
 fun SettingsTab(
@@ -89,7 +89,7 @@ fun SettingsTab(
     ) {
         GlassPanel(
             title = "Appearance",
-            subtitle = "Liquid glass, tuned for your eyes",
+            subtitle = "Solid colour theme for Dark Mode and Light Mode",
             icon = Icons.Rounded.DarkMode
         ) {
             GlassSegmentedControl(
@@ -135,12 +135,23 @@ fun SettingsTab(
                 onSelect = onDefaultProfileChange,
                 label = { profile ->
                     when (profile) {
-                        WindowsSetupProfile.WIN10_UEFI -> "Win 10 · 566 MB"
-                        WindowsSetupProfile.WIN11_UEFI -> "Win 11 · ${PartitionConstants.WINDOWS_SETUP_OVERHEAD_WIN11_MB} MB"
+                        WindowsSetupProfile.WIN10_UEFI -> "Win 10"
+                        WindowsSetupProfile.WIN11_UEFI -> "Win 11"
                         WindowsSetupProfile.CUSTOM -> "Custom"
                     }
                 },
                 modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(Modifier.height(tokens.spaceXs))
+            Text(
+                text = when (settings.setupProfile) {
+                    WindowsSetupProfile.WIN10_UEFI -> "Windows 10 UEFI/GPT overhead: ${PartitionConstants.WINDOWS_SETUP_OVERHEAD_MB} MB"
+                    WindowsSetupProfile.WIN11_UEFI -> "Windows 11 UEFI/GPT overhead: ${PartitionConstants.WINDOWS_SETUP_OVERHEAD_WIN11_MB} MB"
+                    WindowsSetupProfile.CUSTOM -> "Custom overhead: ${settings.customOverheadMb} MB"
+                },
+                style = MaterialTheme.typography.bodyMedium,
+                color = palette.contentTertiary,
+                modifier = Modifier.padding(start = 4.dp)
             )
         }
 
@@ -269,7 +280,10 @@ private fun SettingsAction(
     ) {
         Box(
             Modifier
-                .glassLite(shape = RoundedCornerShape(tokens.cornerSmall))
+                .glassLite(
+                    shape = RoundedCornerShape(tokens.cornerSmall),
+                    tint = palette.accentContainer
+                )
                 .padding(8.dp)
         ) {
             Icon(

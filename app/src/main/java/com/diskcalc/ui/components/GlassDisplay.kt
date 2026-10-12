@@ -22,7 +22,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
@@ -30,7 +29,7 @@ import androidx.compose.ui.unit.dp
 import com.diskcalc.ui.theme.LocalGlassTokens
 import com.diskcalc.ui.theme.LocalLiquidPalette
 
-/** Hairline separator that fades out at both ends. */
+/** Solid hairline separator. */
 @Composable
 fun GlassDivider(modifier: Modifier = Modifier) {
     val palette = LocalLiquidPalette.current
@@ -38,15 +37,7 @@ fun GlassDivider(modifier: Modifier = Modifier) {
         modifier
             .fillMaxWidth()
             .height(1.dp)
-            .background(
-                Brush.horizontalGradient(
-                    listOf(
-                        Color.Transparent,
-                        palette.glassBorderStart,
-                        Color.Transparent
-                    )
-                )
-            )
+            .background(color = palette.glassBorderStart)
     )
 }
 
@@ -104,7 +95,8 @@ fun StatTile(
         modifier = modifier
             .glassLite(
                 shape = RoundedCornerShape(tokens.cornerMedium),
-                tint = if (highlight) palette.accent.copy(alpha = 0.16f) else palette.glassTint
+                tint = if (highlight) palette.accentContainer else palette.controlSurface,
+                borderColor = if (highlight) palette.accent else palette.glassBorderStart
             )
             .padding(horizontal = tokens.spaceMd, vertical = tokens.spaceSm)
     ) {
@@ -134,13 +126,13 @@ fun StatTile(
             Text(
                 text = caption,
                 style = MaterialTheme.typography.bodyMedium,
-                color = palette.contentTertiary
+                color = palette.contentSecondary
             )
         }
     }
 }
 
-/** Amber note list shown under every result. */
+/** Solid amber note list shown under every result. */
 @Composable
 fun WarningList(
     warnings: List<String>,
@@ -155,7 +147,8 @@ fun WarningList(
             .fillMaxWidth()
             .glassLite(
                 shape = RoundedCornerShape(tokens.cornerMedium),
-                tint = palette.warningContainer
+                tint = palette.warningContainer,
+                borderColor = palette.warningContent
             )
             .padding(tokens.spaceMd),
         verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -197,7 +190,8 @@ fun InfoBanner(
             .fillMaxWidth()
             .glassLite(
                 shape = RoundedCornerShape(tokens.cornerMedium),
-                tint = if (isError) palette.dangerContainer else palette.glassTint
+                tint = if (isError) palette.dangerContainer else palette.accentContainer,
+                borderColor = if (isError) palette.dangerContent else palette.glassBorderStart
             )
             .padding(horizontal = tokens.spaceMd, vertical = tokens.spaceSm),
         verticalAlignment = Alignment.CenterVertically
@@ -223,12 +217,12 @@ fun InfoBanner(
         Text(
             text = text,
             style = MaterialTheme.typography.bodyMedium,
-            color = if (isError) palette.dangerContent else palette.contentSecondary
+            color = if (isError) palette.dangerContent else palette.contentPrimary
         )
     }
 }
 
-/** Small pill used above section titles ("MB → GB"). */
+/** Small solid pill used above section titles ("MB → GB"). */
 @Composable
 fun GlassBadge(text: String, modifier: Modifier = Modifier) {
     val palette = LocalLiquidPalette.current
@@ -236,7 +230,8 @@ fun GlassBadge(text: String, modifier: Modifier = Modifier) {
         modifier = modifier
             .glassLite(
                 shape = RoundedCornerShape(percent = 50),
-                tint = palette.accent.copy(alpha = 0.18f)
+                tint = palette.accentContainer,
+                borderColor = palette.glassBorderStart
             )
             .padding(horizontal = 12.dp, vertical = 5.dp)
     ) {

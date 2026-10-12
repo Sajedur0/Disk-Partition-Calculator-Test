@@ -7,21 +7,22 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 /**
- * Colour recipe for the "liquid glass" look. Everything the glass surfaces need lives here so
- * light and dark mode only differ by one object.
+ * Solid colour palette for Dark Mode and Light Mode.
+ * All colours are 100% opaque solid values to prevent translucency/blur visual conflicts.
  */
 @Immutable
 data class LiquidPalette(
     val isDark: Boolean,
-    /** Opaque backdrop colour the blobs float on. */
+    /** Solid app background colour. */
     val backdropBase: Color,
-    /** Soft colour blobs that give the backdrop its liquid feel. */
+    /** Solid accent palette list kept for API compatibility. */
     val backdropBlobs: List<Color>,
     val vignette: Color,
-    /** Translucent fill laid over the frosted backdrop sample. */
+    /** Solid card / panel surface colour. */
     val glassTint: Color,
-    /** Extra sheen drawn across the top-left of the glass, like a specular highlight. */
+    /** Solid secondary / control surface colour. */
     val glassHighlight: Color,
+    /** Solid border colour. */
     val glassBorderStart: Color,
     val glassBorderEnd: Color,
     val accent: Color,
@@ -33,21 +34,25 @@ data class LiquidPalette(
     val warningContainer: Color,
     val warningContent: Color,
     val dangerContainer: Color,
-    val dangerContent: Color
+    val dangerContent: Color,
+    /** Solid surface colour for inner controls (inputs, chips, segmented tracks, tiles). */
+    val controlSurface: Color = glassHighlight,
+    /** Solid container colour for accented badges, active highlights and steppers. */
+    val accentContainer: Color = glassHighlight
 )
 
-/** Spacing / radius / blur scale so screens stay visually consistent. */
+/** Spacing and corner radius scale so screens stay visually consistent. */
 @Immutable
 data class GlassTokens(
-    val cornerXl: Dp = 30.dp,
-    val cornerLarge: Dp = 24.dp,
-    val cornerMedium: Dp = 18.dp,
-    val cornerSmall: Dp = 12.dp,
-    val blur: Dp = 28.dp,
-    val blurSoft: Dp = 18.dp,
+    val cornerXl: Dp = 24.dp,
+    val cornerLarge: Dp = 20.dp,
+    val cornerMedium: Dp = 14.dp,
+    val cornerSmall: Dp = 10.dp,
+    val blur: Dp = 0.dp,
+    val blurSoft: Dp = 0.dp,
     val border: Dp = 1.dp,
-    val elevation: Dp = 18.dp,
-    val elevationSmall: Dp = 8.dp,
+    val elevation: Dp = 4.dp,
+    val elevationSmall: Dp = 2.dp,
     val spaceXs: Dp = 6.dp,
     val spaceSm: Dp = 10.dp,
     val spaceMd: Dp = 16.dp,
@@ -58,56 +63,60 @@ data class GlassTokens(
 
 val DarkLiquidPalette = LiquidPalette(
     isDark = true,
-    backdropBase = Color(0xFF070A16),
+    backdropBase = Color(0xFF0F172A),
     backdropBlobs = listOf(
-        Color(0xFF2E5BFF),
-        Color(0xFF22D3EE),
-        Color(0xFFA855F7),
-        Color(0xFFF472B6),
+        Color(0xFF0F172A),
+        Color(0xFF1E293B),
+        Color(0xFF3B82F6),
+        Color(0xFF6366F1),
         Color(0xFF14B8A6)
     ),
-    vignette = Color(0xCC04060F),
-    glassTint = Color(0x1FFFFFFF),
-    glassHighlight = Color(0x33FFFFFF),
-    glassBorderStart = Color(0x59FFFFFF),
-    glassBorderEnd = Color(0x0FFFFFFF),
-    accent = Color(0xFF7CB8FF),
-    accentSecondary = Color(0xFFC99BFF),
-    onAccent = Color(0xFF061024),
-    contentPrimary = Color(0xFFF2F6FF),
-    contentSecondary = Color(0xFFA9B6D6),
-    contentTertiary = Color(0xFF7183A8),
-    warningContainer = Color(0x33FFC46B),
-    warningContent = Color(0xFFFFD79A),
-    dangerContainer = Color(0x33FF7A8A),
-    dangerContent = Color(0xFFFFB3BC)
+    vignette = Color(0xFF0F172A),
+    glassTint = Color(0xFF1E293B),
+    glassHighlight = Color(0xFF273549),
+    glassBorderStart = Color(0xFF334155),
+    glassBorderEnd = Color(0xFF334155),
+    accent = Color(0xFF4F8CFF),
+    accentSecondary = Color(0xFF6366F1),
+    onAccent = Color(0xFFFFFFFF),
+    contentPrimary = Color(0xFFF8FAFC),
+    contentSecondary = Color(0xFF94A3B8),
+    contentTertiary = Color(0xFF64748B),
+    warningContainer = Color(0xFF3B2A14),
+    warningContent = Color(0xFFFBBF24),
+    dangerContainer = Color(0xFF3F1A24),
+    dangerContent = Color(0xFFF87171),
+    controlSurface = Color(0xFF273549),
+    accentContainer = Color(0xFF1E3A5F)
 )
 
 val LightLiquidPalette = LiquidPalette(
     isDark = false,
-    backdropBase = Color(0xFFE9EEFF),
+    backdropBase = Color(0xFFF1F5F9),
     backdropBlobs = listOf(
-        Color(0xFF9FB6FF),
-        Color(0xFF7CD8F5),
-        Color(0xFFCDB4FF),
-        Color(0xFFFFB6DA),
-        Color(0xFF9BE7CE)
+        Color(0xFFF1F5F9),
+        Color(0xFFFFFFFF),
+        Color(0xFF2563EB),
+        Color(0xFF4F46E5),
+        Color(0xFF0D9488)
     ),
-    vignette = Color(0x38FFFFFF),
-    glassTint = Color(0x73FFFFFF),
-    glassHighlight = Color(0xB3FFFFFF),
-    glassBorderStart = Color(0xCCFFFFFF),
-    glassBorderEnd = Color(0x4DFFFFFF),
-    accent = Color(0xFF2F5BEA),
-    accentSecondary = Color(0xFF8B4DE0),
+    vignette = Color(0xFFF1F5F9),
+    glassTint = Color(0xFFFFFFFF),
+    glassHighlight = Color(0xFFF1F5F9),
+    glassBorderStart = Color(0xFFCBD5E1),
+    glassBorderEnd = Color(0xFFCBD5E1),
+    accent = Color(0xFF2563EB),
+    accentSecondary = Color(0xFF4F46E5),
     onAccent = Color(0xFFFFFFFF),
-    contentPrimary = Color(0xFF0D1428),
-    contentSecondary = Color(0xFF4C5880),
-    contentTertiary = Color(0xFF7B87AB),
-    warningContainer = Color(0x4DFFB648),
-    warningContent = Color(0xFF8A5B00),
-    dangerContainer = Color(0x40FF5C72),
-    dangerContent = Color(0xFF9E1B2C)
+    contentPrimary = Color(0xFF0F172A),
+    contentSecondary = Color(0xFF475569),
+    contentTertiary = Color(0xFF64748B),
+    warningContainer = Color(0xFFFEF3C7),
+    warningContent = Color(0xFF92400E),
+    dangerContainer = Color(0xFFFEE2E2),
+    dangerContent = Color(0xFFB91C1C),
+    controlSurface = Color(0xFFF1F5F9),
+    accentContainer = Color(0xFFDBEAFE)
 )
 
 val LocalLiquidPalette = staticCompositionLocalOf { DarkLiquidPalette }

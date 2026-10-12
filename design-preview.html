@@ -3,82 +3,73 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Disk Partition Calculator — Liquid Glass design preview</title>
+<title>Disk Partition Calculator — Solid Theme design preview</title>
 <style>
   /* ------------------------------------------------------------------ tokens */
   :root {
-    --base: #070A16;
-    --blob-0: #2E5BFF;
-    --blob-1: #22D3EE;
-    --blob-2: #A855F7;
-    --blob-3: #F472B6;
-    --blob-4: #14B8A6;
-    --vignette: rgba(4, 6, 15, .80);
-    --glass-tint: rgba(255, 255, 255, .12);
-    --glass-lite: rgba(255, 255, 255, .10);
-    --border-a: rgba(255, 255, 255, .38);
-    --border-b: rgba(255, 255, 255, .06);
-    --accent: #7CB8FF;
-    --accent-2: #C99BFF;
-    --on-accent: #061024;
-    --text: #F2F6FF;
-    --text-2: #A9B6D6;
-    --text-3: #7183A8;
-    --warning-bg: rgba(255, 196, 107, .20);
-    --warning-fg: #FFD79A;
-    --danger-bg: rgba(255, 122, 138, .20);
-    --danger-fg: #FFB3BC;
-    --radius-xl: 30px;
-    --radius-lg: 24px;
-    --radius-md: 18px;
-    --radius-sm: 12px;
-    --blur: 26px;
-    --shadow: 0 18px 40px rgba(0, 0, 0, .50);
-    --shadow-soft: 0 8px 20px rgba(0, 0, 0, .35);
-    --glow: 0 10px 26px rgba(124, 184, 255, .38);
+    --base: #0F172A;
+    --glass-tint: #1E293B;
+    --glass-lite: #273549;
+    --accent-container: #1E3A5F;
+    --border-a: #334155;
+    --border-b: #334155;
+    --accent: #4F8CFF;
+    --accent-2: #6366F1;
+    --on-accent: #FFFFFF;
+    --text: #F8FAFC;
+    --text-2: #94A3B8;
+    --text-3: #64748B;
+    --warning-bg: #3B2A14;
+    --warning-fg: #FBBF24;
+    --danger-bg: #3F1A24;
+    --danger-fg: #F87171;
+    --radius-xl: 24px;
+    --radius-lg: 20px;
+    --radius-md: 14px;
+    --radius-sm: 10px;
+    --shadow: 0 4px 12px rgba(0, 0, 0, .28);
+    --shadow-soft: 0 2px 6px rgba(0, 0, 0, .18);
   }
   body.light {
-    --base: #E9EEFF;
-    --blob-0: #9FB6FF;
-    --blob-1: #7CD8F5;
-    --blob-2: #CDB4FF;
-    --blob-3: #FFB6DA;
-    --blob-4: #9BE7CE;
-    --vignette: rgba(255, 255, 255, .34);
-    --glass-tint: rgba(255, 255, 255, .48);
-    --glass-lite: rgba(255, 255, 255, .40);
-    --border-a: rgba(255, 255, 255, .85);
-    --border-b: rgba(255, 255, 255, .30);
-    --accent: #2F5BEA;
-    --accent-2: #8B4DE0;
+    --base: #F1F5F9;
+    --glass-tint: #FFFFFF;
+    --glass-lite: #F1F5F9;
+    --accent-container: #DBEAFE;
+    --border-a: #CBD5E1;
+    --border-b: #CBD5E1;
+    --accent: #2563EB;
+    --accent-2: #4F46E5;
     --on-accent: #FFFFFF;
-    --text: #0D1428;
-    --text-2: #4C5880;
-    --text-3: #7B87AB;
-    --warning-bg: rgba(255, 182, 72, .30);
-    --warning-fg: #8A5B00;
-    --danger-bg: rgba(255, 92, 114, .25);
-    --danger-fg: #9E1B2C;
-    --shadow: 0 18px 40px rgba(40, 60, 120, .28);
-    --glow: 0 10px 26px rgba(47, 91, 234, .30);
+    --text: #0F172A;
+    --text-2: #475569;
+    --text-3: #64748B;
+    --warning-bg: #FEF3C7;
+    --warning-fg: #92400E;
+    --danger-bg: #FEE2E2;
+    --danger-fg: #B91C1C;
+    --shadow: 0 4px 12px rgba(15, 23, 42, .08);
+    --shadow-soft: 0 2px 6px rgba(15, 23, 42, .06);
   }
 
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body { height: 100%; margin: 0; }
   body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    background: radial-gradient(120% 90% at 50% 0%, #141a33 0%, #05060d 60%, #02030a 100%);
-    color: #e7ecf7;
+    background: #090D16;
+    color: var(--text);
     display: grid;
     place-items: center;
     padding: 28px 16px 44px;
     gap: 18px;
   }
+  body.light {
+    background: #E2E8F0;
+  }
 
   .stage-head { text-align: center; max-width: 760px; }
   .stage-head h1 { font-size: 20px; font-weight: 650; margin: 0 0 6px; letter-spacing: -.2px; }
-  .stage-head p { margin: 0; font-size: 13px; color: #93a0bd; line-height: 1.5; }
-  .stage-head code { background: rgba(255,255,255,.08); padding: 1px 6px; border-radius: 6px; font-size: 12px; }
+  .stage-head p { margin: 0; font-size: 13px; color: var(--text-2); line-height: 1.5; }
+  .stage-head code { background: var(--glass-tint); padding: 1px 6px; border-radius: 6px; font-size: 12px; border: 1px solid var(--border-a); }
 
   /* ------------------------------------------------------------- phone shell */
   .phone {
@@ -88,92 +79,50 @@
     border-radius: 46px;
     overflow: hidden;
     background: var(--base);
-    box-shadow: 0 40px 90px rgba(0,0,0,.65), 0 0 0 10px rgba(255,255,255,.045), 0 0 0 11px rgba(255,255,255,.10);
+    color: var(--text);
+    box-shadow: 0 30px 70px rgba(0,0,0,.45), 0 0 0 8px var(--border-a);
     isolation: isolate;
   }
-  .phone::after { /* glass edge highlight of the device itself */
-    content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.35), inset 0 -1px 0 rgba(255,255,255,.10);
-  }
 
-  /* ------------------------------------------------------- animated backdrop */
-  .backdrop { position: absolute; inset: 0; overflow: hidden; }
-  .blob {
-    position: absolute; border-radius: 50%; filter: blur(46px);
-    mix-blend-mode: screen; opacity: .62;
-    animation: drift-0 38s ease-in-out infinite alternate;
-  }
-  .b0 { width: 340px; height: 340px; left: -110px; top: -70px;  background: var(--blob-0); animation-name: drift-0; }
-  .b1 { width: 300px; height: 300px; right: -100px; top: -20px; background: var(--blob-1); animation-name: drift-1; }
-  .b2 { width: 380px; height: 380px; right: -130px; top: 330px; background: var(--blob-2); animation-name: drift-2; }
-  .b3 { width: 320px; height: 320px; left: -110px; bottom: -70px; background: var(--blob-3); animation-name: drift-3; }
-  .b4 { width: 240px; height: 240px; left: 110px; top: 300px; background: var(--blob-4); animation-name: drift-4; opacity: .45; }
-  @keyframes drift-0 { 0% { transform: translate3d(0,0,0) scale(1); } 100% { transform: translate3d(60px,50px,0) scale(1.12); } }
-  @keyframes drift-1 { 0% { transform: translate3d(0,0,0) scale(1.05); } 100% { transform: translate3d(-55px,60px,0) scale(1); } }
-  @keyframes drift-2 { 0% { transform: translate3d(0,0,0) scale(1); } 100% { transform: translate3d(-70px,-50px,0) scale(1.15); } }
-  @keyframes drift-3 { 0% { transform: translate3d(0,0,0) scale(1.1); } 100% { transform: translate3d(55px,-55px,0) scale(1); } }
-  @keyframes drift-4 { 0% { transform: translate3d(0,0,0) scale(.95); } 100% { transform: translate3d(40px,-40px,0) scale(1.1); } }
-  .backdrop::before { /* vignette + top-left sheen */
-    content: ''; position: absolute; inset: 0;
-    background:
-      radial-gradient(120% 100% at 50% 40%, transparent 40%, var(--vignette) 100%),
-      linear-gradient(135deg, rgba(255,255,255,.06), transparent 55%);
-  }
+  /* ------------------------------------------------------- solid backdrop */
+  .backdrop { position: absolute; inset: 0; background: var(--base); }
+  .blob { display: none; }
 
-  /* ------------------------------------------------------------ glass surface */
+  /* ------------------------------------------------------------ solid surface */
   .glass {
     position: relative;
     border-radius: var(--radius-lg);
     background: var(--glass-tint);
-    backdrop-filter: blur(var(--blur)) saturate(180%);
-    -webkit-backdrop-filter: blur(var(--blur)) saturate(180%);
+    border: 1px solid var(--border-a);
     box-shadow: var(--shadow);
     isolation: isolate;
   }
-  .glass::before { /* bevelled gradient hairline */
-    content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1px;
-    background: linear-gradient(135deg, var(--border-a), var(--border-b) 55%, var(--border-a));
-    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-    -webkit-mask-composite: xor; mask-composite: exclude;
-    pointer-events: none;
-  }
-  .glass::after { /* slow specular sweep — the "liquid" part */
-    content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
-    background: linear-gradient(115deg, transparent 38%, rgba(255,255,255,.20) 50%, transparent 62%);
-    background-size: 260% 260%;
-    animation: sweep 22s linear infinite;
-    mix-blend-mode: screen;
-    opacity: .8;
-  }
-  @keyframes sweep { 0% { background-position: 130% 0; } 100% { background-position: -40% 0; } }
   .glass.lite { border-radius: var(--radius-md); background: var(--glass-lite); box-shadow: none; }
-  .glass.lite::after { animation-duration: 30s; opacity: .5; }
   .glass.pill { border-radius: 999px; }
   .glass.tight { border-radius: var(--radius-sm); }
 
   /* ----------------------------------------------------------------- app shell */
   .app { position: absolute; inset: 0; display: flex; flex-direction: column; padding: 18px 18px 14px; }
-  header.appbar { display: flex; align-items: flex-start; gap: 10px; padding-top: 22px; }
-  .title { font-size: 25px; font-weight: 650; line-height: 1.1; letter-spacing: -.4px; }
+  header.appbar { display: flex; align-items: center; gap: 8px; padding-top: 22px; flex: 0 0 auto; }
+  .title { font-size: 25px; font-weight: 650; line-height: 1.1; letter-spacing: -.4px; color: var(--text); }
   .badges { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
   .badge {
     font-size: 10.5px; letter-spacing: .5px; text-transform: uppercase; font-weight: 600;
     color: var(--accent); padding: 4px 10px; border-radius: 999px;
-    background: color-mix(in srgb, var(--accent) 16%, transparent);
-    border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
+    background: var(--accent-container);
+    border: 1px solid var(--border-a);
   }
   .icon-btn {
     width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center;
-    border: none; cursor: pointer; color: var(--text); font-size: 17px;
-    background: var(--glass-lite);
-    backdrop-filter: blur(16px) saturate(170%);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.25), 0 6px 16px rgba(0,0,0,.30);
+    border: 1px solid var(--border-a); cursor: pointer; color: var(--text); font-size: 17px;
+    background: var(--glass-tint);
+    box-shadow: var(--shadow-soft);
     transition: transform .18s ease;
+    flex: none;
   }
   .icon-btn:active { transform: scale(.94); }
 
-  .screens { position: relative; flex: 1; margin-top: 16px; overflow: hidden; }
+  .screens { position: relative; flex: 1 1 0%; min-height: 0; margin-top: 16px; overflow: hidden; }
   .screen {
     position: absolute; inset: 0; overflow-y: auto; overscroll-behavior: contain;
     display: flex; flex-direction: column; gap: 16px; padding: 2px 2px 20px;
@@ -188,34 +137,35 @@
   .panel { padding: 16px; }
   .panel-head { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
   .panel-icon {
-    width: 34px; height: 34px; border-radius: var(--radius-sm); display: grid; place-items: center;
-    font-size: 16px; background: var(--glass-lite); border: 1px solid var(--border-b); color: var(--accent);
+    width: 36px; height: 36px; border-radius: var(--radius-sm); display: grid; place-items: center;
+    font-size: 16px; background: var(--accent-container); border: 1px solid var(--border-a); color: var(--accent);
   }
-  .panel-title { font-size: 15.5px; font-weight: 600; }
+  .panel-title { font-size: 15.5px; font-weight: 600; color: var(--text); }
   .panel-sub { font-size: 12.5px; color: var(--text-2); margin-top: 2px; }
   .panel-head .spacer { flex: 1; }
 
   .chips { display: flex; flex-wrap: wrap; gap: 8px; }
   .chip {
-    border: none; cursor: pointer; font: inherit; font-size: 13.5px; font-weight: 600;
+    border: 1px solid var(--border-a); cursor: pointer; font: inherit; font-size: 13.5px; font-weight: 600;
     color: var(--text); padding: 9px 16px; border-radius: 999px;
-    background: var(--glass-lite); box-shadow: inset 0 1px 0 rgba(255,255,255,.20);
-    transition: transform .16s ease, background .2s ease, color .2s ease;
+    background: var(--glass-lite);
+    transition: transform .16s ease, background .2s ease, color .2s ease, border-color .2s ease;
   }
   .chip:active { transform: scale(.95); }
   .chip[aria-pressed="true"] {
-    background: linear-gradient(135deg, var(--accent), var(--accent-2));
-    color: var(--on-accent); box-shadow: var(--glow);
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--on-accent);
   }
 
   .field { margin-top: 14px; }
   .label { font-size: 11px; letter-spacing: .6px; text-transform: uppercase; color: var(--text-2); margin: 0 0 6px 4px; font-weight: 600; }
   .input-row {
     display: flex; align-items: center; gap: 10px; padding: 13px 16px; border-radius: var(--radius-md);
-    background: var(--glass-lite); box-shadow: inset 0 1px 0 rgba(255,255,255,.18);
-    border: 1px solid transparent;
+    background: var(--glass-lite);
+    border: 1px solid var(--border-a);
   }
-  .input-row.error { border-color: color-mix(in srgb, var(--danger-fg) 55%, transparent); background: var(--danger-bg); }
+  .input-row.error { border-color: var(--danger-fg); background: var(--danger-bg); }
   .input-row input {
     flex: 1; min-width: 0; border: none; outline: none; background: transparent;
     color: var(--text); font-size: 22px; font-weight: 650; letter-spacing: -.2px;
@@ -225,81 +175,81 @@
   .support { font-size: 12px; color: var(--text-3); margin: 6px 0 0 4px; }
   .support.error { color: var(--danger-fg); }
 
-  .segmented { position: relative; display: flex; padding: 4px; border-radius: 999px; background: var(--glass-lite); box-shadow: inset 0 1px 0 rgba(255,255,255,.18); }
+  .segmented { position: relative; display: flex; height: 48px; padding: 4px; border-radius: 999px; background: var(--glass-lite); border: 1px solid var(--border-a); }
   .segmented .pill {
     position: absolute; top: 4px; bottom: 4px; border-radius: 999px;
-    background: linear-gradient(135deg, var(--accent), var(--accent-2));
-    box-shadow: var(--glow); transition: transform .32s cubic-bezier(.22,1,.36,1), width .32s ease;
+    background: var(--accent);
+    transition: transform .32s cubic-bezier(.22,1,.36,1), width .32s ease;
   }
   .segmented button {
     position: relative; flex: 1; border: none; background: transparent; cursor: pointer; font: inherit;
-    font-size: 13.5px; font-weight: 600; color: var(--text-2); padding: 10px 6px; z-index: 1;
-    transition: color .24s ease;
+    font-size: 13.5px; font-weight: 600; color: var(--text-2); padding: 0 6px; z-index: 1;
+    transition: color .24s ease; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
   .segmented button[aria-selected="true"] { color: var(--on-accent); }
 
   .toggle-row { display: flex; align-items: center; gap: 12px; margin-top: 16px; }
   .toggle-text { flex: 1; }
-  .toggle-title { font-size: 15px; font-weight: 600; }
+  .toggle-title { font-size: 15px; font-weight: 600; color: var(--text); }
   .toggle-sub { font-size: 12.5px; color: var(--text-2); margin-top: 2px; }
   .switch {
-    position: relative; width: 54px; height: 32px; border-radius: 999px; border: none; cursor: pointer;
-    background: var(--glass-lite); box-shadow: inset 0 1px 0 rgba(255,255,255,.20);
-    transition: background .25s ease; flex: none;
+    position: relative; width: 54px; height: 32px; border-radius: 999px; border: 1px solid var(--border-a); cursor: pointer;
+    background: var(--glass-lite);
+    transition: background .25s ease, border-color .25s ease; flex: none;
   }
   .switch .thumb {
-    position: absolute; top: 4px; left: 4px; width: 24px; height: 24px; border-radius: 50%;
-    background: linear-gradient(180deg, #fff, rgba(255,255,255,.82));
-    box-shadow: 0 4px 10px rgba(0,0,0,.35); transition: transform .3s cubic-bezier(.22,1,.36,1);
+    position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%;
+    background: #FFFFFF;
+    box-shadow: 0 2px 4px rgba(0,0,0,.25); transition: transform .3s cubic-bezier(.22,1,.36,1);
   }
-  .switch[aria-checked="true"] { background: linear-gradient(135deg, var(--accent), var(--accent-2)); }
+  .switch[aria-checked="true"] { background: var(--accent); border-color: var(--accent); }
   .switch[aria-checked="true"] .thumb { transform: translateX(22px); }
 
-  .stepper { display: flex; align-items: center; gap: 4px; border-radius: var(--radius-md); background: var(--glass-lite); box-shadow: inset 0 1px 0 rgba(255,255,255,.18); }
+  .stepper { display: flex; align-items: center; gap: 4px; border-radius: var(--radius-md); background: var(--glass-lite); border: 1px solid var(--border-a); }
   .stepper button {
-    width: 44px; height: 46px; border: none; background: transparent; cursor: pointer; color: var(--text);
-    display: grid; place-items: center;
+    width: 44px; height: 46px; border: none; background: transparent; cursor: pointer; color: var(--accent);
+    display: grid; place-items: center; font-size: 18px; font-weight: 700;
   }
   .stepper button span {
     width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font-size: 17px;
-    background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 26%, transparent), color-mix(in srgb, var(--accent-2) 26%, transparent));
+    background: var(--accent-container); color: var(--accent);
   }
   .stepper button:disabled { opacity: .35; }
-  .stepper .value { width: 60px; text-align: center; font-size: 19px; font-weight: 650; font-variant-numeric: tabular-nums; }
+  .stepper .value { width: 60px; text-align: center; font-size: 19px; font-weight: 650; font-variant-numeric: tabular-nums; color: var(--text); }
 
   .btn {
-    width: 100%; border: none; cursor: pointer; font: inherit; font-size: 14.5px; font-weight: 650;
-    padding: 15px 20px; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; gap: 9px;
-    transition: transform .16s ease, box-shadow .2s ease;
+    width: 100%; border: 1px solid transparent; cursor: pointer; font: inherit; font-size: 14.5px; font-weight: 650;
+    padding: 14px 20px; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; gap: 9px;
+    transition: transform .16s ease;
   }
   .btn:active { transform: scale(.975); }
-  .btn.primary { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: var(--on-accent); box-shadow: var(--glow); }
-  .btn.ghost { background: var(--glass-lite); color: var(--text); box-shadow: inset 0 1px 0 rgba(255,255,255,.20); }
+  .btn.primary { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+  .btn.ghost { background: var(--glass-lite); color: var(--text); border-color: var(--border-a); }
   .btn.small { width: auto; padding: 10px 16px; font-size: 13px; }
   .row { display: flex; gap: 10px; align-items: center; }
   .row .btn { width: auto; }
   .row .btn.grow { flex: 1; }
 
-  .stat { padding: 13px 16px; border-radius: var(--radius-md); background: var(--glass-lite); box-shadow: inset 0 1px 0 rgba(255,255,255,.16); }
+  .stat { padding: 13px 16px; border-radius: var(--radius-md); background: var(--glass-lite); border: 1px solid var(--border-a); }
   .stat.highlight {
-    background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 22%, transparent), color-mix(in srgb, var(--accent-2) 16%, transparent));
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.28), var(--glow);
+    background: var(--accent-container);
+    border: 1px solid var(--accent);
   }
   .stat .label { margin: 0 0 2px 0; }
-  .stat .value { font-size: 27px; font-weight: 650; letter-spacing: -.6px; font-variant-numeric: tabular-nums; display: flex; align-items: baseline; gap: 6px; }
+  .stat .value { font-size: 27px; font-weight: 650; letter-spacing: -.6px; font-variant-numeric: tabular-nums; display: flex; align-items: baseline; gap: 6px; color: var(--text); }
   .stat.highlight .value { color: var(--accent); }
   .stat .unit { font-size: 14px; font-weight: 600; color: var(--text-2); }
-  .stat .caption { font-size: 12px; color: var(--text-3); margin-top: 2px; }
+  .stat .caption { font-size: 12px; color: var(--text-2); margin-top: 2px; }
   .stats-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
   .stats-row .stat .value { font-size: 20px; }
 
   .kv { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 0; }
   .kv .k { font-size: 13px; color: var(--text-2); }
-  .kv .v { font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; text-align: right; }
+  .kv .v { font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; text-align: right; color: var(--text); }
   .kv.emph .v { font-size: 19px; color: var(--accent); }
-  .divider { height: 1px; margin: 10px 0; background: linear-gradient(90deg, transparent, var(--border-a), transparent); opacity: .6; }
+  .divider { height: 1px; margin: 10px 0; background: var(--border-a); }
 
-  .warnings { border-radius: var(--radius-md); background: var(--warning-bg); padding: 13px 14px; display: flex; flex-direction: column; gap: 8px; }
+  .warnings { border-radius: var(--radius-md); background: var(--warning-bg); border: 1px solid var(--warning-fg); padding: 13px 14px; display: flex; flex-direction: column; gap: 8px; }
   .warning { display: flex; gap: 8px; font-size: 12.5px; line-height: 1.45; color: var(--warning-fg); }
   .warning b { font-weight: 650; }
 
@@ -310,29 +260,38 @@
   .list-item { display: flex; align-items: center; gap: 12px; padding: 12px 0; cursor: pointer; }
   .list-item .ico {
     width: 34px; height: 34px; border-radius: var(--radius-sm); display: grid; place-items: center; flex: none;
-    background: var(--glass-lite); border: 1px solid var(--border-b); color: var(--accent); font-size: 15px;
+    background: var(--accent-container); border: 1px solid var(--border-a); color: var(--accent); font-size: 15px;
   }
   .list-item .txt { flex: 1; }
-  .list-item .t { font-size: 15px; font-weight: 600; }
+  .list-item .t { font-size: 15px; font-weight: 600; color: var(--text); }
   .list-item .s { font-size: 12.5px; color: var(--text-2); margin-top: 2px; }
   .list-item .chev { color: var(--text-3); }
   .list { padding: 6px 0 0; }
 
   /* ------------------------------------------------------------------ tab bar */
-  .tabbar { position: relative; display: flex; padding: 6px; margin-top: 10px; border-radius: var(--radius-xl); }
+  .tabbar {
+    position: relative;
+    display: flex;
+    height: 68px;
+    min-height: 68px;
+    max-height: 68px;
+    flex: 0 0 68px;
+    padding: 6px;
+    margin-top: 10px;
+    border-radius: var(--radius-xl);
+  }
   .tabbar .pill {
-    position: absolute; top: 6px; bottom: 6px; border-radius: var(--radius-lg);
-    background: linear-gradient(135deg, var(--accent), var(--accent-2));
-    box-shadow: 0 10px 22px color-mix(in srgb, var(--accent) 55%, transparent);
+    position: absolute; top: 6px; bottom: 6px; border-radius: var(--radius-md);
+    background: var(--accent);
     transition: transform .34s cubic-bezier(.22,1,.36,1), width .34s ease;
   }
   .tabbar button {
-    position: relative; z-index: 1; flex: 1; border: none; background: transparent; cursor: pointer; font: inherit;
-    display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 11px 4px; color: var(--text-2);
+    position: relative; z-index: 1; flex: 1; height: 100%; border: none; background: transparent; cursor: pointer; font: inherit;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; padding: 0 4px; color: var(--text-2);
     transition: color .24s ease;
   }
-  .tabbar button .ic { font-size: 18px; }
-  .tabbar button .lb { font-size: 11px; letter-spacing: .6px; font-weight: 650; text-transform: uppercase; }
+  .tabbar button .ic { font-size: 18px; line-height: 1; }
+  .tabbar button .lb { font-size: 11px; letter-spacing: .6px; font-weight: 650; text-transform: uppercase; line-height: 1.2; white-space: nowrap; }
   .tabbar button[aria-selected="true"] { color: var(--on-accent); }
 
   /* ----------------------------------------------------------------- dialogs */
@@ -365,10 +324,10 @@
 </head>
 <body>
   <div class="stage-head">
-    <h1>Disk Partition Calculator — Liquid Glass design preview</h1>
+    <h1>Disk Partition Calculator — Solid Theme design preview</h1>
     <p>
-      Static HTML/CSS mock of the three screens of the Kotlin app, so the visual language can be
-      reviewed without building an APK. It uses the same constants and formulas as
+      Static HTML/CSS mock of the three screens of the Kotlin app with Solid Dark Mode &amp; Light Mode colours
+      and fixed-height Navigation Tab Bar. It uses the same constants and formulas as
       <code>PartitionCalculator</code> / <code>SplitPartitionCalculator</code>.
     </p>
   </div>
@@ -388,6 +347,7 @@
             <span class="badge">Windows Setup ready</span>
           </div>
         </div>
+        <button class="icon-btn" id="theme-toggle-btn" title="Toggle Dark / Light Mode" onclick="toggleThemeMode()" style="color:var(--accent)">☀</button>
         <button class="icon-btn" title="History" onclick="openHistory()">🕘</button>
       </header>
 
@@ -568,7 +528,7 @@
           <div class="glass panel">
             <div class="panel-head">
               <div class="panel-icon">🌙</div>
-              <div><div class="panel-title">Appearance</div><div class="panel-sub">Liquid glass, tuned for your eyes</div></div>
+              <div><div class="panel-title">Appearance</div><div class="panel-sub">Solid colour theme for Dark Mode and Light Mode</div></div>
             </div>
             <div class="segmented" id="theme-segmented" data-value="DARK">
               <div class="pill"></div>
@@ -1136,9 +1096,21 @@
         ? 'Windows 11 uses a bigger recovery partition ≈ 826 MB'
         : 'Type the overhead of your own Setup layout';
   });
-  initSegmented($('#theme-segmented'), value => {
-    document.body.classList.toggle('light', value === 'LIGHT');
+  const moveThemePill = initSegmented($('#theme-segmented'), value => {
+    const isLight = value === 'LIGHT';
+    document.body.classList.toggle('light', isLight);
+    $('#theme-toggle-btn').textContent = isLight ? '🌙' : '☀';
   });
+  function toggleThemeMode() {
+    const isLight = !document.body.classList.contains('light');
+    document.body.classList.toggle('light', isLight);
+    $('#theme-toggle-btn').textContent = isLight ? '🌙' : '☀';
+    const seg = $('#theme-segmented');
+    const targetVal = isLight ? 'LIGHT' : 'DARK';
+    seg.dataset.value = targetVal;
+    seg.querySelectorAll('button').forEach(b => b.setAttribute('aria-selected', String(b.dataset.value === targetVal)));
+    moveThemePill();
+  }
   initSegmented($('#default-fs-segmented'), value => {
     state.fs = value;
     const seg = $('#fs-segmented');

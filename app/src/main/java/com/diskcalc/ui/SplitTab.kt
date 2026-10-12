@@ -24,7 +24,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
@@ -235,7 +234,7 @@ fun SplitTab(
     }
 }
 
-/** Proportional bar so the split is visible at a glance, including the odd last slice. */
+/** Proportional solid bar so the split is visible at a glance, including the odd last slice. */
 @Composable
 private fun SplitBar(result: SplitResult) {
     val palette = LocalLiquidPalette.current
@@ -253,13 +252,7 @@ private fun SplitBar(result: SplitResult) {
                     .weight(fraction.coerceAtLeast(0.0001f))
                     .fillMaxHeight()
                     .background(
-                        Brush.horizontalGradient(
-                            if (index % 2 == 0) {
-                                listOf(palette.accent, palette.accent)
-                            } else {
-                                listOf(palette.accentSecondary, palette.accentSecondary)
-                            }
-                        )
+                        color = if (index % 2 == 0) palette.accent else palette.accentSecondary
                     )
             )
         }

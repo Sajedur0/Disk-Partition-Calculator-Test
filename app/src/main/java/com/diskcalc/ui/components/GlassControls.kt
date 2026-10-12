@@ -13,6 +13,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
@@ -33,15 +35,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
@@ -53,13 +53,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.diskcalc.ui.theme.LocalGlassTokens
 import com.diskcalc.ui.theme.LocalLiquidPalette
 import kotlin.math.roundToInt
 
-/** Press feedback shared by every tappable glass control: a gentle squeeze. */
+/** Press feedback shared by every tappable control: a gentle squeeze. */
 @Composable
 fun Modifier.clickableBounce(
     enabled: Boolean = true,
@@ -68,7 +69,7 @@ fun Modifier.clickableBounce(
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
     val scale by animateFloatAsState(
-        targetValue = if (pressed && enabled) 0.955f else 1f,
+        targetValue = if (pressed && enabled) 0.965f else 1f,
         animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
         label = "pressScale"
     )
@@ -87,7 +88,7 @@ fun Modifier.clickableBounce(
 }
 
 /**
- * Primary actions get the accent gradient with a coloured glow; secondary actions stay glassy.
+ * Primary actions get the solid accent colour; secondary actions use the solid control surface.
  * `loading` swaps the label for a spinner while the calculation runs.
  */
 @Composable
@@ -111,34 +112,31 @@ fun GlassButton(
             .shadow(
                 elevation = tokens.elevationSmall,
                 shape = shape,
-                clip = false,
-                ambientColor = palette.accent.copy(alpha = 0.55f),
-                spotColor = palette.accentSecondary.copy(alpha = 0.55f)
+                clip = false
             )
-            .background(
-                brush = Brush.linearGradient(
-                    listOf(palette.accent, palette.accentSecondary)
-                ),
-                shape = shape
-            )
+            .clip(shape)
+            .background(color = palette.accent, shape = shape)
     } else {
-        base.glassLite(shape = shape, tint = palette.glassTint)
+        base.glassLite(shape = shape, tint = palette.controlSurface)
     }
 
     Row(
         modifier = container
             .clickableBounce(enabled = enabled && !loading, onClick = onClick)
-            .padding(horizontal = tokens.spaceLg, vertical = 15.dp),
+            .padding(horizontal = tokens.spaceLg, vertical = 14.dp),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
     ) {
         val contentColor = if (primary) palette.onAccent else palette.contentPrimary
         when {
-            loading -> CircularProgressIndicator(
-                modifier = Modifier.size(18.dp),
-                strokeWidth = 2.dp,
-                color = contentColor
-            )
+            loading -> {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(18.dp),
+                    strokeWidth = 2.dp,
+                    color = contentColor
+                )
+                Spacer(Modifier.width(tokens.spaceSm))
+            }
             icon != null -> {
                 Icon(icon, contentDescription = null, tint = contentColor, modifier = Modifier.size(19.dp))
                 Spacer(Modifier.width(tokens.spaceSm))
@@ -147,12 +145,14 @@ fun GlassButton(
         Text(
             text = text,
             style = MaterialTheme.typography.labelLarge,
-            color = contentColor
+            color = contentColor,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
         )
     }
 }
 
-/** Small glass pill, used for the GB presets and for quick actions. */
+/** Solid pill chip, used for the GB presets and quick actions. */
 @Composable
 fun GlassChip(
     label: String,
@@ -162,16 +162,19 @@ fun GlassChip(
     enabled: Boolean = true
 ) {
     val palette = LocalLiquidPalette.current
-    val tokens = LocalGlassTokens.current
     val shape = RoundedCornerShape(percent = 50)
     val animatedTint by animateColorAsState(
-        targetValue = if (selected) palette.accent.copy(alpha = 0.85f) else palette.glassTint,
+        targetValue = if (selected) palette.accent else palette.controlSurface,
         label = "chipTint"
+    )
+    val borderColor by animateColorAsState(
+        targetValue = if (selected) palette.accent else palette.glassBorderStart,
+        label = "chipBorder"
     )
 
     Box(
         modifier = modifier
-            .glassLite(shape = shape, tint = animatedTint)
+            .glassLite(shape = shape, tint = animatedTint, borderColor = borderColor)
             .clickableBounce(enabled = enabled, onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 9.dp),
         contentAlignment = Alignment.Center
@@ -179,14 +182,15 @@ fun GlassChip(
         Text(
             text = label,
             style = MaterialTheme.typography.labelLarge,
-            color = if (selected) palette.onAccent else palette.contentPrimary
+            color = if (selected) palette.onAccent else palette.contentPrimary,
+            maxLines = 1
         )
     }
 }
 
 /**
  * Sliding-pill segmented control (filesystem picker, theme picker).
- * The indicator is positioned from the measured container width, so it animates smoothly.
+ * Uses a fixed height and width-only measurement so it never triggers a vertical growth loop.
  */
 @Composable
 fun <T> GlassSegmentedControl(
@@ -200,55 +204,57 @@ fun <T> GlassSegmentedControl(
     if (options.isEmpty()) return
     val palette = LocalLiquidPalette.current
     val density = LocalDensity.current
-    var containerSize by remember { mutableStateOf(androidx.compose.ui.unit.IntSize.Zero) }
+    var innerWidthPx by remember { mutableIntStateOf(0) }
     val index = options.indexOf(selected).coerceAtLeast(0)
-    val paddingPx = with(density) { 4.dp.toPx() }
-    val segmentWidthPx = ((containerSize.width - paddingPx * 2) / options.size).coerceAtLeast(0f)
+    val segmentWidthPx = (innerWidthPx.toFloat() / options.size).coerceAtLeast(0f)
 
-    val targetOffset = paddingPx + segmentWidthPx * index
-    val offsetX by animateFloatAsState(targetOffset, spring(stiffness = Spring.StiffnessMediumLow), label = "segmentOffset")
+    val targetOffset = segmentWidthPx * index
+    val offsetX by animateFloatAsState(
+        targetValue = targetOffset,
+        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+        label = "segmentOffset"
+    )
 
     val shape = RoundedCornerShape(percent = 50)
 
     Box(
         modifier = modifier
-            .glassLite(shape = shape, tint = palette.glassTint)
-            .onSizeChanged { containerSize = it }
+            .height(48.dp)
+            .glassLite(shape = shape, tint = palette.controlSurface)
             .padding(4.dp)
+            .onSizeChanged { size ->
+                if (innerWidthPx != size.width) {
+                    innerWidthPx = size.width
+                }
+            }
     ) {
-        if (containerSize.width > 0) {
+        if (innerWidthPx > 0) {
             Box(
                 Modifier
-                    .offset { IntOffset(offsetX.roundToInt() - paddingPx.roundToInt(), 0) }
-                    .size(
-                        width = with(density) { segmentWidthPx.toDp() },
-                        height = with(density) { (containerSize.height - paddingPx * 2).toDp() }
-                    )
-                    .shadow(
-                        elevation = 6.dp,
-                        shape = shape,
-                        clip = false,
-                        ambientColor = palette.accent.copy(alpha = 0.5f),
-                        spotColor = palette.accent.copy(alpha = 0.5f)
-                    )
-                    .background(Brush.linearGradient(listOf(palette.accent, palette.accentSecondary)), shape)
+                    .offset { IntOffset(offsetX.roundToInt(), 0) }
+                    .width(with(density) { segmentWidthPx.toDp() })
+                    .fillMaxHeight()
+                    .background(color = palette.accent, shape = shape)
             )
         }
-        Row(Modifier.fillMaxWidth()) {
+        Row(Modifier.fillMaxSize()) {
             options.forEach { option ->
                 val isSelected = option == selected
                 Box(
                     modifier = Modifier
                         .weight(1f)
+                        .fillMaxHeight()
                         .clickableBounce(enabled = enabled) { onSelect(option) }
-                        .padding(vertical = 10.dp),
+                        .padding(horizontal = 6.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = label(option),
                         style = MaterialTheme.typography.labelLarge,
                         color = if (isSelected) palette.onAccent else palette.contentSecondary,
-                        textAlign = TextAlign.Center
+                        textAlign = TextAlign.Center,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
@@ -256,7 +262,7 @@ fun <T> GlassSegmentedControl(
     }
 }
 
-/** Hand-rolled switch so the thumb can carry the accent gradient. */
+/** Solid switch with a clean sliding thumb. */
 @Composable
 fun GlassSwitch(
     checked: Boolean,
@@ -278,22 +284,18 @@ fun GlassSwitch(
         label = "thumbOffset"
     )
     val trackTint by animateColorAsState(
-        targetValue = if (checked) Color.Transparent else palette.glassTint,
+        targetValue = if (checked) palette.accent else palette.controlSurface,
         label = "trackTint"
+    )
+    val borderColor by animateColorAsState(
+        targetValue = if (checked) palette.accent else palette.glassBorderStart,
+        label = "switchBorder"
     )
 
     Box(
         modifier = modifier
             .size(width = trackWidth, height = trackHeight)
-            .glassLite(shape = shape, tint = trackTint)
-            .drawBehind {
-                if (checked) {
-                    drawRect(
-                        brush = Brush.linearGradient(listOf(palette.accent, palette.accentSecondary)),
-                        size = size
-                    )
-                }
-            }
+            .glassLite(shape = shape, tint = trackTint, borderColor = borderColor)
             .clickableBounce(enabled = enabled) { onCheckedChange(!checked) }
             .padding(4.dp),
         contentAlignment = Alignment.CenterStart
@@ -302,13 +304,8 @@ fun GlassSwitch(
             Modifier
                 .offset { IntOffset(thumbOffset.roundToInt(), 0) }
                 .size(thumbSize)
-                .shadow(4.dp, CircleShape, clip = false)
-                .background(
-                    brush = Brush.verticalGradient(
-                        listOf(Color.White, Color.White.copy(alpha = 0.82f))
-                    ),
-                    shape = CircleShape
-                )
+                .shadow(2.dp, CircleShape, clip = false)
+                .background(color = Color.White, shape = CircleShape)
         )
     }
 }
@@ -327,7 +324,7 @@ fun GlassStepper(
     val shape = RoundedCornerShape(tokens.cornerMedium)
 
     Row(
-        modifier = modifier.glassLite(shape = shape),
+        modifier = modifier.glassLite(shape = shape, tint = palette.controlSurface),
         verticalAlignment = Alignment.CenterVertically
     ) {
         StepperButton(
@@ -372,12 +369,7 @@ private fun StepperButton(
             Modifier
                 .size(30.dp)
                 .background(
-                    brush = Brush.linearGradient(
-                        listOf(
-                            palette.accent.copy(alpha = if (enabled) 0.24f else 0.10f),
-                            palette.accentSecondary.copy(alpha = if (enabled) 0.24f else 0.10f)
-                        )
-                    ),
+                    color = if (enabled) palette.accentContainer else palette.glassTint,
                     shape = CircleShape
                 ),
             contentAlignment = Alignment.Center
@@ -385,14 +377,14 @@ private fun StepperButton(
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = if (enabled) palette.contentPrimary else palette.contentTertiary,
+                tint = if (enabled) palette.accent else palette.contentTertiary,
                 modifier = Modifier.size(17.dp)
             )
         }
     }
 }
 
-/** Glass text field with an optional unit suffix (MB / GB). */
+/** Solid text field with an optional unit suffix (MB / GB). */
 @Composable
 fun GlassTextField(
     value: String,
@@ -431,10 +423,8 @@ fun GlassTextField(
                 .fillMaxWidth()
                 .glassLite(
                     shape = shape,
-                    tint = when {
-                        isError -> palette.dangerContainer
-                        else -> palette.glassTint
-                    }
+                    tint = if (isError) palette.dangerContainer else palette.controlSurface,
+                    borderColor = if (isError) palette.dangerContent else palette.glassBorderStart
                 )
                 .padding(horizontal = tokens.spaceMd, vertical = 14.dp),
             verticalAlignment = Alignment.CenterVertically
@@ -490,7 +480,7 @@ fun GlassTextField(
     }
 }
 
-/** Label + description + glass switch row, reused by the Setup simulation cards. */
+/** Label + description + switch row, reused by the Setup simulation cards. */
 @Composable
 fun GlassToggleRow(
     title: String,
@@ -521,7 +511,7 @@ fun GlassToggleRow(
             Spacer(Modifier.width(tokens.spaceSm))
             GlassSwitch(checked = checked, onCheckedChange = onCheckedChange)
         }
-        if (content != null) {
+        if (checked && content != null) {
             Spacer(Modifier.height(tokens.spaceMd))
             content()
         }

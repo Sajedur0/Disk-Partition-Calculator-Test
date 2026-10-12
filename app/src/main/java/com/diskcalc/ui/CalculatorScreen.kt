@@ -1,5 +1,6 @@
 package com.diskcalc.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,12 +12,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Calculate
+import androidx.compose.material.icons.rounded.DarkMode
 import androidx.compose.material.icons.rounded.Dashboard
 import androidx.compose.material.icons.rounded.History
+import androidx.compose.material.icons.rounded.LightMode
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
@@ -34,6 +38,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.diskcalc.domain.ThemeMode
 import com.diskcalc.ui.components.GlassBadge
 import com.diskcalc.ui.components.GlassIconButton
 import com.diskcalc.ui.components.GlassTabBar
@@ -46,8 +51,8 @@ import com.diskcalc.ui.theme.LocalLiquidPalette
 import kotlinx.coroutines.launch
 
 /**
- * Host of the three tabs. Owns the theme, the liquid backdrop (everything glassy samples it) and
- * the dialogs. All business state lives in [CalculatorViewModel].
+ * Host of the three tabs. Owns the theme, solid backdrop and dialogs.
+ * All business state lives in [CalculatorViewModel].
  */
 @Composable
 fun CalculatorScreen(
@@ -77,7 +82,11 @@ fun CalculatorScreen(
             val palette = LocalLiquidPalette.current
             val tokens = LocalGlassTokens.current
 
-            Box(Modifier.fillMaxSize()) {
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .background(palette.backdropBase)
+            ) {
                 Column(
                     Modifier
                         .fillMaxSize()
@@ -85,12 +94,22 @@ fun CalculatorScreen(
                         .padding(horizontal = tokens.screenPadding)
                 ) {
                     AppHeader(
+                        isDark = palette.isDark,
+                        onToggleTheme = {
+                            viewModel.onThemeChange(
+                                if (palette.isDark) ThemeMode.LIGHT else ThemeMode.DARK
+                            )
+                        },
                         onHistoryClick = { showHistory = true },
                         historyCount = history.size
                     )
                     Spacer(Modifier.height(tokens.spaceMd))
 
-                    Box(Modifier.weight(1f)) {
+                    Box(
+                        Modifier
+                            .weight(1f)
+                            .fillMaxWidth()
+                    ) {
                         when (selectedTabIndex) {
                             0 -> CalcTab(
                                 state = calc,
@@ -139,11 +158,12 @@ fun CalculatorScreen(
                     hostState = snackbarHostState,
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
-                        .padding(bottom = 104.dp, start = 24.dp, end = 24.dp)
+                        .windowInsetsPadding(WindowInsets.safeDrawing)
+                        .padding(bottom = 92.dp, start = 24.dp, end = 24.dp)
                 ) { data ->
                     LiquidGlassSurface(
                         shape = RoundedCornerShape(percent = 50),
-                        blur = tokens.blurSoft,
+                        tint = palette.glassTint,
                         elevation = tokens.elevationSmall
                     ) {
                         Text(
@@ -194,6 +214,8 @@ fun CalculatorScreen(
 
 @Composable
 private fun AppHeader(
+    isDark: Boolean,
+    onToggleTheme: () -> Unit,
     onHistoryClick: () -> Unit,
     historyCount: Int
 ) {
@@ -218,6 +240,13 @@ private fun AppHeader(
                 GlassBadge(text = "Windows Setup ready")
             }
         }
+        GlassIconButton(
+            icon = if (isDark) Icons.Rounded.LightMode else Icons.Rounded.DarkMode,
+            contentDescription = "Toggle theme",
+            onClick = onToggleTheme,
+            tint = palette.accent
+        )
+        Spacer(Modifier.width(8.dp))
         GlassIconButton(
             icon = Icons.Rounded.History,
             contentDescription = "History",
