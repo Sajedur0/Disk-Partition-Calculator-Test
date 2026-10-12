@@ -4,8 +4,8 @@ import com.diskcalc.domain.PartitionCalculationResult
 import com.diskcalc.domain.SplitResult
 
 /**
- * Plain-text renderings of the results, used by the Copy buttons (and covered by unit tests).
- * Kept free of Compose so they can be verified on the JVM.
+ * Plain-text renderings of the results, used by the Copy buttons.
+ * Kept free of Compose so they can be formatted cleanly.
  */
 object ResultText {
 

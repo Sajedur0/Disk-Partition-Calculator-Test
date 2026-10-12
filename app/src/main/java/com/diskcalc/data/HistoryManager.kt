@@ -8,7 +8,7 @@ import com.diskcalc.domain.ConversionHistory
 import kotlinx.coroutines.flow.first
 import kotlinx.serialization.json.Json
 
-/** Storage boundary so the manager can be unit-tested without Android/DataStore. */
+/** Storage boundary for conversion history persistence. */
 interface HistoryStore {
     suspend fun load(): List<ConversionHistory>
     suspend fun save(list: List<ConversionHistory>)
@@ -70,7 +70,7 @@ class DataStoreHistoryStore(
     }
 }
 
-/** In-memory store used by unit tests and previews. */
+/** In-memory store for previews. */
 class InMemoryHistoryStore(initial: List<ConversionHistory> = emptyList()) : HistoryStore {
     private var entries: List<ConversionHistory> = initial
     override suspend fun load(): List<ConversionHistory> = entries

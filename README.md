@@ -5,18 +5,18 @@ This app does that conversion for you — for a single partition (*Calc*) and fo
 disk into N equal partitions (*Split*) — and it tells you exactly which number to type.
 
 The implementation follows [`APP_LOGIC.md`](APP_LOGIC.md) (the Kotlin port of the original Dart v1.1.3
-logic, including the fixed Split tab) and ships with a **Liquid Glass** user interface built on
-Jetpack Compose.
+logic, including the fixed Split tab) and ships with a clean **Solid Dark Mode & Light Mode** user
+interface built on Jetpack Compose.
 
 ```
 ┌────────────────────────────────────────────┐
 │  Disk Partition                            │
-│  Calculator      [1 GB = 1024 MB]     (⏱)  │
+│  Calculator      [1 GB = 1024 MB]   (☀)(⏱) │
 │                                            │
-│  ╭────────────── frosted glass ──────────╮ │
-│  │ Required input                         │ │
-│  │ 102 970 MB   ≈ 100 GB visible          │ │
-│  ╰────────────────────────────────────────╯ │
+│  ╭────────────── solid surface ──────────╮ │
+│  │ Required input                        │ │
+│  │ 102 970 MB   ≈ 100 GB visible         │ │
+│  ╰───────────────────────────────────────╯ │
 │                                            │
 │  [ Calc ]  [ Split ]  [ Settings ]         │
 └────────────────────────────────────────────┘
@@ -26,10 +26,10 @@ Jetpack Compose.
 
 | Tab | What it does |
 |---|---|
-| **Calc** | Preset chips (20/50/100/250/500 GB, 1 TB), decimal keyboard, NTFS/FAT32 picker, Windows Setup simulation (Win 10 / Win 11 / custom MB), Calculate with spinner, glass result dialog with **Copy**. |
+| **Calc** | Preset chips (20/50/100/250/500 GB, 1 TB), decimal keyboard, NTFS/FAT32 picker, Windows Setup simulation (Win 10 / Win 11 / custom MB), Calculate with spinner, result dialog with **Copy**. |
 | **Split** | Integer-only total MB field, 1–8 partition stepper, proportional bar preview, per-partition table (`type X MB · visible ≈ Y MB`), sum verification, warnings, Copy. |
 | **Settings** | Theme (System/Light/Dark), default filesystem, default Setup simulation + profile, history size / clear / view, privacy policy, rate, share, quit, and a short "how the numbers work" explainer. |
-| **History** | Last 100 conversions (UUID ids, newest first) stored as JSON in DataStore, viewable in a glass bottom sheet, individually deletable. |
+| **History** | Last 100 conversions (UUID ids, newest first) stored as JSON in DataStore, viewable in a bottom sheet, individually deletable. |
 
 ### The maths (exactly as specified)
 
@@ -43,29 +43,16 @@ base              = usableMb / n            // floor, integers only
 remainder         = usableMb − base × n     // rides along on the LAST partition
 ```
 
-Worked examples verified by the test suite: `1 GB → 1028 MB`, `2.5 GB → 2564 MB`,
+Worked examples: `1 GB → 1028 MB`, `2.5 GB → 2564 MB`,
 `10 GB → 10244 MB`, `10 GB + Setup → 10810 MB`, `100 GB + Setup → 102970 MB`,
 `476923 MB ÷ 4 → 119230/119230/119230/119233` (sum 476923),
 `476923 MB ÷ 4 + Setup → 119089/119089/119089/119090`.
 
-## The Liquid Glass UI
-
-Not a static "semi-transparent box" theme — the glass actually frosts what is behind it:
-
-1. **`LiquidBackdropHost`** paints a procedural animated backdrop (five drifting colour blobs,
-   vignette, top-left sheen) on a slow ~10-minute loop. The animation is read **inside draw lambdas
-   only**, so it never triggers recomposition.
-2. **`LiquidGlassSurface`** has no `backdrop-filter` available in Compose, so it re-paints the same
-   backdrop clipped to its own bubble, translated to its position and pushed through
-   `Modifier.blur` — a faithful frosted-glass sample. On API < 31 (no `RenderEffect`) it degrades
-   gracefully to clean translucent glass instead of breaking.
-3. On top of the frost sit a slow **specular sweep**, a bevelled gradient hairline border and an
-   ambient shadow tinted with the accent colour.
-4. Small, numerous controls (chips, fields, switches) use the cheap `Modifier.glassLite`
-   (translucency + border + sheen, no per-control backdrop sampling) so long lists stay at 60 fps.
+## Solid Dark Mode & Light Mode UI
 
 Everything is driven by two token objects in `ui/theme/GlassTokens.kt` (`LiquidPalette` +
-`GlassTokens`), so light/dark are one object apart and no Material dynamic colour can break the look.
+`GlassTokens`), providing 100% opaque solid palettes for both **Dark Mode** and **Light Mode** with
+a fixed-height navigation tab bar (`ui/components/GlassTabBar.kt`).
 
 **Preview without building:** open [`design-preview.html`](design-preview.html) in any browser — it is
 a static HTML/CSS mock of the three screens, useful for reviewing the visual language.
@@ -97,8 +84,6 @@ app/src/main/java/com/diskcalc/
 │   ├── components/                   # LiquidGlass, GlassControls, GlassDisplay, GlassTabBar
 │   └── theme/                        # GlassTokens, Theme, LiquidBackdrop
 └── update/UpdateService.kt           # Play In-App Updates (flexible), crash-proof wrapper
-
-app/src/test/java/com/diskcalc/       # 6 JVM test classes, no Android dependencies
 ```
 
 ## Build and run
@@ -116,9 +101,6 @@ echo "sdk.dir=$HOME/Android/Sdk" > local.properties
 
 # 3. install on a connected device
 ./gradlew installDebug
-
-# 4. unit tests (domain, data, copy-text)
-./gradlew testDebugUnitTest
 ```
 
 | Component | Version |
@@ -134,20 +116,6 @@ echo "sdk.dir=$HOME/Android/Sdk" > local.properties
 Release builds enable R8 + resource shrinking; the kotlinx.serialization keep rules for the history
 DTOs are already in `app/proguard-rules.pro`. **Before publishing, add your own signing config** —
 see the TODO in `app/build.gradle.kts`.
-
-## Testing
-
-`./gradlew testDebugUnitTest` runs six classes that mirror `APP_LOGIC.md` §9 and add coverage for everything
-the spec lists in its checklist:
-
-* `PartitionCalculatorTest` — every row of the §4 example table, FAT32 32 GB edge (32768 valid, 32772 not),
-  NaN/Infinity/zero/negative rejection, warning text.
-* `SplitPartitionCalculatorTest` — remainder on the last partition, sum never exceeds the disk for n = 1..8,
-  Setup overhead subtraction, MBR warning from 4 partitions, range and "too small" errors.
-* `InputValidatorTest`, `CalcPresetsTest`, `AppSettingsTest`, `HistoryTest`, `ResultTextTest`.
-
-The step-by-step verification report (what was checked, how, and what could not be checked without an
-Android SDK) is in [`docs/VERIFICATION.md`](docs/VERIFICATION.md).
 
 ## Known limitations (from APP_LOGIC.md §12)
 

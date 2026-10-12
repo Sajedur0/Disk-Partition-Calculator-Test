@@ -26,7 +26,6 @@ android {
         versionCode = 1
         versionName = "1.0.0"
 
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables { useSupportLibrary = true }
         resourceConfigurations += listOf("en")
     }
@@ -101,7 +100,4 @@ dependencies {
     implementation(libs.play.app.update.ktx)
 
     debugImplementation(libs.androidx.compose.ui.tooling)
-
-    testImplementation(libs.junit)
-    testImplementation(libs.kotlinx.coroutines.test)
 }
