@@ -27,8 +27,8 @@ interface built on Jetpack Compose.
 | Tab | What it does |
 |---|---|
 | **Calc** | Preset chips (20/50/100/250/500 GB, 1 TB), decimal keyboard, NTFS/FAT32 picker, Windows Setup simulation (Win 10 / Win 11 / custom MB), Calculate with spinner, result dialog with **Copy**. |
-| **Split** | Integer-only total MB field, 1–8 partition stepper, proportional bar preview, per-partition table (`type X MB · visible ≈ Y MB`), sum verification, warnings, Copy. |
-| **Settings** | Theme (System/Light/Dark), default filesystem, default Setup simulation + profile, history size / clear / view, privacy policy, rate, share, quit, and a short "how the numbers work" explainer. |
+| **Split** | Integer-only total MB field, 1–8 partition stepper, per-partition table (`type X MB · visible ≈ Y MB`), sum verification, warnings, Copy. |
+| **Settings** | Theme (Dark Mode/Light Mode), default filesystem, default Setup simulation + profile, history size / clear / view, privacy policy, rate, share, quit, and a short "how the numbers work" explainer. |
 | **History** | Last 100 conversions (UUID ids, newest first) stored as JSON in DataStore, viewable in a bottom sheet, individually deletable. |
 
 ### The maths (exactly as specified)

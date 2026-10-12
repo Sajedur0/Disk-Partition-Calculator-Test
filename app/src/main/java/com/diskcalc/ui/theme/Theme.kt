@@ -3,7 +3,6 @@ package com.diskcalc.ui.theme
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
@@ -81,14 +80,10 @@ private val DiskCalcTypography = Typography(
  */
 @Composable
 fun DiskCalcTheme(
-    themeMode: ThemeMode = ThemeMode.SYSTEM,
+    themeMode: ThemeMode = ThemeMode.LIGHT,
     content: @Composable () -> Unit
 ) {
-    val dark = when (themeMode) {
-        ThemeMode.SYSTEM -> isSystemInDarkTheme()
-        ThemeMode.LIGHT -> false
-        ThemeMode.DARK -> true
-    }
+    val dark = themeMode == ThemeMode.DARK
     val palette = if (dark) DarkLiquidPalette else LightLiquidPalette
 
     val scheme = if (dark) {

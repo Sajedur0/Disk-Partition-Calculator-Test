@@ -83,15 +83,14 @@ data class ConversionHistory(
     enum class Mode { CALC, SPLIT }
 }
 
-/** Theme choice persisted in settings. */
+/** Explicit light or dark theme choice persisted in settings. */
 enum class ThemeMode(val label: String) {
-    SYSTEM("System"),
-    LIGHT("Light"),
-    DARK("Dark");
+    DARK("Dark Mode"),
+    LIGHT("Light Mode");
 
     companion object {
         fun fromName(value: String?): ThemeMode =
-            entries.firstOrNull { it.name.equals(value, ignoreCase = true) } ?: SYSTEM
+            entries.firstOrNull { it.name.equals(value, ignoreCase = true) } ?: LIGHT
     }
 }
 

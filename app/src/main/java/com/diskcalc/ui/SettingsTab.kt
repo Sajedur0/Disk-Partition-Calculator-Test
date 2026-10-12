@@ -62,7 +62,7 @@ import com.diskcalc.ui.theme.LocalGlassTokens
 import com.diskcalc.ui.theme.LocalLiquidPalette
 
 /**
- * Settings tab — theme (System / Light / Dark), defaults and informational actions.
+ * Settings tab — theme (Dark Mode / Light Mode), defaults and informational actions.
  */
 @Composable
 fun SettingsTab(
