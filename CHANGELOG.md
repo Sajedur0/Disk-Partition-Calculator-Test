@@ -2,6 +2,31 @@
 
 All notable changes to Disk Partition Calculator are documented here.
 
+## [2.0.0] — Kotlin + Jetpack Compose rewrite
+
+- **Complete rewrite of the UI layer with Jetpack Compose (Material 3)** — the Flutter/Dart
+  implementation was replaced by a native Kotlin app; all calculation logic, constants, copy and
+  stored data formats are unchanged (see `MIGRATION.md`)
+- New Material 3 design language: brand blue palette with slate surfaces, refreshed typography
+  scale, one radius/em sizing system
+- Bottom navigation bar with three destinations (Calc, Split, Settings) replacing the top tab bar
+- Hand-drawn Material Symbols icons compiled into vector drawables (no icon font at runtime)
+- Result dialog redesigned around the "value to enter in Windows disk setup" with an animated
+  counter, copy action and clearer detail rows
+- History sheet redesigned with tonal cards, the same data and the same empty state
+- Settings redesigned with tonal icon rows; theme switching now animates as a circular reveal that
+  grows from the tapped point
+- Splash/launcher resources kept from the previous release; the app still starts in light mode and
+  follows the saved preference
+- In-app updates ported to the Google Play `app-update` library (flexible by default, immediate
+  after 5 stale days, restart after install)
+- Architecture: single module, MVVM with `ViewModel` + `StateFlow`, `SharedPreferences` behind a
+  testable storage seam, and a dependency-free JSON codec
+- Unit test suite rewritten in JUnit (72 tests) covering the calculator math, validation,
+  persistence, migration compatibility and every result/history string
+- Project tooling: Gradle 9.6 + AGP 9.2.1 + Kotlin 2.4.0, R8 minification/shrinking for release
+  builds, `tools/generate_icons.py` to regenerate the icon set, `.editorconfig`
+
 ## [1.1.3]
 - Flexible updates no longer cause the app to restart mid-download when resuming
 - Update status now accurately shows completion, cancellation, or errors

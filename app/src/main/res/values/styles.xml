@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      Window theme applied once the process has started. The Compose UI draws the real
+      surface, so the window background only needs to match it to avoid flashes.
+    -->
+    <style name="Theme.DiskCalc" parent="@android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/surface_light</item>
+    </style>
+
+    <!-- Window theme shown while the app is starting (icon centred on the splash colour). -->
+    <style name="Theme.DiskCalc.Launch" parent="@android:style/Theme.Light.NoTitleBar">
+        <item name="android:windowBackground">@drawable/launch_background</item>
+    </style>
+</resources>

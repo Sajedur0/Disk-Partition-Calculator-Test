@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Adaptive launcher icon background -->
+    <color name="ic_launcher_background">#FFFFFF</color>
+
+    <!-- Splash / launch window backgrounds (kept in sync with the Compose surface colours) -->
+    <color name="splash_background_light">#F8FAFC</color>
+    <color name="splash_background_dark">#0F172A</color>
+
+    <color name="surface_light">#F8FAFC</color>
+    <color name="surface_dark">#0F172A</color>
+</resources>
