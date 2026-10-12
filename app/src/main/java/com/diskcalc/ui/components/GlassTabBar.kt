@@ -1,0 +1,129 @@
+package com.diskcalc.ui.components
+
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.dp
+import com.diskcalc.ui.theme.LocalGlassTokens
+import com.diskcalc.ui.theme.LocalLiquidPalette
+import kotlin.math.roundToInt
+
+data class GlassTabItem(val title: String, val icon: ImageVector)
+
+/**
+ * Solid navigation tab bar with a fixed height and a sliding solid accent pill.
+ * Uses a fixed inner height and width-only measurement so the bar never auto-expands.
+ */
+@Composable
+fun GlassTabBar(
+    items: List<GlassTabItem>,
+    selectedIndex: Int,
+    onSelect: (Int) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    if (items.isEmpty()) return
+    val palette = LocalLiquidPalette.current
+    val tokens = LocalGlassTokens.current
+    val density = LocalDensity.current
+
+    var innerWidthPx by remember { mutableIntStateOf(0) }
+    val segmentWidthPx = (innerWidthPx.toFloat() / items.size).coerceAtLeast(0f)
+    val targetOffset = segmentWidthPx * selectedIndex.coerceIn(0, items.lastIndex)
+    val offsetX by animateFloatAsState(
+        targetValue = targetOffset,
+        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+        label = "tabOffset"
+    )
+
+    LiquidGlassSurface(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(68.dp),
+        shape = RoundedCornerShape(tokens.cornerXl),
+        tint = palette.glassTint,
+        elevation = tokens.elevation
+    ) {
+        Box(
+            Modifier
+                .fillMaxSize()
+                .padding(6.dp)
+                .onSizeChanged { size ->
+                    if (innerWidthPx != size.width) {
+                        innerWidthPx = size.width
+                    }
+                }
+        ) {
+            if (innerWidthPx > 0) {
+                Box(
+                    Modifier
+                        .offset { IntOffset(offsetX.roundToInt(), 0) }
+                        .width(with(density) { segmentWidthPx.toDp() })
+                        .fillMaxHeight()
+                        .background(
+                            color = palette.accent,
+                            shape = RoundedCornerShape(tokens.cornerMedium)
+                        )
+                )
+            }
+            Row(Modifier.fillMaxSize()) {
+                items.forEachIndexed { index, item ->
+                    val selected = index == selectedIndex
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight()
+                            .clickableBounce { onSelect(index) }
+                            .padding(horizontal = 4.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            imageVector = item.icon,
+                            contentDescription = item.title,
+                            tint = if (selected) palette.onAccent else palette.contentSecondary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(Modifier.height(3.dp))
+                        Text(
+                            text = item.title,
+                            style = MaterialTheme.typography.labelMedium,
+                            color = if (selected) palette.onAccent else palette.contentSecondary,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
