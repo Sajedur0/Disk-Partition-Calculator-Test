@@ -18,8 +18,10 @@ All notable changes to Disk Partition Calculator are documented here.
   grows from the tapped point
 - Splash/launcher resources kept from the previous release; the app still starts in light mode and
   follows the saved preference
-- In-app updates ported to the Google Play `app-update` library (flexible by default, immediate
-  after 5 stale days, restart after install)
+- In-app updates use Google Play's native update UI (`AppUpdateManager` with
+  `ActivityResultContracts.StartIntentSenderForResult`): flexible by default, immediate after
+  5 stale days, restart after install, and no second consent dialog while a flexible download
+  is already running
 - Architecture: single module, MVVM with `ViewModel` + `StateFlow`, `SharedPreferences` behind a
   testable storage seam, and a dependency-free JSON codec
 - Unit test suite rewritten in JUnit (72 tests) covering the calculator math, validation,

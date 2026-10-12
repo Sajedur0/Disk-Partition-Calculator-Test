@@ -5,6 +5,8 @@ import android.content.Context
 import android.content.ContextWrapper
 import android.os.SystemClock
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -80,12 +82,20 @@ fun DiskPartitionCalculatorApp(
     val destination = AppDestination.valueOf(destinationName)
     var lastUpdateCheckAt by remember { mutableLongStateOf(0L) }
 
+    // Google Play's native update UI (consent dialog / full-screen install screen) is launched
+    // through the Activity Result API, which is the documented entry point for in-app updates.
+    val updateFlowLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartIntentSenderForResult(),
+    ) { result ->
+        UpdateService.onUpdateFlowResult(result.resultCode)
+    }
+
     // First update check, after the UI is up and running.
     LaunchedEffect(activity) {
         if (activity == null) return@LaunchedEffect
         delay(FIRST_UPDATE_CHECK_DELAY_MS)
         lastUpdateCheckAt = SystemClock.elapsedRealtime()
-        UpdateService.checkForUpdate(activity, isResume = false)
+        UpdateService.checkForUpdate(activity, updateFlowLauncher, isResume = false)
     }
 
     // Further checks whenever the app comes back to the foreground.
@@ -99,7 +109,7 @@ fun DiskPartitionCalculatorApp(
             val now = SystemClock.elapsedRealtime()
             if (lastUpdateCheckAt != 0L && now - lastUpdateCheckAt >= RESUME_UPDATE_CHECK_GAP_MS) {
                 lastUpdateCheckAt = now
-                UpdateService.checkForUpdate(activity, isResume = true)
+                UpdateService.checkForUpdate(activity, updateFlowLauncher, isResume = true)
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)

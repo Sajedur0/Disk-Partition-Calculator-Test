@@ -26,7 +26,7 @@ reveal that grows from the tapped point.
 | `lib/models/partition_models.dart` | `core/model/*.kt` |
 | `lib/managers/history_manager.dart` | `core/data/HistoryStore.kt` + `HistoryJsonCodec.kt` |
 | `lib/constants/app_constants.dart` | `BuildConfig.VERSION_NAME` + `ui/text/AppStrings.kt` |
-| `lib/services/update_service.dart` | `core/update/UpdateService.kt` |
+| `lib/services/update_service.dart` | `core/update/UpdateService.kt` (Google Play's native UI via the Activity Result API) |
 | `lib/pages/calculator_page.dart` | `ui/screens/CalculatorScreen.kt` |
 | `lib/widgets/shared_controls.dart` | `ui/components/SectionCard.kt`, `FilesystemToggle.kt`, `SimulationCard.kt` |
 | `lib/widgets/result_dialog.dart` | `ui/result/ResultContent.kt` + `ui/components/ResultDialog.kt` |
@@ -63,7 +63,8 @@ Kept identical on purpose:
    (`system = 0`, `light = 1`, `dark = 2`). Zone-less timestamps written by the Dart app still parse.
 4. **Flow** — start in light mode unless a preference exists, 100 entry history cap, 1-8 partitions,
    FAT32 warnings above 32 GB, quick presets 20/50/100/250/500/1024 GB, "1 TB" label for 1024 GB,
-   2 s delayed update check plus checks on resume, mandatory update after 5 stale days.
+   2 s delayed update check plus checks on resume, mandatory update after 5 stale days, Google Play
+   supplies the update UI for both flows.
 5. **Dialogs** — the result dialog keeps the same rows, the same `Enabled (566 MB hidden overhead)` /
    `Disabled` values, the same explanation ordering (Windows Setup note, FAT32 size warning, FAT32
    file size note) and the same copy-to-clipboard action.

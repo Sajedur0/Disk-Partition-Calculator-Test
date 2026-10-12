@@ -5,6 +5,8 @@ import android.content.IntentSender
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.IntentSenderRequest
 import com.google.android.play.core.appupdate.AppUpdateInfo
 import com.google.android.play.core.appupdate.AppUpdateManager
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory
@@ -19,15 +21,17 @@ import com.google.android.play.core.install.model.UpdateAvailability
  * Google Play in-app update orchestration, ported from the original app:
  *
  * * checks shortly after launch and whenever the app is resumed,
- * * prefers flexible updates and offers an immediate update once the installed version is
- *   five days stale,
+ * * hands the update over to Google Play's own (native) update UI, launched through the
+ *   Activity Result API — a flexible download by default, an immediate update once the
+ *   installed version is five days stale,
+ * * never asks for the same flexible download twice: while Play is downloading or installing,
+ *   the install-state listener simply waits for it,
  * * remembers a dismissal for the rest of the session,
  * * completes a downloaded flexible update and restarts the app (with a 30s safety net).
  */
 object UpdateService {
 
     private const val TAG = "UpdateService"
-    private const val REQUEST_CODE = 1001
     private const val CHECK_TIMEOUT_MS = 10_000L
     private const val FALLBACK_RESTART_MS = 30_000L
     private const val RESTART_DELAY_MS = 2_000L
@@ -45,8 +49,15 @@ object UpdateService {
     private var isChecking = false
     private var userDismissedInSession = false
 
-    /** Starts an update check. [isResume] checks are skipped once the user dismissed a flow. */
-    fun checkForUpdate(activity: Activity, isResume: Boolean = false) {
+    /**
+     * Starts an update check. When Play reports an update, Google Play's native update UI is
+     * opened through [launcher]. [isResume] checks are skipped once the user dismissed a flow.
+     */
+    fun checkForUpdate(
+        activity: Activity,
+        launcher: ActivityResultLauncher<IntentSenderRequest>,
+        isResume: Boolean = false,
+    ) {
         if (isChecking) return
         if (isResume && userDismissedInSession) return
 
@@ -63,7 +74,7 @@ object UpdateService {
             .addOnSuccessListener { info ->
                 cancelTimeoutReset()
                 isChecking = false
-                processUpdateInfo(activity, manager, info)
+                processUpdateInfo(activity, manager, launcher, info)
             }
             .addOnFailureListener { error ->
                 Log.w(TAG, "Update check failed", error)
@@ -73,9 +84,8 @@ object UpdateService {
             }
     }
 
-    /** Forwards the update flow result from `Activity.onActivityResult`. */
-    fun onActivityResult(requestCode: Int, resultCode: Int) {
-        if (requestCode != REQUEST_CODE) return
+    /** Handles the result of Google Play's native update UI. */
+    fun onUpdateFlowResult(resultCode: Int) {
         if (resultCode != Activity.RESULT_OK) {
             userDismissedInSession = true
             cancelFallbackRestart()
@@ -94,6 +104,7 @@ object UpdateService {
     private fun processUpdateInfo(
         activity: Activity,
         manager: AppUpdateManager,
+        launcher: ActivityResultLauncher<IntentSenderRequest>,
         info: AppUpdateInfo,
     ) {
         if (info.installStatus == InstallStatus.DOWNLOADED) {
@@ -106,7 +117,7 @@ object UpdateService {
         ) {
             if (userDismissedInSession) return
             listenForFlexibleUpdate(activity, manager)
-            startUpdateFlow(activity, manager, info, AppUpdateType.FLEXIBLE)
+            startUpdateFlow(manager, launcher, info, AppUpdateType.FLEXIBLE)
             return
         }
 
@@ -116,25 +127,36 @@ object UpdateService {
         if (info.isUpdateTypeAllowed(AppUpdateType.IMMEDIATE) &&
             staleness >= STALENESS_DAYS_FOR_IMMEDIATE
         ) {
-            startUpdateFlow(activity, manager, info, AppUpdateType.IMMEDIATE)
+            startUpdateFlow(manager, launcher, info, AppUpdateType.IMMEDIATE)
             return
         }
 
         if (!info.isUpdateTypeAllowed(AppUpdateType.FLEXIBLE)) return
 
+        // A flexible update that is already downloading or installing needs no second consent
+        // dialog, so the listener takes over without opening the flow again. It is registered
+        // without the fallback restart: a slow download must not restart the app midway.
+        if (info.installStatus == InstallStatus.DOWNLOADING ||
+            info.installStatus == InstallStatus.INSTALLING
+        ) {
+            listenForFlexibleUpdate(activity, manager, scheduleFallback = false)
+            return
+        }
+
         listenForFlexibleUpdate(activity, manager)
-        startUpdateFlow(activity, manager, info, AppUpdateType.FLEXIBLE)
+        startUpdateFlow(manager, launcher, info, AppUpdateType.FLEXIBLE)
     }
 
+    /** Opens Google Play's native update UI for [updateType]. */
     private fun startUpdateFlow(
-        activity: Activity,
         manager: AppUpdateManager,
+        launcher: ActivityResultLauncher<IntentSenderRequest>,
         info: AppUpdateInfo,
         updateType: Int,
     ) {
         val options = AppUpdateOptions.newBuilder(updateType).build()
         try {
-            manager.startUpdateFlowForResult(info, options, activity, REQUEST_CODE)
+            manager.startUpdateFlowForResult(info, launcher, options)
         } catch (error: IntentSender.SendIntentException) {
             Log.w(TAG, "Could not start the update flow", error)
             cancelFallbackRestart()
@@ -142,7 +164,11 @@ object UpdateService {
         }
     }
 
-    private fun listenForFlexibleUpdate(activity: Activity, manager: AppUpdateManager) {
+    private fun listenForFlexibleUpdate(
+        activity: Activity,
+        manager: AppUpdateManager,
+        scheduleFallback: Boolean = true,
+    ) {
         cancelListener()
         cancelFallbackRestart()
 
@@ -179,7 +205,7 @@ object UpdateService {
 
         installStateListener = listener
         manager.registerListener(listener)
-        scheduleFallbackRestart(activity)
+        if (scheduleFallback) scheduleFallbackRestart(activity)
     }
 
     private fun completeFlexibleUpdate(activity: Activity, manager: AppUpdateManager) {

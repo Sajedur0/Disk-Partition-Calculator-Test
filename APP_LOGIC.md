@@ -371,11 +371,18 @@ Row N: "Partition N:" → "<displayMB> MB"   (one row per partition)
 
 ## In-App Updates
 
+- Google Play's own update UI is used for both flows: the consent dialog and the full-screen
+  install screen are launched through the Activity Result API
+  (`ActivityResultContracts.StartIntentSenderForResult`)
 - Checked 2 seconds after the first frame, and again whenever the app is resumed (at most one resume
   check per minute, and never after the user dismissed a flow in this session)
+- Flexible is the default flow; an immediate update is offered when the installed version is at
+  least 5 days stale
+- A flexible update that is already downloading or installing is never prompted for again — the
+  install-state listener waits for it instead of reopening the dialog
 - A downloaded flexible update is completed immediately and the app restarts after 2 seconds
-- Immediate updates are offered when the installed version is at least 5 days stale
-- A 30 second fallback restarts the app if the install-state callback never arrives
+- A 30 second fallback restarts the app if the install-state callback never arrives (only for
+  updates this session started, never while a download is still running)
 - A 10 second timeout releases the "checking" latch if Play Core never answers
 
 ---
