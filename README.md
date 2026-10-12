@@ -54,9 +54,6 @@ Everything is driven by two token objects in `ui/theme/GlassTokens.kt` (`LiquidP
 `GlassTokens`), providing 100% opaque solid palettes for both **Dark Mode** and **Light Mode** with
 a fixed-height navigation tab bar (`ui/components/GlassTabBar.kt`).
 
-**Preview without building:** open [`design-preview.html`](design-preview.html) in any browser — it is
-a static HTML/CSS mock of the three screens, useful for reviewing the visual language.
-
 ## Project structure
 
 ```
