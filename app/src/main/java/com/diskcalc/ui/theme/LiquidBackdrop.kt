@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -40,7 +41,7 @@ import kotlin.math.sin
  */
 @Immutable
 class LiquidBackdropRef(
-    val sizeState: State<Size>,
+    val sizeState: MutableState<Size>,
     val timeState: State<Float>,
     val palette: LiquidPalette,
     val blurSupported: Boolean

@@ -4,6 +4,7 @@ import android.app.Activity
 import android.widget.Toast
 import com.google.android.play.core.appupdate.AppUpdateManager
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory
+import com.google.android.play.core.appupdate.AppUpdateOptions
 import com.google.android.play.core.install.InstallStateUpdatedListener
 import com.google.android.play.core.install.model.AppUpdateType
 import com.google.android.play.core.install.model.InstallStatus
@@ -47,7 +48,8 @@ class UpdateService(private val activity: Activity) {
 
     private fun startFlexibleUpdate(info: com.google.android.play.core.appupdate.AppUpdateInfo) {
         runCatching {
-            manager?.startUpdateFlow(info, activity, AppUpdateType.FLEXIBLE)
+            val options = AppUpdateOptions.newBuilder(AppUpdateType.FLEXIBLE).build()
+            manager?.startUpdateFlow(info, activity, options)
         }.onFailure {
             // Cancelled or unavailable: keep the app running on the current version.
         }
