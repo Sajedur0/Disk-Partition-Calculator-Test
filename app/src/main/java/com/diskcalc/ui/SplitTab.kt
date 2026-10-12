@@ -1,21 +1,16 @@
 package com.diskcalc.ui
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ContentCopy
-import androidx.compose.material.icons.rounded.Dashboard
 import androidx.compose.material.icons.rounded.Layers
 import androidx.compose.material.icons.rounded.Storage
 import androidx.compose.material3.MaterialTheme
@@ -23,13 +18,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import com.diskcalc.domain.FileSystemType
 import com.diskcalc.domain.PartitionConstants
-import com.diskcalc.domain.SplitResult
 import com.diskcalc.ui.components.GlassButton
 import com.diskcalc.ui.components.GlassPanel
 import com.diskcalc.ui.components.GlassSegmentedControl
@@ -38,7 +31,6 @@ import com.diskcalc.ui.components.GlassTextField
 import com.diskcalc.ui.components.GlassToggleRow
 import com.diskcalc.ui.components.InfoBanner
 import com.diskcalc.ui.components.KeyValueRow
-import com.diskcalc.ui.components.StatTile
 import com.diskcalc.ui.components.WarningList
 import com.diskcalc.ui.theme.LocalGlassTokens
 import com.diskcalc.ui.theme.LocalLiquidPalette
@@ -67,66 +59,6 @@ fun SplitTab(
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(tokens.spaceMd)
     ) {
-        // ------------------------------------------------------------------ hero
-        GlassPanel(
-            title = "Equal partitions",
-            subtitle = "Every partition gets the same size, the last one keeps the rounding",
-            icon = Icons.Rounded.Dashboard
-        ) {
-            val result = state.result
-            if (result == null) {
-                Text(
-                    text = "Type the total disk size in MB, choose how many partitions you want, then tap Split.",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = palette.contentSecondary
-                )
-                Spacer(Modifier.height(tokens.spaceSm))
-                Row(horizontalArrangement = Arrangement.spacedBy(tokens.spaceSm)) {
-                    StatTile(
-                        label = "Total",
-                        value = state.totalMbText.ifBlank { "—" },
-                        unit = "MB",
-                        modifier = Modifier.weight(1f)
-                    )
-                    StatTile(
-                        label = "Partitions",
-                        value = state.partitionCount.toString(),
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-            } else {
-                StatTile(
-                    label = "Type this for each partition",
-                    value = result.partitions.first().typeMb.toString(),
-                    unit = "MB",
-                    caption = if (result.partitions.any { it.typeMb != result.partitions.first().typeMb }) {
-                        "Last partition: ${result.partitions.last().typeMb} MB (absorbs the remainder)"
-                    } else {
-                        "All partitions are exactly equal"
-                    },
-                    highlight = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Spacer(Modifier.height(tokens.spaceSm))
-                SplitBar(result)
-                Spacer(Modifier.height(tokens.spaceSm))
-                Row(horizontalArrangement = Arrangement.spacedBy(tokens.spaceSm)) {
-                    StatTile(
-                        label = "Usable space",
-                        value = result.usableMb.toString(),
-                        unit = "MB",
-                        modifier = Modifier.weight(1f)
-                    )
-                    StatTile(
-                        label = "Sum check",
-                        value = result.sumOfTypeMb.toString(),
-                        unit = "MB",
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-            }
-        }
-
         // ----------------------------------------------------------- input panel
         GlassPanel(
             title = "Disk layout",
@@ -231,30 +163,5 @@ fun SplitTab(
         }
 
         Spacer(Modifier.height(tokens.spaceSm))
-    }
-}
-
-/** Proportional solid bar so the split is visible at a glance, including the odd last slice. */
-@Composable
-private fun SplitBar(result: SplitResult) {
-    val palette = LocalLiquidPalette.current
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(12.dp)
-            .clip(RoundedCornerShape(percent = 50)),
-        horizontalArrangement = Arrangement.spacedBy(2.dp)
-    ) {
-        result.partitions.forEachIndexed { index, partition ->
-            val fraction = partition.typeMb.toFloat() / result.usableMb.toFloat()
-            Box(
-                Modifier
-                    .weight(fraction.coerceAtLeast(0.0001f))
-                    .fillMaxHeight()
-                    .background(
-                        color = if (index % 2 == 0) palette.accent else palette.accentSecondary
-                    )
-            )
-        }
     }
 }
