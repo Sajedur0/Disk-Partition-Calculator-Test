@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Disk Partition Calculator</string>
+    <string name="tab_calc">Calc</string>
+    <string name="tab_split">Split</string>
+    <string name="tab_settings">Settings</string>
+
+    <string name="cd_back">Back</string>
+    <string name="cd_copy">Copy result</string>
+    <string name="cd_close">Close</string>
+    <string name="cd_increase">Increase</string>
+    <string name="cd_decrease">Decrease</string>
+    <string name="cd_history">History</string>
+    <string name="cd_theme">Toggle theme</string>
+
+    <string name="backdrop_description">Decorative background</string>
+</resources>

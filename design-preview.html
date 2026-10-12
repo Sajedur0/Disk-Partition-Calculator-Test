@@ -1,0 +1,1180 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Disk Partition Calculator — Liquid Glass design preview</title>
+<style>
+  /* ------------------------------------------------------------------ tokens */
+  :root {
+    --base: #070A16;
+    --blob-0: #2E5BFF;
+    --blob-1: #22D3EE;
+    --blob-2: #A855F7;
+    --blob-3: #F472B6;
+    --blob-4: #14B8A6;
+    --vignette: rgba(4, 6, 15, .80);
+    --glass-tint: rgba(255, 255, 255, .12);
+    --glass-lite: rgba(255, 255, 255, .10);
+    --border-a: rgba(255, 255, 255, .38);
+    --border-b: rgba(255, 255, 255, .06);
+    --accent: #7CB8FF;
+    --accent-2: #C99BFF;
+    --on-accent: #061024;
+    --text: #F2F6FF;
+    --text-2: #A9B6D6;
+    --text-3: #7183A8;
+    --warning-bg: rgba(255, 196, 107, .20);
+    --warning-fg: #FFD79A;
+    --danger-bg: rgba(255, 122, 138, .20);
+    --danger-fg: #FFB3BC;
+    --radius-xl: 30px;
+    --radius-lg: 24px;
+    --radius-md: 18px;
+    --radius-sm: 12px;
+    --blur: 26px;
+    --shadow: 0 18px 40px rgba(0, 0, 0, .50);
+    --shadow-soft: 0 8px 20px rgba(0, 0, 0, .35);
+    --glow: 0 10px 26px rgba(124, 184, 255, .38);
+  }
+  body.light {
+    --base: #E9EEFF;
+    --blob-0: #9FB6FF;
+    --blob-1: #7CD8F5;
+    --blob-2: #CDB4FF;
+    --blob-3: #FFB6DA;
+    --blob-4: #9BE7CE;
+    --vignette: rgba(255, 255, 255, .34);
+    --glass-tint: rgba(255, 255, 255, .48);
+    --glass-lite: rgba(255, 255, 255, .40);
+    --border-a: rgba(255, 255, 255, .85);
+    --border-b: rgba(255, 255, 255, .30);
+    --accent: #2F5BEA;
+    --accent-2: #8B4DE0;
+    --on-accent: #FFFFFF;
+    --text: #0D1428;
+    --text-2: #4C5880;
+    --text-3: #7B87AB;
+    --warning-bg: rgba(255, 182, 72, .30);
+    --warning-fg: #8A5B00;
+    --danger-bg: rgba(255, 92, 114, .25);
+    --danger-fg: #9E1B2C;
+    --shadow: 0 18px 40px rgba(40, 60, 120, .28);
+    --glow: 0 10px 26px rgba(47, 91, 234, .30);
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: radial-gradient(120% 90% at 50% 0%, #141a33 0%, #05060d 60%, #02030a 100%);
+    color: #e7ecf7;
+    display: grid;
+    place-items: center;
+    padding: 28px 16px 44px;
+    gap: 18px;
+  }
+
+  .stage-head { text-align: center; max-width: 760px; }
+  .stage-head h1 { font-size: 20px; font-weight: 650; margin: 0 0 6px; letter-spacing: -.2px; }
+  .stage-head p { margin: 0; font-size: 13px; color: #93a0bd; line-height: 1.5; }
+  .stage-head code { background: rgba(255,255,255,.08); padding: 1px 6px; border-radius: 6px; font-size: 12px; }
+
+  /* ------------------------------------------------------------- phone shell */
+  .phone {
+    position: relative;
+    width: 390px;
+    height: 800px;
+    border-radius: 46px;
+    overflow: hidden;
+    background: var(--base);
+    box-shadow: 0 40px 90px rgba(0,0,0,.65), 0 0 0 10px rgba(255,255,255,.045), 0 0 0 11px rgba(255,255,255,.10);
+    isolation: isolate;
+  }
+  .phone::after { /* glass edge highlight of the device itself */
+    content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.35), inset 0 -1px 0 rgba(255,255,255,.10);
+  }
+
+  /* ------------------------------------------------------- animated backdrop */
+  .backdrop { position: absolute; inset: 0; overflow: hidden; }
+  .blob {
+    position: absolute; border-radius: 50%; filter: blur(46px);
+    mix-blend-mode: screen; opacity: .62;
+    animation: drift-0 38s ease-in-out infinite alternate;
+  }
+  .b0 { width: 340px; height: 340px; left: -110px; top: -70px;  background: var(--blob-0); animation-name: drift-0; }
+  .b1 { width: 300px; height: 300px; right: -100px; top: -20px; background: var(--blob-1); animation-name: drift-1; }
+  .b2 { width: 380px; height: 380px; right: -130px; top: 330px; background: var(--blob-2); animation-name: drift-2; }
+  .b3 { width: 320px; height: 320px; left: -110px; bottom: -70px; background: var(--blob-3); animation-name: drift-3; }
+  .b4 { width: 240px; height: 240px; left: 110px; top: 300px; background: var(--blob-4); animation-name: drift-4; opacity: .45; }
+  @keyframes drift-0 { 0% { transform: translate3d(0,0,0) scale(1); } 100% { transform: translate3d(60px,50px,0) scale(1.12); } }
+  @keyframes drift-1 { 0% { transform: translate3d(0,0,0) scale(1.05); } 100% { transform: translate3d(-55px,60px,0) scale(1); } }
+  @keyframes drift-2 { 0% { transform: translate3d(0,0,0) scale(1); } 100% { transform: translate3d(-70px,-50px,0) scale(1.15); } }
+  @keyframes drift-3 { 0% { transform: translate3d(0,0,0) scale(1.1); } 100% { transform: translate3d(55px,-55px,0) scale(1); } }
+  @keyframes drift-4 { 0% { transform: translate3d(0,0,0) scale(.95); } 100% { transform: translate3d(40px,-40px,0) scale(1.1); } }
+  .backdrop::before { /* vignette + top-left sheen */
+    content: ''; position: absolute; inset: 0;
+    background:
+      radial-gradient(120% 100% at 50% 40%, transparent 40%, var(--vignette) 100%),
+      linear-gradient(135deg, rgba(255,255,255,.06), transparent 55%);
+  }
+
+  /* ------------------------------------------------------------ glass surface */
+  .glass {
+    position: relative;
+    border-radius: var(--radius-lg);
+    background: var(--glass-tint);
+    backdrop-filter: blur(var(--blur)) saturate(180%);
+    -webkit-backdrop-filter: blur(var(--blur)) saturate(180%);
+    box-shadow: var(--shadow);
+    isolation: isolate;
+  }
+  .glass::before { /* bevelled gradient hairline */
+    content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1px;
+    background: linear-gradient(135deg, var(--border-a), var(--border-b) 55%, var(--border-a));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+    pointer-events: none;
+  }
+  .glass::after { /* slow specular sweep — the "liquid" part */
+    content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+    background: linear-gradient(115deg, transparent 38%, rgba(255,255,255,.20) 50%, transparent 62%);
+    background-size: 260% 260%;
+    animation: sweep 22s linear infinite;
+    mix-blend-mode: screen;
+    opacity: .8;
+  }
+  @keyframes sweep { 0% { background-position: 130% 0; } 100% { background-position: -40% 0; } }
+  .glass.lite { border-radius: var(--radius-md); background: var(--glass-lite); box-shadow: none; }
+  .glass.lite::after { animation-duration: 30s; opacity: .5; }
+  .glass.pill { border-radius: 999px; }
+  .glass.tight { border-radius: var(--radius-sm); }
+
+  /* ----------------------------------------------------------------- app shell */
+  .app { position: absolute; inset: 0; display: flex; flex-direction: column; padding: 18px 18px 14px; }
+  header.appbar { display: flex; align-items: flex-start; gap: 10px; padding-top: 22px; }
+  .title { font-size: 25px; font-weight: 650; line-height: 1.1; letter-spacing: -.4px; }
+  .badges { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+  .badge {
+    font-size: 10.5px; letter-spacing: .5px; text-transform: uppercase; font-weight: 600;
+    color: var(--accent); padding: 4px 10px; border-radius: 999px;
+    background: color-mix(in srgb, var(--accent) 16%, transparent);
+    border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
+  }
+  .icon-btn {
+    width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center;
+    border: none; cursor: pointer; color: var(--text); font-size: 17px;
+    background: var(--glass-lite);
+    backdrop-filter: blur(16px) saturate(170%);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.25), 0 6px 16px rgba(0,0,0,.30);
+    transition: transform .18s ease;
+  }
+  .icon-btn:active { transform: scale(.94); }
+
+  .screens { position: relative; flex: 1; margin-top: 16px; overflow: hidden; }
+  .screen {
+    position: absolute; inset: 0; overflow-y: auto; overscroll-behavior: contain;
+    display: flex; flex-direction: column; gap: 16px; padding: 2px 2px 20px;
+    opacity: 0; pointer-events: none; transform: translateY(10px) scale(.99);
+    transition: opacity .28s ease, transform .28s ease;
+    scrollbar-width: none;
+  }
+  .screen::-webkit-scrollbar { display: none; }
+  .screen.active { opacity: 1; pointer-events: auto; transform: none; }
+
+  /* --------------------------------------------------------------- components */
+  .panel { padding: 16px; }
+  .panel-head { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .panel-icon {
+    width: 34px; height: 34px; border-radius: var(--radius-sm); display: grid; place-items: center;
+    font-size: 16px; background: var(--glass-lite); border: 1px solid var(--border-b); color: var(--accent);
+  }
+  .panel-title { font-size: 15.5px; font-weight: 600; }
+  .panel-sub { font-size: 12.5px; color: var(--text-2); margin-top: 2px; }
+  .panel-head .spacer { flex: 1; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip {
+    border: none; cursor: pointer; font: inherit; font-size: 13.5px; font-weight: 600;
+    color: var(--text); padding: 9px 16px; border-radius: 999px;
+    background: var(--glass-lite); box-shadow: inset 0 1px 0 rgba(255,255,255,.20);
+    transition: transform .16s ease, background .2s ease, color .2s ease;
+  }
+  .chip:active { transform: scale(.95); }
+  .chip[aria-pressed="true"] {
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: var(--on-accent); box-shadow: var(--glow);
+  }
+
+  .field { margin-top: 14px; }
+  .label { font-size: 11px; letter-spacing: .6px; text-transform: uppercase; color: var(--text-2); margin: 0 0 6px 4px; font-weight: 600; }
+  .input-row {
+    display: flex; align-items: center; gap: 10px; padding: 13px 16px; border-radius: var(--radius-md);
+    background: var(--glass-lite); box-shadow: inset 0 1px 0 rgba(255,255,255,.18);
+    border: 1px solid transparent;
+  }
+  .input-row.error { border-color: color-mix(in srgb, var(--danger-fg) 55%, transparent); background: var(--danger-bg); }
+  .input-row input {
+    flex: 1; min-width: 0; border: none; outline: none; background: transparent;
+    color: var(--text); font-size: 22px; font-weight: 650; letter-spacing: -.2px;
+    font-variant-numeric: tabular-nums;
+  }
+  .input-row .suffix { color: var(--text-2); font-size: 15px; font-weight: 600; }
+  .support { font-size: 12px; color: var(--text-3); margin: 6px 0 0 4px; }
+  .support.error { color: var(--danger-fg); }
+
+  .segmented { position: relative; display: flex; padding: 4px; border-radius: 999px; background: var(--glass-lite); box-shadow: inset 0 1px 0 rgba(255,255,255,.18); }
+  .segmented .pill {
+    position: absolute; top: 4px; bottom: 4px; border-radius: 999px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    box-shadow: var(--glow); transition: transform .32s cubic-bezier(.22,1,.36,1), width .32s ease;
+  }
+  .segmented button {
+    position: relative; flex: 1; border: none; background: transparent; cursor: pointer; font: inherit;
+    font-size: 13.5px; font-weight: 600; color: var(--text-2); padding: 10px 6px; z-index: 1;
+    transition: color .24s ease;
+  }
+  .segmented button[aria-selected="true"] { color: var(--on-accent); }
+
+  .toggle-row { display: flex; align-items: center; gap: 12px; margin-top: 16px; }
+  .toggle-text { flex: 1; }
+  .toggle-title { font-size: 15px; font-weight: 600; }
+  .toggle-sub { font-size: 12.5px; color: var(--text-2); margin-top: 2px; }
+  .switch {
+    position: relative; width: 54px; height: 32px; border-radius: 999px; border: none; cursor: pointer;
+    background: var(--glass-lite); box-shadow: inset 0 1px 0 rgba(255,255,255,.20);
+    transition: background .25s ease; flex: none;
+  }
+  .switch .thumb {
+    position: absolute; top: 4px; left: 4px; width: 24px; height: 24px; border-radius: 50%;
+    background: linear-gradient(180deg, #fff, rgba(255,255,255,.82));
+    box-shadow: 0 4px 10px rgba(0,0,0,.35); transition: transform .3s cubic-bezier(.22,1,.36,1);
+  }
+  .switch[aria-checked="true"] { background: linear-gradient(135deg, var(--accent), var(--accent-2)); }
+  .switch[aria-checked="true"] .thumb { transform: translateX(22px); }
+
+  .stepper { display: flex; align-items: center; gap: 4px; border-radius: var(--radius-md); background: var(--glass-lite); box-shadow: inset 0 1px 0 rgba(255,255,255,.18); }
+  .stepper button {
+    width: 44px; height: 46px; border: none; background: transparent; cursor: pointer; color: var(--text);
+    display: grid; place-items: center;
+  }
+  .stepper button span {
+    width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font-size: 17px;
+    background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 26%, transparent), color-mix(in srgb, var(--accent-2) 26%, transparent));
+  }
+  .stepper button:disabled { opacity: .35; }
+  .stepper .value { width: 60px; text-align: center; font-size: 19px; font-weight: 650; font-variant-numeric: tabular-nums; }
+
+  .btn {
+    width: 100%; border: none; cursor: pointer; font: inherit; font-size: 14.5px; font-weight: 650;
+    padding: 15px 20px; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; gap: 9px;
+    transition: transform .16s ease, box-shadow .2s ease;
+  }
+  .btn:active { transform: scale(.975); }
+  .btn.primary { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: var(--on-accent); box-shadow: var(--glow); }
+  .btn.ghost { background: var(--glass-lite); color: var(--text); box-shadow: inset 0 1px 0 rgba(255,255,255,.20); }
+  .btn.small { width: auto; padding: 10px 16px; font-size: 13px; }
+  .row { display: flex; gap: 10px; align-items: center; }
+  .row .btn { width: auto; }
+  .row .btn.grow { flex: 1; }
+
+  .stat { padding: 13px 16px; border-radius: var(--radius-md); background: var(--glass-lite); box-shadow: inset 0 1px 0 rgba(255,255,255,.16); }
+  .stat.highlight {
+    background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 22%, transparent), color-mix(in srgb, var(--accent-2) 16%, transparent));
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.28), var(--glow);
+  }
+  .stat .label { margin: 0 0 2px 0; }
+  .stat .value { font-size: 27px; font-weight: 650; letter-spacing: -.6px; font-variant-numeric: tabular-nums; display: flex; align-items: baseline; gap: 6px; }
+  .stat.highlight .value { color: var(--accent); }
+  .stat .unit { font-size: 14px; font-weight: 600; color: var(--text-2); }
+  .stat .caption { font-size: 12px; color: var(--text-3); margin-top: 2px; }
+  .stats-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+  .stats-row .stat .value { font-size: 20px; }
+
+  .kv { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 0; }
+  .kv .k { font-size: 13px; color: var(--text-2); }
+  .kv .v { font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; text-align: right; }
+  .kv.emph .v { font-size: 19px; color: var(--accent); }
+  .divider { height: 1px; margin: 10px 0; background: linear-gradient(90deg, transparent, var(--border-a), transparent); opacity: .6; }
+
+  .warnings { border-radius: var(--radius-md); background: var(--warning-bg); padding: 13px 14px; display: flex; flex-direction: column; gap: 8px; }
+  .warning { display: flex; gap: 8px; font-size: 12.5px; line-height: 1.45; color: var(--warning-fg); }
+  .warning b { font-weight: 650; }
+
+  .bar { display: flex; gap: 2px; height: 12px; border-radius: 999px; overflow: hidden; margin-top: 12px; }
+  .bar i { display: block; height: 100%; background: var(--accent); }
+  .bar i:nth-child(even) { background: var(--accent-2); }
+
+  .list-item { display: flex; align-items: center; gap: 12px; padding: 12px 0; cursor: pointer; }
+  .list-item .ico {
+    width: 34px; height: 34px; border-radius: var(--radius-sm); display: grid; place-items: center; flex: none;
+    background: var(--glass-lite); border: 1px solid var(--border-b); color: var(--accent); font-size: 15px;
+  }
+  .list-item .txt { flex: 1; }
+  .list-item .t { font-size: 15px; font-weight: 600; }
+  .list-item .s { font-size: 12.5px; color: var(--text-2); margin-top: 2px; }
+  .list-item .chev { color: var(--text-3); }
+  .list { padding: 6px 0 0; }
+
+  /* ------------------------------------------------------------------ tab bar */
+  .tabbar { position: relative; display: flex; padding: 6px; margin-top: 10px; border-radius: var(--radius-xl); }
+  .tabbar .pill {
+    position: absolute; top: 6px; bottom: 6px; border-radius: var(--radius-lg);
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    box-shadow: 0 10px 22px color-mix(in srgb, var(--accent) 55%, transparent);
+    transition: transform .34s cubic-bezier(.22,1,.36,1), width .34s ease;
+  }
+  .tabbar button {
+    position: relative; z-index: 1; flex: 1; border: none; background: transparent; cursor: pointer; font: inherit;
+    display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 11px 4px; color: var(--text-2);
+    transition: color .24s ease;
+  }
+  .tabbar button .ic { font-size: 18px; }
+  .tabbar button .lb { font-size: 11px; letter-spacing: .6px; font-weight: 650; text-transform: uppercase; }
+  .tabbar button[aria-selected="true"] { color: var(--on-accent); }
+
+  /* ----------------------------------------------------------------- dialogs */
+  .dialog-layer { position: absolute; inset: 0; display: none; place-items: center; padding: 18px; z-index: 5; }
+  .dialog-layer.open { display: grid; animation: fade .22s ease; }
+  .scrim { position: absolute; inset: 0; background: rgba(0,0,0,.45); backdrop-filter: blur(2px); }
+  @keyframes fade { from { opacity: 0 } to { opacity: 1 } }
+  .dialog {
+    position: relative; width: 100%; max-height: 92%; overflow-y: auto; padding: 18px 20px 20px;
+    animation: pop .28s cubic-bezier(.22,1,.36,1); scrollbar-width: none;
+  }
+  .dialog::-webkit-scrollbar { display: none; }
+  @keyframes pop { from { transform: translateY(14px) scale(.97); opacity: 0 } to { transform: none; opacity: 1 } }
+  .dialog .dialog-head { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .dialog .dialog-head .close { margin-left: auto; }
+  .dialog-title { font-size: 18px; font-weight: 650; }
+
+  .toast {
+    position: absolute; left: 50%; bottom: 104px; transform: translate(-50%, 20px);
+    padding: 11px 18px; border-radius: 999px; font-size: 13px; font-weight: 600; color: var(--text);
+    opacity: 0; transition: opacity .25s ease, transform .25s ease; pointer-events: none; z-index: 9;
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+  .hint { font-size: 14px; line-height: 1.55; color: var(--text-2); }
+  .mono { font-variant-numeric: tabular-nums; }
+  .footnote { font-size: 11.5px; color: #6c7899; text-align: center; max-width: 420px; line-height: 1.55; }
+  .footnote button { font: inherit; font-size: 11.5px; color: #9fb6ff; background: none; border: none; cursor: pointer; text-decoration: underline; }
+</style>
+</head>
+<body>
+  <div class="stage-head">
+    <h1>Disk Partition Calculator — Liquid Glass design preview</h1>
+    <p>
+      Static HTML/CSS mock of the three screens of the Kotlin app, so the visual language can be
+      reviewed without building an APK. It uses the same constants and formulas as
+      <code>PartitionCalculator</code> / <code>SplitPartitionCalculator</code>.
+    </p>
+  </div>
+
+  <div class="phone" id="phone">
+    <div class="backdrop">
+      <div class="blob b0"></div><div class="blob b1"></div><div class="blob b2"></div>
+      <div class="blob b3"></div><div class="blob b4"></div>
+    </div>
+
+    <div class="app">
+      <header class="appbar">
+        <div style="flex:1">
+          <div class="title">Disk Partition<br />Calculator</div>
+          <div class="badges">
+            <span class="badge">1 GB = 1024 MB</span>
+            <span class="badge">Windows Setup ready</span>
+          </div>
+        </div>
+        <button class="icon-btn" title="History" onclick="openHistory()">🕘</button>
+      </header>
+
+      <div class="screens">
+        <!-- ------------------------------------------------------------- CALC -->
+        <section class="screen active" id="screen-calc">
+          <div class="glass panel">
+            <div class="panel-head">
+              <div class="panel-icon">∑</div>
+              <div>
+                <div class="panel-title">What to type in Windows Setup</div>
+                <div class="panel-sub">Explorer shows GB, Setup asks for MB</div>
+              </div>
+            </div>
+            <div class="stat highlight">
+              <div class="label">Required input</div>
+              <div class="value" id="calc-hero-value">—<span class="unit">MB</span></div>
+              <div class="caption" id="calc-hero-caption">Pick a preset or type a size, then tap Calculate</div>
+            </div>
+            <div class="stats-row">
+              <div class="stat"><div class="label">Partition size</div><div class="value" id="calc-tile-partition">—<span class="unit">MB</span></div></div>
+              <div class="stat"><div class="label">Visible target</div><div class="value" id="calc-tile-visible">—<span class="unit">GB</span></div></div>
+            </div>
+          </div>
+
+          <div class="glass panel">
+            <div class="panel-head">
+              <div class="panel-icon">⚙</div>
+              <div>
+                <div class="panel-title">Partition size</div>
+                <div class="panel-sub">Binary sizing: 1 GB = 1024 MB</div>
+              </div>
+            </div>
+
+            <div class="chips" id="preset-chips"></div>
+
+            <div class="field">
+              <div class="label">Visible size</div>
+              <div class="input-row" id="calc-input-row">
+                <input id="calc-input" inputmode="decimal" value="100" aria-label="Visible size in GB" />
+                <span class="suffix">GB</span>
+              </div>
+              <div class="support" id="calc-support"></div>
+            </div>
+
+            <div class="field">
+              <div class="label">Filesystem</div>
+              <div class="segmented" id="fs-segmented" data-value="NTFS">
+                <div class="pill"></div>
+                <button aria-selected="true" data-value="NTFS">NTFS</button>
+                <button aria-selected="false" data-value="FAT32">FAT32</button>
+              </div>
+            </div>
+
+            <div class="toggle-row">
+              <div class="toggle-text">
+                <div class="toggle-title">Simulate Windows Setup</div>
+                <div class="toggle-sub">Adds the system partitions Setup creates (EFI + MSR + Recovery)</div>
+              </div>
+              <button class="switch" id="setup-switch" role="switch" aria-checked="false"><span class="thumb"></span></button>
+            </div>
+
+            <div class="field" id="setup-extra" style="display:none">
+              <div class="segmented" id="profile-segmented" data-value="WIN10_UEFI">
+                <div class="pill"></div>
+                <button aria-selected="true" data-value="WIN10_UEFI">Win 10</button>
+                <button aria-selected="false" data-value="WIN11_UEFI">Win 11</button>
+                <button aria-selected="false" data-value="CUSTOM">Custom</button>
+              </div>
+              <div class="support" id="profile-hint">100 MB EFI + 16 MB MSR + 450 MB Recovery = 566 MB</div>
+              <div class="field" id="custom-overhead-field" style="display:none">
+                <div class="label">Custom overhead</div>
+                <div class="input-row" id="overhead-row">
+                  <input id="overhead-input" inputmode="numeric" value="566" aria-label="Custom overhead in MB" />
+                  <span class="suffix">MB</span>
+                </div>
+              </div>
+            </div>
+
+            <div style="height:20px"></div>
+            <button class="btn primary" id="calc-btn">∑ &nbsp;Calculate</button>
+          </div>
+
+          <div class="glass panel" id="calc-last" style="display:none">
+            <div class="panel-head">
+              <div class="panel-icon">✓</div>
+              <div><div class="panel-title">Last calculation</div><div class="panel-sub">Copy it straight into Setup</div></div>
+              <div class="spacer"></div>
+              <button class="btn ghost small" id="calc-copy">Copy</button>
+            </div>
+            <div id="calc-last-body"></div>
+          </div>
+        </section>
+
+        <!-- ------------------------------------------------------------ SPLIT -->
+        <section class="screen" id="screen-split">
+          <div class="glass panel">
+            <div class="panel-head">
+              <div class="panel-icon">▦</div>
+              <div>
+                <div class="panel-title">Equal partitions</div>
+                <div class="panel-sub">Whole MB only, the last one keeps the remainder</div>
+              </div>
+            </div>
+            <div class="stat highlight">
+              <div class="label">Type this for each partition</div>
+              <div class="value" id="split-hero-value">—<span class="unit">MB</span></div>
+              <div class="caption" id="split-hero-caption">Enter the total disk size, then tap Split</div>
+            </div>
+            <div class="bar" id="split-bar"></div>
+            <div class="stats-row">
+              <div class="stat"><div class="label">Usable space</div><div class="value" id="split-tile-usable">—<span class="unit">MB</span></div></div>
+              <div class="stat"><div class="label">Sum check</div><div class="value" id="split-tile-sum">—<span class="unit">MB</span></div></div>
+            </div>
+          </div>
+
+          <div class="glass panel">
+            <div class="panel-head">
+              <div class="panel-icon">▤</div>
+              <div><div class="panel-title">Disk layout</div><div class="panel-sub">Setup does not accept fractions</div></div>
+            </div>
+
+            <div class="field" style="margin-top:0">
+              <div class="label">Total size</div>
+              <div class="input-row" id="split-input-row">
+                <input id="split-input" inputmode="numeric" value="476923" aria-label="Total size in MB" />
+                <span class="suffix">MB</span>
+              </div>
+              <div class="support" id="split-support"></div>
+            </div>
+
+            <div class="toggle-row">
+              <div class="toggle-text">
+                <div class="toggle-title">Partitions</div>
+                <div class="toggle-sub">From 1 to 8</div>
+              </div>
+              <div class="stepper">
+                <button id="count-minus" aria-label="Decrease">−</button>
+                <div class="value" id="count-value">4</div>
+                <button id="count-plus" aria-label="Increase">+</button>
+              </div>
+            </div>
+
+            <div class="field">
+              <div class="label">Filesystem</div>
+              <div class="segmented" id="split-fs-segmented" data-value="NTFS">
+                <div class="pill"></div>
+                <button aria-selected="true" data-value="NTFS">NTFS</button>
+                <button aria-selected="false" data-value="FAT32">FAT32</button>
+              </div>
+            </div>
+
+            <div class="toggle-row">
+              <div class="toggle-text">
+                <div class="toggle-title">Simulate Windows Setup</div>
+                <div class="toggle-sub">Subtract the system partitions before splitting</div>
+              </div>
+              <button class="switch" id="split-setup-switch" role="switch" aria-checked="false"><span class="thumb"></span></button>
+            </div>
+
+            <div style="height:20px"></div>
+            <button class="btn primary" id="split-btn">▦ &nbsp;Split disk</button>
+          </div>
+
+          <div class="glass panel" id="split-last" style="display:none">
+            <div class="panel-head">
+              <div class="panel-icon">✓</div>
+              <div><div class="panel-title">Partition table</div><div class="panel-sub">Newest calculation</div></div>
+              <div class="spacer"></div>
+              <button class="btn ghost small" id="split-copy">Copy</button>
+            </div>
+            <div id="split-last-body"></div>
+          </div>
+        </section>
+
+        <!-- --------------------------------------------------------- SETTINGS -->
+        <section class="screen" id="screen-settings">
+          <div class="glass panel">
+            <div class="panel-head">
+              <div class="panel-icon">🌙</div>
+              <div><div class="panel-title">Appearance</div><div class="panel-sub">Liquid glass, tuned for your eyes</div></div>
+            </div>
+            <div class="segmented" id="theme-segmented" data-value="DARK">
+              <div class="pill"></div>
+              <button aria-selected="false" data-value="SYSTEM">System</button>
+              <button aria-selected="true" data-value="DARK">Dark</button>
+              <button aria-selected="false" data-value="LIGHT">Light</button>
+            </div>
+          </div>
+
+          <div class="glass panel">
+            <div class="panel-head">
+              <div class="panel-icon">⚙</div>
+              <div><div class="panel-title">Defaults</div><div class="panel-sub">Starting point of every calculation</div></div>
+            </div>
+            <div class="label">Default filesystem</div>
+            <div class="segmented" id="default-fs-segmented" data-value="NTFS">
+              <div class="pill"></div>
+              <button aria-selected="true" data-value="NTFS">NTFS</button>
+              <button aria-selected="false" data-value="FAT32">FAT32</button>
+            </div>
+            <div class="toggle-row">
+              <div class="toggle-text">
+                <div class="toggle-title">Windows Setup simulation</div>
+                <div class="toggle-sub">On by default in the Calc tab</div>
+              </div>
+              <button class="switch" role="switch" aria-checked="false" onclick="toggleSwitch(this)"><span class="thumb"></span></button>
+            </div>
+          </div>
+
+          <div class="glass panel">
+            <div class="panel-head">
+              <div class="panel-icon">🕘</div>
+              <div><div class="panel-title">History</div><div class="panel-sub">Up to 100 conversions, newest first</div></div>
+            </div>
+            <div class="hint" id="history-count">Nothing stored yet.</div>
+            <div style="height:14px"></div>
+            <div class="row">
+              <button class="btn primary grow" onclick="openHistory()">🕘&nbsp; View history</button>
+              <button class="btn ghost grow" onclick="clearHistory()">Clear</button>
+            </div>
+          </div>
+
+          <div class="glass panel">
+            <div class="panel-head">
+              <div class="panel-icon">✨</div>
+              <div><div class="panel-title">About</div><div class="panel-sub">Disk Partition Calculator v1.0.0</div></div>
+            </div>
+            <div class="list">
+              <div class="list-item"><div class="ico">🔒</div><div class="txt"><div class="t">Privacy policy</div><div class="s">Everything runs on-device</div></div><div class="chev">›</div></div>
+              <div class="divider"></div>
+              <div class="list-item"><div class="ico">★</div><div class="txt"><div class="t">Rate us</div><div class="s">Open the Play Store listing</div></div><div class="chev">›</div></div>
+              <div class="divider"></div>
+              <div class="list-item"><div class="ico">↗</div><div class="txt"><div class="t">Share app</div><div class="s">Tell a friend who reinstalls Windows</div></div><div class="chev">›</div></div>
+            </div>
+          </div>
+
+          <div class="glass panel">
+            <div class="panel-head">
+              <div class="panel-icon">💾</div>
+              <div><div class="panel-title">How the numbers work</div></div>
+            </div>
+            <div class="hint">
+              • 1 GB = 1024 MB, exactly what Explorer shows.<br />
+              • The typed value = visible size + 4 MB formatter slack.<br />
+              • Windows Setup system partitions ≈ 566 MB (100 EFI + 16 MSR + 450 Recovery).<br />
+              • FAT32 stops at 32 GB in the format tool and 4 GB per file.<br />
+              • MBR disks accept only 4 primary partitions — use GPT.
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <nav class="tabbar glass" id="tabbar">
+        <div class="pill"></div>
+        <button aria-selected="true" data-tab="calc"><span class="ic">∑</span><span class="lb">Calc</span></button>
+        <button aria-selected="false" data-tab="split"><span class="ic">▦</span><span class="lb">Split</span></button>
+        <button aria-selected="false" data-tab="settings"><span class="ic">⚙</span><span class="lb">Settings</span></button>
+      </nav>
+    </div>
+
+    <div class="dialog-layer" id="dialog-layer"></div>
+    <div class="toast glass pill" id="toast"></div>
+  </div>
+
+  <p class="footnote">
+    This mock is a design reference, not the app. The Android UI is Jetpack Compose
+    (<code>ui/components/LiquidGlass.kt</code>), where the frost is produced by re-sampling the
+    animated backdrop through <code>Modifier.blur</code>.<br />
+    <button onclick="document.body.classList.toggle('light')">toggle light / dark</button>
+  </p>
+
+<script>
+  /* ============================================================ domain logic
+     Mirrors com.diskcalc.domain — same constants, same integer arithmetic. */
+  const Constants = {
+    MB_PER_GB: 1024,
+    OVERHEAD_MB_PER_PARTITION: 4,
+    WINDOWS_SETUP_OVERHEAD_MB: 566,
+    WINDOWS_SETUP_OVERHEAD_WIN11_MB: 826,
+    FAT32_MAX_PARTITION_MB: 32 * 1024,
+    FAT32_MAX_FILE_GB: 4,
+    MAX_SPLIT_COUNT: 8,
+    MIN_SPLIT_COUNT: 1
+  };
+
+  const PROFILES = {
+    WIN10_UEFI: { overhead: 566, label: 'Windows 10 (UEFI/GPT)' },
+    WIN11_UEFI: { overhead: 826, label: 'Windows 11 (UEFI/GPT)' },
+    CUSTOM: { overhead: 0, label: 'Custom' }
+  };
+
+  function visibleGbToPartitionMb(visibleGb) {
+    if (!isFinite(visibleGb)) throw new Error('Enter a valid positive GB value');
+    return Math.round(visibleGb * Constants.MB_PER_GB) + Constants.OVERHEAD_MB_PER_PARTITION;
+  }
+
+  function isFat32SizeValid(partitionSizeMb) {
+    return partitionSizeMb <= Constants.FAT32_MAX_PARTITION_MB;
+  }
+
+  function calculate(visibleGb, filesystem, simulateSetup, setupOverheadMb) {
+    if (!isFinite(visibleGb) || visibleGb <= 0) throw new Error('Enter a valid positive GB value');
+    const partitionSizeMb = visibleGbToPartitionMb(visibleGb);
+    const appliedOverhead = simulateSetup ? setupOverheadMb : 0;
+    const requiredInputMb = partitionSizeMb + appliedOverhead;
+    const warnings = [];
+    if (simulateSetup) {
+      warnings.push('Windows Setup creates system partitions (~' + appliedOverhead +
+        ' MB). The value above includes this overhead.');
+    }
+    if (filesystem === 'FAT32') {
+      if (!isFat32SizeValid(partitionSizeMb)) {
+        warnings.push('Warning: Partition size exceeds the 32 GB limit of the Windows FAT32 format tool.');
+      }
+      warnings.push('Note: FAT32 has a ' + Constants.FAT32_MAX_FILE_GB + ' GB maximum file size limit.');
+    }
+    warnings.push('Actual visible size may differ by 1–2 MB depending on the Windows version.');
+    return {
+      visibleGb, partitionSizeMb, requiredInputMb,
+      expectedVisibleMb: partitionSizeMb - Constants.OVERHEAD_MB_PER_PARTITION,
+      usesWindowsSetupOverhead: simulateSetup, setupOverheadMb: appliedOverhead,
+      filesystem, warnings
+    };
+  }
+
+  function split(totalMb, count, filesystem, simulateSetup, overheadMb) {
+    if (!Number.isInteger(count) || count < 1 || count > Constants.MAX_SPLIT_COUNT) {
+      throw new Error('Partition count must be between 1 and 8');
+    }
+    if (!Number.isFinite(totalMb) || totalMb <= 0) throw new Error('Enter a valid positive MB value');
+    const appliedOverhead = simulateSetup ? overheadMb : 0;
+    const usableMb = totalMb - appliedOverhead;
+    if (usableMb <= count * Constants.OVERHEAD_MB_PER_PARTITION) {
+      throw new Error('Total size too small for ' + count + ' partitions');
+    }
+    const base = Math.floor(usableMb / count);
+    const remainder = usableMb - base * count;
+    const partitions = [];
+    for (let i = 1; i <= count; i++) {
+      const typeMb = i === count ? base + remainder : base;
+      partitions.push({ index: i, typeMb, expectedVisibleMb: typeMb - Constants.OVERHEAD_MB_PER_PARTITION });
+    }
+    const warnings = [];
+    if (simulateSetup) warnings.push('Setup overhead (' + appliedOverhead + ' MB) was subtracted from the total before splitting.');
+    if (filesystem === 'FAT32') {
+      if (partitions.some(p => p.typeMb > Constants.FAT32_MAX_PARTITION_MB)) {
+        warnings.push('Warning: Some partitions exceed the 32 GB limit of the Windows FAT32 format tool.');
+      }
+      warnings.push('Note: FAT32 has a ' + Constants.FAT32_MAX_FILE_GB + ' GB maximum file size limit.');
+    }
+    if (count >= 4) warnings.push('MBR disks allow only 4 primary partitions (system partitions count too). Use GPT for more.');
+    return { totalMb, usableMb, partitions, filesystem, warnings, sum: partitions.reduce((a, p) => a + p.typeMb, 0) };
+  }
+
+  const presets = [20, 50, 100, 250, 500, 1024];
+  const presetLabel = gb => gb === 1024 ? '1 TB' : gb + ' GB';
+  const fmt = n => n.toLocaleString('en-US');
+
+  /* ================================================================== UI state */
+  const state = {
+    tab: 'calc',
+    fs: 'NTFS',
+    setup: false,
+    profile: 'WIN10_UEFI',
+    customOverhead: 566,
+    splitFs: 'NTFS',
+    splitSetup: false,
+    count: 4,
+    calcResult: null,
+    splitResult: null,
+    history: []
+  };
+
+  const $ = sel => document.querySelector(sel);
+  const $$ = sel => Array.from(document.querySelectorAll(sel));
+
+  function effectiveOverhead() {
+    return state.profile === 'CUSTOM' ? state.customOverhead : PROFILES[state.profile].overhead;
+  }
+
+  function toast(message) {
+    const el = $('#toast');
+    el.textContent = message;
+    el.classList.add('show');
+    clearTimeout(el._t);
+    el._t = setTimeout(() => el.classList.remove('show'), 1800);
+  }
+
+  /* ------------------------------------------------------------ segmented UI */
+  function initSegmented(root, onChange) {
+    const pill = root.querySelector('.pill');
+    const buttons = Array.from(root.querySelectorAll('button'));
+    const move = () => {
+      const active = root.querySelector('button[aria-selected="true"]');
+      if (!active) return;
+      pill.style.width = active.offsetWidth + 'px';
+      pill.style.transform = 'translateX(' + (active.offsetLeft - 4) + 'px)';
+    };
+    buttons.forEach(btn => btn.addEventListener('click', () => {
+      buttons.forEach(b => b.setAttribute('aria-selected', String(b === btn)));
+      root.dataset.value = btn.dataset.value;
+      move();
+      onChange(btn.dataset.value);
+    }));
+    requestAnimationFrame(move);
+    window.addEventListener('resize', move);
+    return move;
+  }
+
+  function toggleSwitch(el) {
+    el.setAttribute('aria-checked', el.getAttribute('aria-checked') !== 'true');
+    return el.getAttribute('aria-checked') === 'true';
+  }
+
+  /* --------------------------------------------------------------- presets */
+  function renderPresets() {
+    const wrap = $('#preset-chips');
+    wrap.innerHTML = '';
+    presets.forEach(gb => {
+      const chip = document.createElement('button');
+      chip.className = 'chip';
+      chip.textContent = presetLabel(gb);
+      chip.setAttribute('aria-pressed', String($('#calc-input').value === String(gb)));
+      chip.onclick = () => {
+        $('#calc-input').value = String(gb);
+        renderPresets();
+        validateCalcInput();
+      };
+      wrap.appendChild(chip);
+    });
+  }
+
+  /* --------------------------------------------------------------- Calc tab */
+  function validateCalcInput() {
+    const raw = $('#calc-input').value.trim();
+    const row = $('#calc-input-row');
+    const support = $('#calc-support');
+    const value = Number(raw.replace(',', '.'));
+    let error = null;
+    if (raw === '') error = null;
+    else if (!isFinite(value) || value <= 0) error = 'Enter a valid positive GB value';
+    row.classList.toggle('error', Boolean(error));
+    support.textContent = error || '';
+    support.classList.toggle('error', Boolean(error));
+    return error;
+  }
+
+  function showCalcResult(result, openDialog) {
+    $('#calc-hero-value').innerHTML = fmt(result.requiredInputMb) + '<span class="unit">MB</span>';
+    $('#calc-hero-caption').textContent = '≈ ' + fmt(result.expectedVisibleMb) + ' MB visible after formatting' +
+      (result.usesWindowsSetupOverhead ? ' · includes ' + result.setupOverheadMb + ' MB Setup overhead' : '');
+    $('#calc-tile-partition').innerHTML = fmt(result.partitionSizeMb) + '<span class="unit">MB</span>';
+    $('#calc-tile-visible').innerHTML = result.visibleGb + '<span class="unit">GB</span>';
+
+    const rows = [
+      ['Visible size', result.visibleGb + ' GB', false],
+      ['Filesystem', result.filesystem, false],
+      ['Partition size', fmt(result.partitionSizeMb) + ' MB', false],
+      ['Required input', fmt(result.requiredInputMb) + ' MB', true],
+      ['Windows Setup', result.usesWindowsSetupOverhead ? 'Yes (+' + result.setupOverheadMb + ' MB)' : 'No', false]
+    ];
+    $('#calc-last').style.display = '';
+    $('#calc-last-body').innerHTML = kvRows(rows) + warningsHtml(result.warnings);
+
+    if (openDialog) openCalcDialog(result);
+  }
+
+  function kvRows(rows) {
+    return rows.map(([k, v, emph]) =>
+      '<div class="kv' + (emph ? ' emph' : '') + '"><div class="k">' + k + '</div><div class="v">' + v + '</div></div>'
+    ).join('');
+  }
+
+  function warningsHtml(warnings) {
+    if (!warnings.length) return '';
+    return '<div class="divider"></div><div class="warnings">' + warnings.map(w => {
+      const isWarning = w.startsWith('Warning');
+      return '<div class="warning"><span>' + (isWarning ? '⚠' : 'ⓘ') + '</span><span>' + w + '</span></div>';
+    }).join('') + '</div>';
+  }
+
+  function calcCopyText(r) {
+    return [
+      'Disk Partition Calculator — Calc',
+      'Visible size: ' + r.visibleGb + ' GB',
+      'Filesystem: ' + r.filesystem,
+      'Partition size: ' + r.partitionSizeMb + ' MB',
+      'Type in Windows Setup: ' + r.requiredInputMb + ' MB',
+      'Windows Setup overhead: ' + (r.usesWindowsSetupOverhead ? 'Yes (+' + r.setupOverheadMb + ' MB)' : 'No'),
+      'Expected visible size: ~' + r.expectedVisibleMb + ' MB',
+      '',
+      ...r.warnings.map(w => '• ' + w)
+    ].join('\n');
+  }
+
+  function splitCopyText(r) {
+    return [
+      'Disk Partition Calculator — Split',
+      'Total: ' + r.totalMb + ' MB',
+      'Usable after system partitions: ' + r.usableMb + ' MB',
+      'Filesystem: ' + r.filesystem,
+      'Partitions: ' + r.partitions.length,
+      '',
+      ...r.partitions.map(p => 'Partition ' + p.index + ': ' + p.typeMb + ' MB (visible ≈ ' + p.expectedVisibleMb + ' MB)'),
+      '',
+      'Sum of all partitions: ' + r.sum + ' MB',
+      ...(r.warnings.length ? ['', ...r.warnings.map(w => '• ' + w)] : [])
+    ].join('\n');
+  }
+
+  function copy(text, label) {
+    const done = () => toast(label || 'Copied to clipboard');
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, done);
+    } else {
+      const area = document.createElement('textarea');
+      area.value = text; document.body.appendChild(area); area.select();
+      try { document.execCommand('copy'); } catch (e) { /* ignore */ }
+      document.body.removeChild(area); done();
+    }
+  }
+
+  /* -------------------------------------------------------------- Split tab */
+  function validateSplitInput() {
+    const raw = $('#split-input').value.trim();
+    const row = $('#split-input-row');
+    const support = $('#split-support');
+    const value = Number(raw);
+    let error = null;
+    if (raw === '') error = null;
+    else if (!Number.isInteger(value) || value <= 0) error = 'Enter a valid positive MB value';
+    row.classList.toggle('error', Boolean(error));
+    support.textContent = error || '';
+    support.classList.toggle('error', Boolean(error));
+    return error;
+  }
+
+  function renderStepper() {
+    $('#count-value').textContent = state.count;
+    $('#count-minus').disabled = state.count <= 1;
+    $('#count-plus').disabled = state.count >= 8;
+  }
+
+  function showSplitResult(result, openDialog) {
+    const first = result.partitions[0];
+    const last = result.partitions[result.partitions.length - 1];
+    const equal = first.typeMb === last.typeMb;
+    $('#split-hero-value').innerHTML = fmt(first.typeMb) + '<span class="unit">MB</span>';
+    $('#split-hero-caption').textContent = equal
+      ? 'All partitions are exactly equal'
+      : 'Last partition: ' + fmt(last.typeMb) + ' MB (absorbs the remainder)';
+    $('#split-tile-usable').innerHTML = fmt(result.usableMb) + '<span class="unit">MB</span>';
+    $('#split-tile-sum').innerHTML = fmt(result.sum) + '<span class="unit">MB</span>';
+
+    const bar = $('#split-bar');
+    bar.innerHTML = result.partitions
+      .map(p => '<i style="flex:' + Math.max(p.typeMb, 1) + '"></i>').join('');
+
+    $('#split-last').style.display = '';
+    $('#split-last-body').innerHTML =
+      kvRows(result.partitions.map(p => ['Partition ' + p.index, fmt(p.typeMb) + ' MB · visible ≈ ' + fmt(p.expectedVisibleMb) + ' MB', false])) +
+      '<div class="divider"></div>' +
+      kvRows([
+        ['Total', fmt(result.totalMb) + ' MB', false],
+        ['Usable after Setup', fmt(result.usableMb) + ' MB', false],
+        ['Sum of partitions', fmt(result.sum) + ' MB', true]
+      ]) +
+      warningsHtml(result.warnings);
+
+    if (openDialog) openSplitDialog(result);
+  }
+
+  /* ---------------------------------------------------------------- dialogs */
+  function openDialog(html) {
+    const layer = $('#dialog-layer');
+    layer.innerHTML = '<div class="scrim" onclick="closeDialog()"></div>' +
+      '<div class="glass dialog">' + html + '</div>';
+    layer.classList.add('open');
+  }
+  function closeDialog() { $('#dialog-layer').classList.remove('open'); }
+
+  function openCalcDialog(r) {
+    openDialog(
+      '<div class="dialog-head"><span style="color:var(--accent);font-size:19px">✓</span>' +
+      '<span class="dialog-title">Single partition</span>' +
+      '<button class="icon-btn close" onclick="closeDialog()">✕</button></div>' +
+      '<span class="badge">' + r.filesystem + ' · Visible GB → Required MB</span>' +
+      '<div style="height:14px"></div>' +
+      '<div class="stat highlight"><div class="label">Type this in Windows Setup</div>' +
+      '<div class="value">' + fmt(r.requiredInputMb) + '<span class="unit">MB</span></div>' +
+      '<div class="caption">≈ ' + fmt(r.expectedVisibleMb) + ' MB visible after formatting</div></div>' +
+      '<div style="height:14px"></div>' +
+      kvRows([
+        ['Visible size', r.visibleGb + ' GB', false],
+        ['Filesystem', r.filesystem, false],
+        ['Partition size', fmt(r.partitionSizeMb) + ' MB', false],
+        ['Required input', fmt(r.requiredInputMb) + ' MB', true],
+        ['Windows Setup', r.usesWindowsSetupOverhead ? 'Yes (+' + r.setupOverheadMb + ' MB)' : 'No', false]
+      ]) +
+      warningsHtml(r.warnings) +
+      '<div style="height:18px"></div><div class="row">' +
+      '<button class="btn primary grow" onclick="copy(calcCopyText(window.__lastCalc))">⧉&nbsp; Copy</button>' +
+      '<button class="btn ghost" onclick="closeDialog()">Done</button></div>'
+    );
+  }
+
+  function openSplitDialog(r) {
+    const first = r.partitions[0];
+    openDialog(
+      '<div class="dialog-head"><span style="color:var(--accent);font-size:19px">▦</span>' +
+      '<span class="dialog-title">Split preview</span>' +
+      '<button class="icon-btn close" onclick="closeDialog()">✕</button></div>' +
+      '<span class="badge">' + r.partitions.length + ' partitions · ' + fmt(r.totalMb) + ' MB total</span>' +
+      '<div style="height:14px"></div>' +
+      '<div class="stat highlight"><div class="label">Type this for every partition</div>' +
+      '<div class="value">' + fmt(first.typeMb) + '<span class="unit">MB</span></div>' +
+      '<div class="caption">Usable space: ' + fmt(r.usableMb) + ' MB of ' + fmt(r.totalMb) + ' MB</div></div>' +
+      '<div style="height:14px"></div>' +
+      kvRows(r.partitions.map(p => ['Partition ' + p.index,
+        fmt(p.typeMb) + ' MB · visible ≈ ' + fmt(p.expectedVisibleMb) + ' MB',
+        p.index === r.partitions.length && p.typeMb !== first.typeMb])) +
+      '<div class="divider"></div>' + kvRows([['Sum of partitions', fmt(r.sum) + ' MB', false]]) +
+      warningsHtml(r.warnings) +
+      '<div style="height:18px"></div><div class="row">' +
+      '<button class="btn primary grow" onclick="copy(splitCopyText(window.__lastSplit))">⧉&nbsp; Copy</button>' +
+      '<button class="btn ghost" onclick="closeDialog()">Done</button></div>'
+    );
+  }
+
+  function openHistory() {
+    const items = state.history;
+    openDialog(
+      '<div class="dialog-head"><span style="color:var(--accent);font-size:19px">🕘</span>' +
+      '<span class="dialog-title">History</span>' +
+      '<button class="icon-btn close" onclick="closeDialog()">✕</button></div>' +
+      (items.length === 0
+        ? '<div class="hint">No conversions yet. Every calculation you make lands here (max 100, newest first, stored in DataStore as JSON with UUID ids).</div>'
+        : '<div class="list">' + items.slice(0, 20).map((entry, i) =>
+            '<div class="list-item"><div class="ico">' + (entry.mode === 'CALC' ? '∑' : '▦') + '</div>' +
+            '<div class="txt"><div class="t" style="font-size:13.5px">' + entry.summary + '</div>' +
+            '<div class="s">' + entry.fromUnit + ' → ' + entry.toUnit + ' · ' + entry.id.slice(0, 8) + '…</div></div></div>' +
+            (i < Math.min(items.length, 20) - 1 ? '<div class="divider"></div>' : '')
+          ).join('') + '</div>')
+    );
+  }
+
+  /* ------------------------------------------------------------ orchestration */
+  function pushHistory(entry) {
+    state.history.unshift(entry);
+    state.history = state.history.slice(0, 100);
+    $('#history-count').textContent = state.history.length === 0
+      ? 'Nothing stored yet.'
+      : state.history.length + ' saved conversion' + (state.history.length === 1 ? '.' : 's.');
+  }
+
+  function runCalc() {
+    if (validateCalcInput()) return;
+    const raw = $('#calc-input').value.trim();
+    if (raw === '') { $('#calc-support').textContent = 'Enter a visible partition size in GB'; $('#calc-support').classList.add('error'); return; }
+    const btn = $('#calc-btn');
+    const original = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span style="opacity:.85">Calculating…</span>';
+    setTimeout(() => {
+      const result = calculate(Number(raw.replace(',', '.')), state.fs, state.setup, effectiveOverhead());
+      state.calcResult = result;
+      window.__lastCalc = result;
+      showCalcResult(result, true);
+      pushHistory({
+        id: 'uuid-' + Math.random().toString(16).slice(2, 10) + '-demo',
+        mode: 'CALC',
+        fromUnit: 'Visible GB',
+        toUnit: 'Required MB',
+        summary: result.filesystem + ' - ' + result.requiredInputMb + ' MB'
+      });
+      btn.disabled = false;
+      btn.innerHTML = original;
+    }, 320);
+  }
+
+  function runSplit() {
+    if (validateSplitInput()) return;
+    const raw = $('#split-input').value.trim();
+    if (raw === '') { $('#split-support').textContent = 'Enter a total disk size in MB'; $('#split-support').classList.add('error'); return; }
+    const btn = $('#split-btn');
+    const original = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span style="opacity:.85">Splitting…</span>';
+    setTimeout(() => {
+      try {
+        const result = split(Number(raw), state.count, state.splitFs, state.splitSetup, effectiveOverhead());
+        state.splitResult = result;
+        window.__lastSplit = result;
+        showSplitResult(result, true);
+        pushHistory({
+          id: 'uuid-' + Math.random().toString(16).slice(2, 10) + '-demo',
+          mode: 'SPLIT',
+          fromUnit: 'Total MB',
+          toUnit: 'Per Partition MB',
+          summary: result.partitions.length + ' partitions: ' + result.partitions.map(p => p.typeMb + ' MB').join(', ')
+        });
+      } catch (error) {
+        $('#split-support').textContent = error.message;
+        $('#split-support').classList.add('error');
+        $('#split-input-row').classList.add('error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = original;
+      }
+    }, 320);
+  }
+
+  function selectTab(name) {
+    state.tab = name;
+    $$('.screen').forEach(screen => screen.classList.toggle('active', screen.id === 'screen-' + name));
+    $$('#tabbar button').forEach(btn => btn.setAttribute('aria-selected', String(btn.dataset.tab === name)));
+    moveTabPill();
+  }
+  function moveTabPill() {
+    const bar = $('#tabbar');
+    const active = bar.querySelector('button[aria-selected="true"]');
+    const pill = bar.querySelector('.pill');
+    if (!active) return;
+    pill.style.width = active.offsetWidth + 'px';
+    pill.style.transform = 'translateX(' + (active.offsetLeft - 6) + 'px)';
+  }
+
+  function clearHistory() {
+    state.history = [];
+    $('#history-count').textContent = 'Nothing stored yet.';
+    toast('History cleared');
+  }
+
+  /* ------------------------------------------------------------------- wire up */
+  renderPresets();
+  renderStepper();
+  initSegmented($('#fs-segmented'), value => { state.fs = value; });
+  initSegmented($('#split-fs-segmented'), value => { state.splitFs = value; });
+  initSegmented($('#profile-segmented'), value => {
+    state.profile = value;
+    $('#custom-overhead-field').style.display = value === 'CUSTOM' ? '' : 'none';
+    $('#profile-hint').textContent = value === 'WIN10_UEFI'
+      ? '100 MB EFI + 16 MB MSR + 450 MB Recovery = 566 MB'
+      : value === 'WIN11_UEFI'
+        ? 'Windows 11 uses a bigger recovery partition ≈ 826 MB'
+        : 'Type the overhead of your own Setup layout';
+  });
+  initSegmented($('#theme-segmented'), value => {
+    document.body.classList.toggle('light', value === 'LIGHT');
+  });
+  initSegmented($('#default-fs-segmented'), value => {
+    state.fs = value;
+    const seg = $('#fs-segmented');
+    seg.dataset.value = value;
+    seg.querySelectorAll('button').forEach(b => b.setAttribute('aria-selected', String(b.dataset.value === value)));
+    seg.querySelector('.pill').style.transform = 'translateX(' + (seg.querySelector('button[aria-selected="true"]').offsetLeft - 4) + 'px)';
+  });
+
+  $('#setup-switch').addEventListener('click', e => {
+    state.setup = toggleSwitch(e.currentTarget);
+    $('#setup-extra').style.display = state.setup ? '' : 'none';
+  });
+  $('#split-setup-switch').addEventListener('click', e => { state.splitSetup = toggleSwitch(e.currentTarget); });
+
+  $('#calc-input').addEventListener('input', () => { renderPresets(); validateCalcInput(); });
+  $('#overhead-input').addEventListener('input', e => {
+    state.customOverhead = Math.max(0, parseInt(e.target.value.replace(/\D/g, '') || '0', 10));
+  });
+  $('#split-input').addEventListener('input', validateSplitInput);
+  $('#count-minus').onclick = () => { state.count = Math.max(1, state.count - 1); renderStepper(); };
+  $('#count-plus').onclick = () => { state.count = Math.min(8, state.count + 1); renderStepper(); };
+  $('#calc-btn').onclick = runCalc;
+  $('#split-btn').onclick = runSplit;
+  $('#calc-copy').onclick = () => copy(calcCopyText(state.calcResult || calculate(100, state.fs, state.setup, effectiveOverhead())));
+  $('#split-copy').onclick = () => copy(splitCopyText(state.splitResult || split(476923, state.count, state.splitFs, false, 566)));
+
+  $$('#tabbar button').forEach(btn => btn.addEventListener('click', () => selectTab(btn.dataset.tab)));
+  window.addEventListener('resize', moveTabPill);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDialog(); });
+
+  /* first paint: show the spec's reference example (100 GB + Setup = 102970 MB) */
+  requestAnimationFrame(() => {
+    moveTabPill();
+    showCalcResult(calculate(100, 'NTFS', false, 566), false);
+    showSplitResult(split(476923, 4, 'NTFS', false, 566), false);
+  });
+</script>
+</body>
+</html>
