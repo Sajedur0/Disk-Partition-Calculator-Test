@@ -15,7 +15,7 @@ import kotlinx.coroutines.flow.map
 
 /** Everything the Settings tab owns. */
 data class AppSettings(
-    val themeMode: ThemeMode = ThemeMode.SYSTEM,
+    val themeMode: ThemeMode = ThemeMode.LIGHT,
     val defaultFilesystem: FileSystemType = FileSystemType.NTFS,
     val setupSimulationEnabled: Boolean = false,
     val setupProfile: WindowsSetupProfile = WindowsSetupProfile.WIN10_UEFI,

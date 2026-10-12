@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -35,9 +34,7 @@ import com.diskcalc.ui.components.GlassPanel
 import com.diskcalc.ui.components.GlassSegmentedControl
 import com.diskcalc.ui.components.GlassTextField
 import com.diskcalc.ui.components.GlassToggleRow
-import com.diskcalc.ui.components.InfoBanner
 import com.diskcalc.ui.components.KeyValueRow
-import com.diskcalc.ui.components.StatTile
 import com.diskcalc.ui.components.WarningList
 import com.diskcalc.ui.theme.LocalGlassTokens
 import com.diskcalc.ui.theme.LocalLiquidPalette
@@ -70,67 +67,6 @@ fun CalcTab(
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(tokens.spaceMd)
     ) {
-        // ------------------------------------------------ live "what to type" hero
-        GlassPanel(
-            title = "What to type in Windows Setup",
-            subtitle = "Windows shows GB in Explorer but asks for MB while installing",
-            icon = Icons.Rounded.Calculate
-        ) {
-            val result = state.result
-            if (result == null) {
-                Text(
-                    text = "Pick a preset or type the size you want, then tap Calculate.",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = palette.contentSecondary
-                )
-                Spacer(Modifier.height(tokens.spaceSm))
-                Row(horizontalArrangement = Arrangement.spacedBy(tokens.spaceSm)) {
-                    StatTile(
-                        label = "Requested",
-                        value = if (state.visibleGbText.isBlank()) "—" else state.visibleGbText,
-                        unit = "GB",
-                        modifier = Modifier.weight(1f)
-                    )
-                    StatTile(
-                        label = "Required input",
-                        value = "—",
-                        unit = "MB",
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-            } else {
-                StatTile(
-                    label = "Required input",
-                    value = result.requiredInputMb.toString(),
-                    unit = "MB",
-                    caption = "≈ ${result.expectedVisibleMb} MB visible after formatting",
-                    highlight = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Spacer(Modifier.height(tokens.spaceSm))
-                Row(horizontalArrangement = Arrangement.spacedBy(tokens.spaceSm)) {
-                    StatTile(
-                        label = "Partition size",
-                        value = result.partitionSizeMb.toString(),
-                        unit = "MB",
-                        modifier = Modifier.weight(1f)
-                    )
-                    StatTile(
-                        label = "Visible target",
-                        value = ResultText.trim(result.visibleGb),
-                        unit = "GB",
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-                if (result.usesWindowsSetupOverhead) {
-                    Spacer(Modifier.height(tokens.spaceSm))
-                    InfoBanner(
-                        text = "Includes ${result.setupOverheadMb} MB of Windows Setup system partitions (EFI + MSR + Recovery)."
-                    )
-                }
-            }
-        }
-
         // ------------------------------------------------------------ input panel
         GlassPanel(
             title = "Partition size",

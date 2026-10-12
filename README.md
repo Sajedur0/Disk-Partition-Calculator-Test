@@ -11,7 +11,7 @@ interface built on Jetpack Compose.
 ```
 ┌────────────────────────────────────────────┐
 │  Disk Partition                            │
-│  Calculator      [1 GB = 1024 MB]   (☀)(⏱) │
+│  Calculator                          (☀)(⏱) │
 │                                            │
 │  ╭────────────── solid surface ──────────╮ │
 │  │ Required input                        │ │
@@ -27,9 +27,11 @@ interface built on Jetpack Compose.
 | Tab | What it does |
 |---|---|
 | **Calc** | Preset chips (20/50/100/250/500 GB, 1 TB), decimal keyboard, NTFS/FAT32 picker, Windows Setup simulation (Win 10 / Win 11 / custom MB), Calculate with spinner, result dialog with **Copy**. |
-| **Split** | Integer-only total MB field, 1–8 partition stepper, proportional bar preview, per-partition table (`type X MB · visible ≈ Y MB`), sum verification, warnings, Copy. |
-| **Settings** | Theme (System/Light/Dark), default filesystem, default Setup simulation + profile, history size / clear / view, privacy policy, rate, share, quit, and a short "how the numbers work" explainer. |
+| **Split** | Integer-only total MB field, 1–8 partition stepper, per-partition table (`type X MB · visible ≈ Y MB`), sum verification, warnings, Copy. |
+| **Settings** | Theme (Dark Mode/Light Mode), default filesystem and Setup profile, history controls, Privacy Policy, Rate Us, Share App, About, a detailed FAQ, and a "how the numbers work" explainer. |
 | **History** | Last 100 conversions (UUID ids, newest first) stored as JSON in DataStore, viewable in a bottom sheet, individually deletable. |
+
+Full policy text: [`PRIVACY_POLICY.md`](PRIVACY_POLICY.md). Before publishing, host it at a publicly accessible URL, add that URL in Google Play Console, and ensure the contact details and Data Safety declarations match the production app.
 
 ### The maths (exactly as specified)
 

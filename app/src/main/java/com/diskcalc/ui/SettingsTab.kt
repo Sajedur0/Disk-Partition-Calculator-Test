@@ -1,6 +1,5 @@
 package com.diskcalc.ui
 
-import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -12,6 +11,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -22,7 +22,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material.icons.rounded.DarkMode
-import androidx.compose.material.icons.rounded.ExitToApp
+import androidx.compose.material.icons.rounded.HelpOutline
 import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.PrivacyTip
 import androidx.compose.material.icons.rounded.RestoreFromTrash
@@ -62,7 +62,7 @@ import com.diskcalc.ui.theme.LocalGlassTokens
 import com.diskcalc.ui.theme.LocalLiquidPalette
 
 /**
- * Settings tab — theme (System / Light / Dark), defaults and informational actions.
+ * Settings tab — theme (Dark Mode / Light Mode), defaults and informational actions.
  */
 @Composable
 fun SettingsTab(
@@ -80,6 +80,7 @@ fun SettingsTab(
     val tokens = LocalGlassTokens.current
     val context = LocalContext.current
     var showPrivacy by remember { mutableStateOf(false) }
+    var showAbout by remember { mutableStateOf(false) }
 
     Column(
         modifier = modifier
@@ -191,36 +192,82 @@ fun SettingsTab(
         }
 
         GlassPanel(
-            title = "About",
-            subtitle = "Disk Partition Calculator v${BuildConfig.VERSION_NAME}",
+            title = "More",
+            subtitle = "Privacy, sharing, and app information",
             icon = Icons.Rounded.AutoAwesome
         ) {
             SettingsAction(
                 icon = Icons.Rounded.PrivacyTip,
-                title = "Privacy policy",
-                subtitle = "Everything runs on-device — nothing leaves your phone",
+                title = "Privacy Policy",
+                subtitle = "How the app handles and stores information",
                 onClick = { showPrivacy = true }
             )
             GlassDivider()
             SettingsAction(
                 icon = Icons.Rounded.StarRate,
-                title = "Rate us",
+                title = "Rate Us",
                 subtitle = "Open the Play Store listing",
                 onClick = { openPlayStore(context) }
             )
             GlassDivider()
             SettingsAction(
                 icon = Icons.Rounded.Share,
-                title = "Share app",
+                title = "Share App",
                 subtitle = "Tell a friend who reinstalls Windows often",
                 onClick = { shareApp(context) }
             )
             GlassDivider()
             SettingsAction(
-                icon = Icons.Rounded.ExitToApp,
-                title = "Quit",
-                subtitle = "Close the app",
-                onClick = { (context as? Activity)?.finish() }
+                icon = Icons.Rounded.AutoAwesome,
+                title = "About",
+                subtitle = "Disk Partition Calculator v${BuildConfig.VERSION_NAME}",
+                onClick = { showAbout = true }
+            )
+        }
+
+        GlassPanel(
+            title = "FAQ",
+            subtitle = "Common questions about sizing, Setup, and your data",
+            icon = Icons.Rounded.HelpOutline
+        ) {
+            FaqItem(
+                question = "Does this app create or format partitions?",
+                answer = "No. It only calculates suggested MB values. It does not inspect, create, resize, format, or delete partitions. You make any changes in Windows Setup, so always verify the selected disk and value before proceeding."
+            )
+            GlassDivider()
+            FaqItem(
+                question = "Why does the app use 1 GB = 1024 MB?",
+                answer = "This follows the binary size convention Windows Explorer uses when it labels disk sizes as GB. Windows Setup asks for whole MB values, so the app converts using 1024 MB per GB."
+            )
+            GlassDivider()
+            FaqItem(
+                question = "Why is 4 MB added to a partition?",
+                answer = "The calculation allows about 4 MB for space used during formatting, so the visible size is closer to your target. The actual result can vary by about 1–2 MB depending on Windows and the filesystem."
+            )
+            GlassDivider()
+            FaqItem(
+                question = "What does Simulate Windows Setup do?",
+                answer = "In Calc, it adds the selected system-partition overhead to the value to type. In Split, it subtracts that overhead from the total before splitting. The presets are 566 MB for Windows 10 UEFI/GPT and 826 MB for Windows 11 UEFI/GPT; Custom lets you enter another value. Actual layouts can differ."
+            )
+            GlassDivider()
+            FaqItem(
+                question = "Why can the last split partition be a little larger?",
+                answer = "Windows Setup accepts whole MB values. The app divides the usable space using integer arithmetic and gives any leftover MB to the last partition, so the partition values add up exactly to the usable total."
+            )
+            GlassDivider()
+            FaqItem(
+                question = "What are the FAT32 limits?",
+                answer = "The built-in Windows format tool generally will not format a FAT32 partition larger than 32 GB, and FAT32 cannot store a single file larger than 4 GB. The 32 GB limit is specific to that Windows tool."
+            )
+            GlassDivider()
+            FaqItem(
+                question = "Where is my history stored, and how can I delete it?",
+                answer = "Up to 100 recent calculations and your app preferences are stored in the app's private storage. Use Settings > History > Clear or remove individual items from the History sheet. Android backup or device transfer may include this app data if enabled in your device settings."
+            )
+            GlassDivider()
+            FaqItem(
+                question = "Does the app send my disk sizes or history anywhere?",
+                answer = "The app does not send your calculations, history, or preferences to a developer-operated server and does not use advertising or analytics SDKs. If Android backup or device transfer is enabled, Android may back up or restore app data. Google Play handles its own technical data when the app checks for updates or opens its store listing. Share App sends only the store link through Android's share sheet when you choose a receiving app. See Privacy Policy for details."
             )
         }
 
@@ -259,6 +306,32 @@ fun SettingsTab(
 
     if (showPrivacy) {
         PrivacyDialog(onDismiss = { showPrivacy = false })
+    }
+    if (showAbout) {
+        AboutDialog(onDismiss = { showAbout = false })
+    }
+}
+
+@Composable
+private fun FaqItem(question: String, answer: String) {
+    val palette = LocalLiquidPalette.current
+    val tokens = LocalGlassTokens.current
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = tokens.spaceSm)
+    ) {
+        Text(
+            text = question,
+            style = MaterialTheme.typography.titleMedium,
+            color = palette.contentPrimary
+        )
+        Spacer(Modifier.height(tokens.spaceXs))
+        Text(
+            text = answer,
+            style = MaterialTheme.typography.bodyMedium,
+            color = palette.contentSecondary
+        )
     }
 }
 
@@ -321,18 +394,103 @@ private fun PrivacyDialog(onDismiss: () -> Unit) {
     val tokens = LocalGlassTokens.current
     Dialog(onDismissRequest = onDismiss) {
         LiquidGlassSurface(shape = RoundedCornerShape(tokens.cornerLarge)) {
+            Column(
+                modifier = Modifier
+                    .heightIn(max = 560.dp)
+                    .verticalScroll(rememberScrollState())
+                    .padding(tokens.spaceLg)
+            ) {
+                Text(
+                    text = "Privacy Policy",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = palette.contentPrimary
+                )
+                Spacer(Modifier.height(tokens.spaceXs))
+                Text(
+                    text = "Last updated: 12 October 2026",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = palette.contentTertiary
+                )
+                Spacer(Modifier.height(tokens.spaceMd))
+                PolicySection(
+                    title = "Overview",
+                    body = "Disk Partition Calculator helps calculate partition sizes for Windows Setup. This policy explains what information the app handles, how it is stored, and when another service may be involved."
+                )
+                PolicySection(
+                    title = "Information handled by the app",
+                    body = "Partition sizes you enter, calculation results, selected filesystem, Windows Setup profile, and app preferences are processed on your device. The app saves up to 100 recent calculation records and your preferences in its private app storage. It does not require an account or ask you to provide your name, email address, location, contacts, or other personal details."
+                )
+                PolicySection(
+                    title = "Collection and use",
+                    body = "The developer does not operate a server for this app and does not receive your disk sizes, calculations, history, or preferences. Calculations run locally. The app contains no advertising, analytics, or tracking SDKs."
+                )
+                PolicySection(
+                    title = "Google Play and sharing",
+                    body = "The app may use Google Play's in-app update service to check whether an update is available, and the Rate Us action opens the Google Play listing. Google may process technical, app, or account information under its own privacy terms; the developer does not receive your calculation history through these features. Share App opens Android's share sheet with a static Play Store link. If you choose another app, that app receives the link and handles it under its own privacy policy. Your calculations and history are not attached to the shared link."
+                )
+                PolicySection(
+                    title = "Storage, backup, and retention",
+                    body = "History and preferences are kept in app-private storage. You can remove individual history entries from the History sheet or clear all history in Settings. Preferences remain until changed or app data is cleared. Android backup and device transfer are allowed for this app's data; if enabled in your device settings, Android may back up, transfer, or restore history and preferences. The developer cannot access or control those backups."
+                )
+                PolicySection(
+                    title = "Security",
+                    body = "App data is protected by Android's app sandbox. Any backup or device transfer is managed by Android and your device account settings. No method of storage or transfer can be guaranteed completely secure."
+                )
+                PolicySection(
+                    title = "Children",
+                    body = "This is a general-purpose utility and is not directed to children. The app does not knowingly collect personal information from children."
+                )
+                PolicySection(
+                    title = "Changes and contact",
+                    body = "This policy may be updated if the app's features or data practices change. For privacy questions or requests, contact the developer using the support email shown on this app's Google Play Store listing."
+                )
+                Spacer(Modifier.height(tokens.spaceLg))
+                GlassButton(text = "Got it", onClick = onDismiss)
+            }
+        }
+    }
+}
+
+@Composable
+private fun PolicySection(title: String, body: String) {
+    val palette = LocalLiquidPalette.current
+    val tokens = LocalGlassTokens.current
+    Column(Modifier.padding(bottom = tokens.spaceMd)) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleMedium,
+            color = palette.contentPrimary
+        )
+        Spacer(Modifier.height(tokens.spaceXs))
+        Text(
+            text = body,
+            style = MaterialTheme.typography.bodyMedium,
+            color = palette.contentSecondary
+        )
+    }
+}
+
+@Composable
+private fun AboutDialog(onDismiss: () -> Unit) {
+    val palette = LocalLiquidPalette.current
+    val tokens = LocalGlassTokens.current
+    Dialog(onDismissRequest = onDismiss) {
+        LiquidGlassSurface(shape = RoundedCornerShape(tokens.cornerLarge)) {
             Column(Modifier.padding(tokens.spaceLg)) {
                 Text(
-                    text = "Privacy policy",
+                    text = "Disk Partition Calculator",
                     style = MaterialTheme.typography.titleLarge,
                     color = palette.contentPrimary
                 )
                 Spacer(Modifier.height(tokens.spaceSm))
                 Text(
-                    text = "This app performs every calculation on your device. It has no internet " +
-                        "permission, contains no analytics, no ads and no trackers. Your conversion " +
-                        "history and preferences are stored locally in the app's private storage and " +
-                        "are removed when you uninstall the app or clear its data.",
+                    text = "Version ${BuildConfig.VERSION_NAME}",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = palette.contentSecondary
+                )
+                Spacer(Modifier.height(tokens.spaceSm))
+                Text(
+                    text = "Calculate partition sizes for Windows Setup and split disk space into equal parts.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = palette.contentSecondary
                 )
@@ -368,5 +526,5 @@ private fun shareApp(context: Context) {
                 "https://play.google.com/store/apps/details?id=${context.packageName}"
         )
     }
-    context.startActivity(Intent.createChooser(share, "Share app"))
+    context.startActivity(Intent.createChooser(share, "Share App"))
 }
