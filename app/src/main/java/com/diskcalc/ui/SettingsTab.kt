@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,7 +12,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -23,6 +23,7 @@ import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material.icons.rounded.DarkMode
 import androidx.compose.material.icons.rounded.History
+import androidx.compose.material.icons.rounded.MenuBook
 import androidx.compose.material.icons.rounded.PrivacyTip
 import androidx.compose.material.icons.rounded.RestoreFromTrash
 import androidx.compose.material.icons.rounded.Share
@@ -35,6 +36,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -59,6 +61,9 @@ import com.diskcalc.ui.components.glassLite
 import com.diskcalc.ui.theme.LocalGlassTokens
 import com.diskcalc.ui.theme.LocalLiquidPalette
 
+/** Full-screen pages opened from the Settings tab actions. */
+private enum class SettingsPage { PRIVACY, GUIDE }
+
 /**
  * Settings tab — theme (Dark Mode / Light Mode), defaults and informational actions.
  */
@@ -77,8 +82,19 @@ fun SettingsTab(
     val palette = LocalLiquidPalette.current
     val tokens = LocalGlassTokens.current
     val context = LocalContext.current
-    var showPrivacy by remember { mutableStateOf(false) }
+    var page by rememberSaveable { mutableStateOf<SettingsPage?>(null) }
     var showAbout by remember { mutableStateOf(false) }
+
+    // Privacy Policy and Guide are full pages that replace the Settings content until dismissed.
+    val openPage = page
+    if (openPage != null) {
+        BackHandler { page = null }
+        when (openPage) {
+            SettingsPage.PRIVACY -> PrivacyPolicyPage(onBack = { page = null }, modifier = modifier)
+            SettingsPage.GUIDE -> GuidePage(onBack = { page = null }, modifier = modifier)
+        }
+        return
+    }
 
     Column(
         modifier = modifier
@@ -189,16 +205,19 @@ fun SettingsTab(
             }
         }
 
-        GlassPanel(
-            title = "More",
-            subtitle = "Privacy, sharing, and app information",
-            icon = Icons.Rounded.AutoAwesome
-        ) {
+        GlassPanel {
             SettingsAction(
                 icon = Icons.Rounded.PrivacyTip,
                 title = "Privacy Policy",
                 subtitle = "How the app handles and stores information",
-                onClick = { showPrivacy = true }
+                onClick = { page = SettingsPage.PRIVACY }
+            )
+            GlassDivider()
+            SettingsAction(
+                icon = Icons.Rounded.MenuBook,
+                title = "Guide",
+                subtitle = "How to use every part of the app",
+                onClick = { page = SettingsPage.GUIDE }
             )
             GlassDivider()
             SettingsAction(
@@ -226,9 +245,6 @@ fun SettingsTab(
         Spacer(Modifier.height(tokens.spaceSm))
     }
 
-    if (showPrivacy) {
-        PrivacyDialog(onDismiss = { showPrivacy = false })
-    }
     if (showAbout) {
         AboutDialog(onDismiss = { showAbout = false })
     }
@@ -283,88 +299,6 @@ private fun SettingsAction(
             contentDescription = null,
             tint = palette.contentTertiary,
             modifier = Modifier.size(20.dp)
-        )
-    }
-}
-
-@Composable
-private fun PrivacyDialog(onDismiss: () -> Unit) {
-    val palette = LocalLiquidPalette.current
-    val tokens = LocalGlassTokens.current
-    Dialog(onDismissRequest = onDismiss) {
-        LiquidGlassSurface(shape = RoundedCornerShape(tokens.cornerLarge)) {
-            Column(
-                modifier = Modifier
-                    .heightIn(max = 560.dp)
-                    .verticalScroll(rememberScrollState())
-                    .padding(tokens.spaceLg)
-            ) {
-                Text(
-                    text = "Privacy Policy",
-                    style = MaterialTheme.typography.titleLarge,
-                    color = palette.contentPrimary
-                )
-                Spacer(Modifier.height(tokens.spaceXs))
-                Text(
-                    text = "Last updated: 12 October 2026",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = palette.contentTertiary
-                )
-                Spacer(Modifier.height(tokens.spaceMd))
-                PolicySection(
-                    title = "Overview",
-                    body = "Disk Partition Calculator helps calculate partition sizes for Windows Setup. This policy explains what information the app handles, how it is stored, and when another service may be involved."
-                )
-                PolicySection(
-                    title = "Information handled by the app",
-                    body = "Partition sizes you enter, calculation results, selected filesystem, Windows Setup profile, and app preferences are processed on your device. The app saves up to 100 recent calculation records and your preferences in its private app storage. It does not require an account or ask you to provide your name, email address, location, contacts, or other personal details."
-                )
-                PolicySection(
-                    title = "Collection and use",
-                    body = "The developer does not operate a server for this app and does not receive your disk sizes, calculations, history, or preferences. Calculations run locally. The app contains no advertising, analytics, or tracking SDKs."
-                )
-                PolicySection(
-                    title = "Google Play and sharing",
-                    body = "The app may use Google Play's in-app update service to check whether an update is available, and the Rate Us action opens the Google Play listing. Google may process technical, app, or account information under its own privacy terms; the developer does not receive your calculation history through these features. Share App opens Android's share sheet with a static Play Store link. If you choose another app, that app receives the link and handles it under its own privacy policy. Your calculations and history are not attached to the shared link."
-                )
-                PolicySection(
-                    title = "Storage, backup, and retention",
-                    body = "History and preferences are kept in app-private storage. You can remove individual history entries from the History sheet or clear all history in Settings. Preferences remain until changed or app data is cleared. Android backup and device transfer are allowed for this app's data; if enabled in your device settings, Android may back up, transfer, or restore history and preferences. The developer cannot access or control those backups."
-                )
-                PolicySection(
-                    title = "Security",
-                    body = "App data is protected by Android's app sandbox. Any backup or device transfer is managed by Android and your device account settings. No method of storage or transfer can be guaranteed completely secure."
-                )
-                PolicySection(
-                    title = "Children",
-                    body = "This is a general-purpose utility and is not directed to children. The app does not knowingly collect personal information from children."
-                )
-                PolicySection(
-                    title = "Changes and contact",
-                    body = "This policy may be updated if the app's features or data practices change. For privacy questions or requests, contact the developer using the support email shown on this app's Google Play Store listing."
-                )
-                Spacer(Modifier.height(tokens.spaceLg))
-                GlassButton(text = "Got it", onClick = onDismiss)
-            }
-        }
-    }
-}
-
-@Composable
-private fun PolicySection(title: String, body: String) {
-    val palette = LocalLiquidPalette.current
-    val tokens = LocalGlassTokens.current
-    Column(Modifier.padding(bottom = tokens.spaceMd)) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleMedium,
-            color = palette.contentPrimary
-        )
-        Spacer(Modifier.height(tokens.spaceXs))
-        Text(
-            text = body,
-            style = MaterialTheme.typography.bodyMedium,
-            color = palette.contentSecondary
         )
     }
 }
