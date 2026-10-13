@@ -22,13 +22,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material.icons.rounded.DarkMode
-import androidx.compose.material.icons.rounded.HelpOutline
 import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.PrivacyTip
 import androidx.compose.material.icons.rounded.RestoreFromTrash
 import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material.icons.rounded.StarRate
-import androidx.compose.material.icons.rounded.Storage
 import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -225,82 +223,6 @@ fun SettingsTab(
             )
         }
 
-        GlassPanel(
-            title = "FAQ",
-            subtitle = "Common questions about sizing, Setup, and your data",
-            icon = Icons.Rounded.HelpOutline
-        ) {
-            FaqItem(
-                question = "Does this app create or format partitions?",
-                answer = "No. It only calculates suggested MB values. It does not inspect, create, resize, format, or delete partitions. You make any changes in Windows Setup, so always verify the selected disk and value before proceeding."
-            )
-            GlassDivider()
-            FaqItem(
-                question = "Why does the app use 1 GB = 1024 MB?",
-                answer = "This follows the binary size convention Windows Explorer uses when it labels disk sizes as GB. Windows Setup asks for whole MB values, so the app converts using 1024 MB per GB."
-            )
-            GlassDivider()
-            FaqItem(
-                question = "Why is 4 MB added to a partition?",
-                answer = "The calculation allows about 4 MB for space used during formatting, so the visible size is closer to your target. The actual result can vary by about 1–2 MB depending on Windows and the filesystem."
-            )
-            GlassDivider()
-            FaqItem(
-                question = "What does Simulate Windows Setup do?",
-                answer = "In Calc, it adds the selected system-partition overhead to the value to type. In Split, it subtracts that overhead from the total before splitting. The presets are 566 MB for Windows 10 UEFI/GPT and 826 MB for Windows 11 UEFI/GPT; Custom lets you enter another value. Actual layouts can differ."
-            )
-            GlassDivider()
-            FaqItem(
-                question = "Why can the last split partition be a little larger?",
-                answer = "Windows Setup accepts whole MB values. The app divides the usable space using integer arithmetic and gives any leftover MB to the last partition, so the partition values add up exactly to the usable total."
-            )
-            GlassDivider()
-            FaqItem(
-                question = "What are the FAT32 limits?",
-                answer = "The built-in Windows format tool generally will not format a FAT32 partition larger than 32 GB, and FAT32 cannot store a single file larger than 4 GB. The 32 GB limit is specific to that Windows tool."
-            )
-            GlassDivider()
-            FaqItem(
-                question = "Where is my history stored, and how can I delete it?",
-                answer = "Up to 100 recent calculations and your app preferences are stored in the app's private storage. Use Settings > History > Clear or remove individual items from the History sheet. Android backup or device transfer may include this app data if enabled in your device settings."
-            )
-            GlassDivider()
-            FaqItem(
-                question = "Does the app send my disk sizes or history anywhere?",
-                answer = "The app does not send your calculations, history, or preferences to a developer-operated server and does not use advertising or analytics SDKs. If Android backup or device transfer is enabled, Android may back up or restore app data. Google Play handles its own technical data when the app checks for updates or opens its store listing. Share App sends only the store link through Android's share sheet when you choose a receiving app. See Privacy Policy for details."
-            )
-        }
-
-        GlassPanel(
-            title = "How the numbers work",
-            icon = Icons.Rounded.Storage
-        ) {
-            listOf(
-                "1 GB = 1024 MB (binary, exactly what Explorer shows).",
-                "Every partition needs about ${PartitionConstants.OVERHEAD_MB_PER_PARTITION} MB extra, so the typed value = visible size + 4.",
-                "Windows Setup system partitions are ≈ ${PartitionConstants.WINDOWS_SETUP_OVERHEAD_MB} MB (Win10 UEFI/GPT): 100 EFI + 16 MSR + 450 Recovery.",
-                "FAT32 stops at 32 GB in the Windows format tool and 4 GB per file.",
-                "MBR disks accept only ${PartitionConstants.MBR_MAX_PRIMARY_PARTITIONS} primary partitions — use GPT for more."
-            ).forEach { line ->
-                Row(
-                    Modifier.padding(vertical = 5.dp),
-                    verticalAlignment = Alignment.Top
-                ) {
-                    Text(
-                        text = "•",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = palette.accent,
-                        modifier = Modifier.padding(end = 8.dp)
-                    )
-                    Text(
-                        text = line,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = palette.contentSecondary
-                    )
-                }
-            }
-        }
-
         Spacer(Modifier.height(tokens.spaceSm))
     }
 
@@ -309,29 +231,6 @@ fun SettingsTab(
     }
     if (showAbout) {
         AboutDialog(onDismiss = { showAbout = false })
-    }
-}
-
-@Composable
-private fun FaqItem(question: String, answer: String) {
-    val palette = LocalLiquidPalette.current
-    val tokens = LocalGlassTokens.current
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = tokens.spaceSm)
-    ) {
-        Text(
-            text = question,
-            style = MaterialTheme.typography.titleMedium,
-            color = palette.contentPrimary
-        )
-        Spacer(Modifier.height(tokens.spaceXs))
-        Text(
-            text = answer,
-            style = MaterialTheme.typography.bodyMedium,
-            color = palette.contentSecondary
-        )
     }
 }
 
