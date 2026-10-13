@@ -1,6 +1,5 @@
 package com.diskcalc.ui
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -28,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -111,7 +111,7 @@ fun CalcResultDialog(
     }
 }
 
-/** Result of the Split tab: the per-partition table. */
+/** Result of the Split tab: the per-partition table with the exact values to type. */
 @Composable
 fun SplitResultDialog(
     result: SplitResult,
@@ -119,34 +119,54 @@ fun SplitResultDialog(
     onCopied: () -> Unit
 ) {
     val clipboard = LocalClipboardManager.current
+    val tokens = LocalGlassTokens.current
+
+    val count = result.partitions.size
+    val overheadMb = result.totalMb - result.usableMb
+    // Every partition except the last gets the same base value; the last one carries the remainder.
+    val baseMb = result.partitions.first().typeMb.toLong()
+    val remainderMb = result.usableMb - baseMb * count
+    val sumMatchesUsable = result.sumOfTypeMb == result.usableMb
 
     GlassDialog(onDismiss = onDismiss, title = "Split preview", icon = Icons.Rounded.Layers) {
-        GlassBadge(text = "${result.partitions.size} partitions · ${result.totalMb} MB total")
+        GlassBadge(text = "$count ${if (count == 1) "partition" else "partitions"} · ${result.filesystem.label}")
 
         Spacer(Modifier.height(14.dp))
         StatTile(
-            label = "Type this for every partition (except the last)",
-            value = result.partitions.firstOrNull()?.typeMb?.toString() ?: "0",
+            label = "Space for partitions",
+            value = result.usableMb.toString(),
             unit = "MB",
-            caption = "Usable space: ${result.usableMb} MB of ${result.totalMb} MB",
+            caption = if (overheadMb > 0) {
+                "${result.totalMb} MB total minus $overheadMb MB Windows Setup overhead"
+            } else {
+                "${result.totalMb} MB total, no Setup overhead"
+            },
             highlight = true,
             modifier = Modifier.fillMaxWidth()
         )
 
-        Spacer(Modifier.height(16.dp))
-        Column(verticalArrangement = Arrangement.spacedBy(0.dp)) {
-            result.partitions.forEach { partition ->
-                val isLast = partition.index == result.partitions.size
-                KeyValueRow(
-                    label = "Partition ${partition.index}" + if (isLast && partition.typeMb != result.partitions.first().typeMb) " (gets the remainder)" else "",
-                    value = "${partition.typeMb} MB  ·  visible ≈ ${partition.expectedVisibleMb} MB",
-                    emphasise = isLast && partition.typeMb != result.partitions.first().typeMb
-                )
+        Spacer(Modifier.height(18.dp))
+        SplitTableHeader()
+        GlassDivider()
+        result.partitions.forEach { partition ->
+            val isLast = partition.index == count
+            val note = if (isLast && remainderMb > 0) {
+                "includes +$remainderMb MB remainder"
+            } else {
+                null
             }
+            SplitTableRow(
+                label = "Partition ${partition.index}",
+                typeText = "${partition.typeMb} MB",
+                visibleText = "${partition.expectedVisibleMb} MB",
+                note = note
+            )
+            GlassDivider()
         }
 
-        Spacer(Modifier.height(6.dp))
+        Spacer(Modifier.height(10.dp))
         KeyValueRow("Sum of partitions", "${result.sumOfTypeMb} MB")
+        KeyValueRow("Matches usable space", if (sumMatchesUsable) "Yes" else "No")
         KeyValueRow("Filesystem", result.filesystem.label)
 
         Spacer(Modifier.height(10.dp))
@@ -165,8 +185,85 @@ fun SplitResultDialog(
                 },
                 modifier = Modifier.weight(1f)
             )
-            Spacer(Modifier.width(10.dp))
+            Spacer(Modifier.width(tokens.spaceSm))
             GlassButton(text = "Done", primary = false, onClick = onDismiss, fillWidth = false)
+        }
+    }
+}
+
+/** Column captions for the split table. Numeric columns are right-aligned so digits line up. */
+@Composable
+private fun SplitTableHeader() {
+    val palette = LocalLiquidPalette.current
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 6.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = "Partition",
+            style = MaterialTheme.typography.labelMedium,
+            color = palette.contentTertiary,
+            modifier = Modifier.weight(1f)
+        )
+        Text(
+            text = "Type in Setup",
+            style = MaterialTheme.typography.labelMedium,
+            color = palette.contentTertiary,
+            textAlign = TextAlign.End,
+            modifier = Modifier.weight(1f)
+        )
+        Text(
+            text = "Visible \u2248",
+            style = MaterialTheme.typography.labelMedium,
+            color = palette.contentTertiary,
+            textAlign = TextAlign.End,
+            modifier = Modifier.weight(1f)
+        )
+    }
+}
+
+/** One partition row. The typed value is emphasised so it is the first thing the eye lands on. */
+@Composable
+private fun SplitTableRow(
+    label: String,
+    typeText: String,
+    visibleText: String,
+    note: String?
+) {
+    val palette = LocalLiquidPalette.current
+    Column(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodyMedium,
+                color = palette.contentSecondary,
+                modifier = Modifier.weight(1f)
+            )
+            Text(
+                text = typeText,
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                color = palette.accent,
+                textAlign = TextAlign.End,
+                modifier = Modifier.weight(1f)
+            )
+            Text(
+                text = visibleText,
+                style = MaterialTheme.typography.bodyMedium,
+                color = palette.contentSecondary,
+                textAlign = TextAlign.End,
+                modifier = Modifier.weight(1f)
+            )
+        }
+        if (note != null) {
+            Text(
+                text = note,
+                style = MaterialTheme.typography.labelMedium,
+                color = palette.contentTertiary,
+                textAlign = TextAlign.End,
+                modifier = Modifier.fillMaxWidth()
+            )
         }
     }
 }

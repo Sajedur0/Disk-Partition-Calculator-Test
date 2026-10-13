@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,7 +12,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -22,13 +22,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material.icons.rounded.DarkMode
-import androidx.compose.material.icons.rounded.HelpOutline
 import androidx.compose.material.icons.rounded.History
+import androidx.compose.material.icons.rounded.MenuBook
 import androidx.compose.material.icons.rounded.PrivacyTip
 import androidx.compose.material.icons.rounded.RestoreFromTrash
 import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material.icons.rounded.StarRate
-import androidx.compose.material.icons.rounded.Storage
 import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -37,6 +36,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -61,6 +61,9 @@ import com.diskcalc.ui.components.glassLite
 import com.diskcalc.ui.theme.LocalGlassTokens
 import com.diskcalc.ui.theme.LocalLiquidPalette
 
+/** Full-screen pages opened from the Settings tab actions. */
+private enum class SettingsPage { PRIVACY, GUIDE }
+
 /**
  * Settings tab — theme (Dark Mode / Light Mode), defaults and informational actions.
  */
@@ -79,8 +82,19 @@ fun SettingsTab(
     val palette = LocalLiquidPalette.current
     val tokens = LocalGlassTokens.current
     val context = LocalContext.current
-    var showPrivacy by remember { mutableStateOf(false) }
+    var page by rememberSaveable { mutableStateOf<SettingsPage?>(null) }
     var showAbout by remember { mutableStateOf(false) }
+
+    // Privacy Policy and Guide are full pages that replace the Settings content until dismissed.
+    val openPage = page
+    if (openPage != null) {
+        BackHandler { page = null }
+        when (openPage) {
+            SettingsPage.PRIVACY -> PrivacyPolicyPage(onBack = { page = null }, modifier = modifier)
+            SettingsPage.GUIDE -> GuidePage(onBack = { page = null }, modifier = modifier)
+        }
+        return
+    }
 
     Column(
         modifier = modifier
@@ -191,16 +205,19 @@ fun SettingsTab(
             }
         }
 
-        GlassPanel(
-            title = "More",
-            subtitle = "Privacy, sharing, and app information",
-            icon = Icons.Rounded.AutoAwesome
-        ) {
+        GlassPanel {
             SettingsAction(
                 icon = Icons.Rounded.PrivacyTip,
                 title = "Privacy Policy",
                 subtitle = "How the app handles and stores information",
-                onClick = { showPrivacy = true }
+                onClick = { page = SettingsPage.PRIVACY }
+            )
+            GlassDivider()
+            SettingsAction(
+                icon = Icons.Rounded.MenuBook,
+                title = "Guide",
+                subtitle = "How to use every part of the app",
+                onClick = { page = SettingsPage.GUIDE }
             )
             GlassDivider()
             SettingsAction(
@@ -225,113 +242,11 @@ fun SettingsTab(
             )
         }
 
-        GlassPanel(
-            title = "FAQ",
-            subtitle = "Common questions about sizing, Setup, and your data",
-            icon = Icons.Rounded.HelpOutline
-        ) {
-            FaqItem(
-                question = "Does this app create or format partitions?",
-                answer = "No. It only calculates suggested MB values. It does not inspect, create, resize, format, or delete partitions. You make any changes in Windows Setup, so always verify the selected disk and value before proceeding."
-            )
-            GlassDivider()
-            FaqItem(
-                question = "Why does the app use 1 GB = 1024 MB?",
-                answer = "This follows the binary size convention Windows Explorer uses when it labels disk sizes as GB. Windows Setup asks for whole MB values, so the app converts using 1024 MB per GB."
-            )
-            GlassDivider()
-            FaqItem(
-                question = "Why is 4 MB added to a partition?",
-                answer = "The calculation allows about 4 MB for space used during formatting, so the visible size is closer to your target. The actual result can vary by about 1–2 MB depending on Windows and the filesystem."
-            )
-            GlassDivider()
-            FaqItem(
-                question = "What does Simulate Windows Setup do?",
-                answer = "In Calc, it adds the selected system-partition overhead to the value to type. In Split, it subtracts that overhead from the total before splitting. The presets are 566 MB for Windows 10 UEFI/GPT and 826 MB for Windows 11 UEFI/GPT; Custom lets you enter another value. Actual layouts can differ."
-            )
-            GlassDivider()
-            FaqItem(
-                question = "Why can the last split partition be a little larger?",
-                answer = "Windows Setup accepts whole MB values. The app divides the usable space using integer arithmetic and gives any leftover MB to the last partition, so the partition values add up exactly to the usable total."
-            )
-            GlassDivider()
-            FaqItem(
-                question = "What are the FAT32 limits?",
-                answer = "The built-in Windows format tool generally will not format a FAT32 partition larger than 32 GB, and FAT32 cannot store a single file larger than 4 GB. The 32 GB limit is specific to that Windows tool."
-            )
-            GlassDivider()
-            FaqItem(
-                question = "Where is my history stored, and how can I delete it?",
-                answer = "Up to 100 recent calculations and your app preferences are stored in the app's private storage. Use Settings > History > Clear or remove individual items from the History sheet. Android backup or device transfer may include this app data if enabled in your device settings."
-            )
-            GlassDivider()
-            FaqItem(
-                question = "Does the app send my disk sizes or history anywhere?",
-                answer = "The app does not send your calculations, history, or preferences to a developer-operated server and does not use advertising or analytics SDKs. If Android backup or device transfer is enabled, Android may back up or restore app data. Google Play handles its own technical data when the app checks for updates or opens its store listing. Share App sends only the store link through Android's share sheet when you choose a receiving app. See Privacy Policy for details."
-            )
-        }
-
-        GlassPanel(
-            title = "How the numbers work",
-            icon = Icons.Rounded.Storage
-        ) {
-            listOf(
-                "1 GB = 1024 MB (binary, exactly what Explorer shows).",
-                "Every partition needs about ${PartitionConstants.OVERHEAD_MB_PER_PARTITION} MB extra, so the typed value = visible size + 4.",
-                "Windows Setup system partitions are ≈ ${PartitionConstants.WINDOWS_SETUP_OVERHEAD_MB} MB (Win10 UEFI/GPT): 100 EFI + 16 MSR + 450 Recovery.",
-                "FAT32 stops at 32 GB in the Windows format tool and 4 GB per file.",
-                "MBR disks accept only ${PartitionConstants.MBR_MAX_PRIMARY_PARTITIONS} primary partitions — use GPT for more."
-            ).forEach { line ->
-                Row(
-                    Modifier.padding(vertical = 5.dp),
-                    verticalAlignment = Alignment.Top
-                ) {
-                    Text(
-                        text = "•",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = palette.accent,
-                        modifier = Modifier.padding(end = 8.dp)
-                    )
-                    Text(
-                        text = line,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = palette.contentSecondary
-                    )
-                }
-            }
-        }
-
         Spacer(Modifier.height(tokens.spaceSm))
     }
 
-    if (showPrivacy) {
-        PrivacyDialog(onDismiss = { showPrivacy = false })
-    }
     if (showAbout) {
         AboutDialog(onDismiss = { showAbout = false })
-    }
-}
-
-@Composable
-private fun FaqItem(question: String, answer: String) {
-    val palette = LocalLiquidPalette.current
-    val tokens = LocalGlassTokens.current
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = tokens.spaceSm)
-    ) {
-        Text(
-            text = question,
-            style = MaterialTheme.typography.titleMedium,
-            color = palette.contentPrimary
-        )
-        Spacer(Modifier.height(tokens.spaceXs))
-        Text(
-            text = answer,
-            style = MaterialTheme.typography.bodyMedium,
-            color = palette.contentSecondary
-        )
     }
 }
 
@@ -384,88 +299,6 @@ private fun SettingsAction(
             contentDescription = null,
             tint = palette.contentTertiary,
             modifier = Modifier.size(20.dp)
-        )
-    }
-}
-
-@Composable
-private fun PrivacyDialog(onDismiss: () -> Unit) {
-    val palette = LocalLiquidPalette.current
-    val tokens = LocalGlassTokens.current
-    Dialog(onDismissRequest = onDismiss) {
-        LiquidGlassSurface(shape = RoundedCornerShape(tokens.cornerLarge)) {
-            Column(
-                modifier = Modifier
-                    .heightIn(max = 560.dp)
-                    .verticalScroll(rememberScrollState())
-                    .padding(tokens.spaceLg)
-            ) {
-                Text(
-                    text = "Privacy Policy",
-                    style = MaterialTheme.typography.titleLarge,
-                    color = palette.contentPrimary
-                )
-                Spacer(Modifier.height(tokens.spaceXs))
-                Text(
-                    text = "Last updated: 12 October 2026",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = palette.contentTertiary
-                )
-                Spacer(Modifier.height(tokens.spaceMd))
-                PolicySection(
-                    title = "Overview",
-                    body = "Disk Partition Calculator helps calculate partition sizes for Windows Setup. This policy explains what information the app handles, how it is stored, and when another service may be involved."
-                )
-                PolicySection(
-                    title = "Information handled by the app",
-                    body = "Partition sizes you enter, calculation results, selected filesystem, Windows Setup profile, and app preferences are processed on your device. The app saves up to 100 recent calculation records and your preferences in its private app storage. It does not require an account or ask you to provide your name, email address, location, contacts, or other personal details."
-                )
-                PolicySection(
-                    title = "Collection and use",
-                    body = "The developer does not operate a server for this app and does not receive your disk sizes, calculations, history, or preferences. Calculations run locally. The app contains no advertising, analytics, or tracking SDKs."
-                )
-                PolicySection(
-                    title = "Google Play and sharing",
-                    body = "The app may use Google Play's in-app update service to check whether an update is available, and the Rate Us action opens the Google Play listing. Google may process technical, app, or account information under its own privacy terms; the developer does not receive your calculation history through these features. Share App opens Android's share sheet with a static Play Store link. If you choose another app, that app receives the link and handles it under its own privacy policy. Your calculations and history are not attached to the shared link."
-                )
-                PolicySection(
-                    title = "Storage, backup, and retention",
-                    body = "History and preferences are kept in app-private storage. You can remove individual history entries from the History sheet or clear all history in Settings. Preferences remain until changed or app data is cleared. Android backup and device transfer are allowed for this app's data; if enabled in your device settings, Android may back up, transfer, or restore history and preferences. The developer cannot access or control those backups."
-                )
-                PolicySection(
-                    title = "Security",
-                    body = "App data is protected by Android's app sandbox. Any backup or device transfer is managed by Android and your device account settings. No method of storage or transfer can be guaranteed completely secure."
-                )
-                PolicySection(
-                    title = "Children",
-                    body = "This is a general-purpose utility and is not directed to children. The app does not knowingly collect personal information from children."
-                )
-                PolicySection(
-                    title = "Changes and contact",
-                    body = "This policy may be updated if the app's features or data practices change. For privacy questions or requests, contact the developer using the support email shown on this app's Google Play Store listing."
-                )
-                Spacer(Modifier.height(tokens.spaceLg))
-                GlassButton(text = "Got it", onClick = onDismiss)
-            }
-        }
-    }
-}
-
-@Composable
-private fun PolicySection(title: String, body: String) {
-    val palette = LocalLiquidPalette.current
-    val tokens = LocalGlassTokens.current
-    Column(Modifier.padding(bottom = tokens.spaceMd)) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleMedium,
-            color = palette.contentPrimary
-        )
-        Spacer(Modifier.height(tokens.spaceXs))
-        Text(
-            text = body,
-            style = MaterialTheme.typography.bodyMedium,
-            color = palette.contentSecondary
         )
     }
 }
