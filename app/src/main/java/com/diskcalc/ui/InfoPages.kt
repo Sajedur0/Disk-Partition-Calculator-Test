@@ -37,7 +37,7 @@ import com.diskcalc.ui.theme.LocalGlassTokens
 import com.diskcalc.ui.theme.LocalLiquidPalette
 
 /** Shown on the Privacy Policy page. Update it whenever the data practices change. */
-private const val PRIVACY_LAST_UPDATED = "13 October 2026"
+private const val PRIVACY_LAST_UPDATED = "23 October 2026"
 
 /**
  * Full-screen Privacy Policy page opened from Settings > Privacy Policy.
@@ -56,11 +56,11 @@ fun PrivacyPolicyPage(onBack: () -> Unit, modifier: Modifier = Modifier) {
             title = "Summary",
             icon = Icons.Rounded.PrivacyTip,
             bullets = listOf(
-                "Your calculations, history and preferences stay on your device.",
-                "The app has no account, no sign-in and no developer-operated server.",
-                "The app does not ask for access to your contacts, location, camera, microphone, photos or files.",
-                "The app contains no advertising, analytics, crash-reporting or tracking SDKs.",
-                "The developer does not sell, rent or share your data."
+                "Your calculations, history and preferences stay only on your device.",
+                "The app has no account, no sign-in, and no developer-operated server.",
+                "The app does not ask for access to your contacts, location, camera, microphone, photos, or files.",
+                "The app contains no advertising, analytics, crash-reporting, or tracking SDKs.",
+                "The developer does not sell, rent, or share your data with anyone."
             )
         )
 
@@ -68,9 +68,9 @@ fun PrivacyPolicyPage(onBack: () -> Unit, modifier: Modifier = Modifier) {
             title = "Developer and contact",
             icon = Icons.Rounded.Info,
             paragraphs = listOf(
-                "This policy covers the Disk Partition Calculator Android app (package com.diskcalc). " +
+                "This policy covers the Disk Partition Calculator Android app (package: com.diskcalc). " +
                     "The developer is the publisher named on the app's Google Play Store listing.",
-                "For privacy questions, data requests or concerns, contact the developer at the support " +
+                "For privacy questions, data requests, or concerns, please contact the developer at the support " +
                     "email address shown on the app's Google Play Store listing."
             )
         )
@@ -83,11 +83,11 @@ fun PrivacyPolicyPage(onBack: () -> Unit, modifier: Modifier = Modifier) {
             ),
             bullets = listOf(
                 "Calculation inputs: visible partition size in GB, total disk size in MB, partition count, " +
-                    "filesystem, Windows Setup simulation on or off, and custom Windows Setup overhead.",
+                    "filesystem type, Windows Setup simulation status, and custom Windows Setup overhead value.",
                 "Calculation results and history: up to 100 most recent conversions, including the mode " +
-                    "(Calc or Split), entered values, filesystem, result values, a text summary and a timestamp.",
-                "App preferences: theme (Dark Mode or Light Mode), default filesystem, default Windows Setup " +
-                    "simulation, selected Windows Setup profile and custom overhead value."
+                    "(Calc or Split), entered values, filesystem type, result values, text summary, and timestamp.",
+                "App preferences: theme selection (Dark Mode or Light Mode), default filesystem, default Windows Setup " +
+                    "simulation status, selected Windows Setup profile, and custom overhead value."
             )
         )
 
@@ -96,7 +96,8 @@ fun PrivacyPolicyPage(onBack: () -> Unit, modifier: Modifier = Modifier) {
             icon = Icons.Rounded.Info,
             paragraphs = listOf(
                 "The app does not collect or ask for your name, email address, phone number, location, " +
-                    "contacts, photos, device identifiers or advertising ID. It does not require an account."
+                    "contacts, photos, device identifiers, or advertising ID. It does not require an account " +
+                    "or any form of registration."
             )
         )
 
@@ -112,22 +113,22 @@ fun PrivacyPolicyPage(onBack: () -> Unit, modifier: Modifier = Modifier) {
         )
 
         InfoPanel(
-            title = "Sharing and third parties",
+            title = "Data sharing and third parties",
             icon = Icons.Rounded.Settings,
             paragraphs = listOf(
                 "The developer does not share your data with third parties. The following features " +
-                    "involve other services only when you use them or when the app checks for updates:"
+                    "involve other services only when you explicitly use them:"
             ),
             bullets = listOf(
-                "Google Play: the in-app update check is handled by Google Play. Rate Us opens the Play Store " +
-                    "listing. Google processes information under its own privacy terms.",
-                "Android share sheet: Share App sends only a static Play Store link to the app you choose. " +
+                "Google Play Services: the in-app update check is handled by Google Play. The 'Rate Us' button opens " +
+                    "the Play Store listing. Google processes information under its own privacy policy.",
+                "Android share sheet: The 'Share App' feature sends only a static Play Store link to the app you choose. " +
                     "That app handles the link under its own privacy policy. Your calculations and history " +
-                    "are not attached.",
-                "Android backup and device transfer: if enabled in your device settings, Android may back up " +
-                    "or transfer app data. The developer cannot access or control those backups.",
-                "Clipboard: the Copy buttons place results on your clipboard only when you tap them. " +
-                    "The app does not read the clipboard."
+                    "are not attached or shared.",
+                "Android backup: If enabled in your device settings, Android may back up or transfer app data. " +
+                    "The developer cannot access, view, or control those backups in any way.",
+                "Clipboard: The Copy buttons place calculation results on your clipboard only when you tap them. " +
+                    "The app does not read from the clipboard or access any other clipboard content."
             )
         )
 
@@ -208,10 +209,10 @@ fun GuidePage(onBack: () -> Unit, modifier: Modifier = Modifier) {
             icon = Icons.Rounded.Info,
             paragraphs = listOf(
                 "Windows Setup asks for partition sizes in MB, but after formatting, Windows Explorer shows " +
-                    "sizes in GB (1 GB = 1024 MB). This app converts between the two and tells you the exact " +
-                    "MB value to type.",
-                "The app never touches your disks. It only calculates numbers. You make every change in " +
-                    "Windows Setup or your disk tool."
+                    "sizes in GB (where 1 GB = 1024 MB). This app converts between these units and tells you the exact " +
+                    "MB value to type into Windows Setup.",
+                "The app never touches your disks. It only performs calculations. You make all changes in " +
+                    "Windows Setup or your preferred disk partitioning tool."
             )
         )
 
@@ -229,17 +230,17 @@ fun GuidePage(onBack: () -> Unit, modifier: Modifier = Modifier) {
         InfoPanel(
             title = "Calc tab: one partition",
             icon = Icons.Rounded.Calculate,
-            subtitle = "Use this when you want one partition of a specific size.",
+            subtitle = "Use this when you want to create one partition of a specific size.",
             steps = listOf(
-                "Choose a quick size chip (20 GB, 50 GB, 100 GB, 250 GB, 500 GB or 1 TB), or type a size in " +
-                    "the Visible size box. Decimals work, for example 2.5. A comma also works.",
-                "Pick NTFS or FAT32. Changing it here also changes your default in Settings.",
-                "Optional: turn on Simulate Windows Setup if the disk will also hold the Windows system " +
-                    "partitions. Then choose Win 10 (566 MB), Win 11 (826 MB) or Custom, and enter your own MB " +
-                    "value for Custom.",
-                "Tap Calculate. A result dialog shows the Partition size, the value to Type in Windows Setup, " +
-                    "and the expected visible size.",
-                "Tap Copy to copy the result text, or Done to close the dialog."
+                "Choose a quick size chip (20 GB, 50 GB, 100 GB, 250 GB, 500 GB, or 1 TB), or type a size in " +
+                    "the Visible size box. You can use decimals (e.g., 2.5) and commas (e.g., 1,5).",
+                "Pick NTFS or FAT32 as the filesystem. Changing it here also updates your default in Settings.",
+                "Optional: Turn on 'Simulate Windows Setup' if the disk will also hold the Windows system " +
+                    "partitions. Then choose Win 10 (566 MB overhead), Win 11 (826 MB overhead), or Custom, and enter your own MB " +
+                    "value for Custom overhead.",
+                "Tap Calculate. A result dialog will show: the Partition size in MB, the exact value to Type in Windows Setup, " +
+                    "and the expected visible size in GB.",
+                "Tap Copy to copy the result text to clipboard, or Done to close the dialog."
             )
         )
 
@@ -257,17 +258,17 @@ fun GuidePage(onBack: () -> Unit, modifier: Modifier = Modifier) {
         InfoPanel(
             title = "Split tab: whole disk",
             icon = Icons.Rounded.Dashboard,
-            subtitle = "Use this when you want to divide a whole disk into equal parts.",
+            subtitle = "Use this when you want to divide a whole disk into equal partitions.",
             steps = listOf(
-                "Enter the Total size in whole MB, for example 476923. Fractions are not accepted. " +
-                    "Spaces and commas are ignored.",
-                "Use the minus and plus buttons to choose 1 to 8 partitions.",
-                "Pick NTFS or FAT32. Turn on Simulate Windows Setup if the system partitions should be " +
-                    "subtracted first. The overhead comes from the Windows Setup profile set in the Calc tab.",
-                "Tap Split disk. The Partition table lists the value to type for each partition and its " +
-                    "expected visible size.",
-                "Check the sum line. It equals the usable space: the total, minus the Setup overhead when " +
-                    "simulation is on. Tap Copy to copy the whole table."
+                "Enter the Total disk size in whole MB (e.g., 476923). Only whole numbers are accepted. " +
+                    "Spaces and commas in the input are automatically ignored.",
+                "Use the minus (-) and plus (+) buttons to select the number of partitions (1 to 8).",
+                "Pick NTFS or FAT32 as the filesystem. Turn on 'Simulate Windows Setup' if the system partitions should be " +
+                    "subtracted first. The overhead value comes from the Windows Setup profile set in the Calc tab.",
+                "Tap Split disk. The Partition table will show: the exact MB value to type for each partition " +
+                    "and its expected visible size in GB.",
+                "Check the sum line at the bottom. It shows the total usable space: the disk size minus the Setup overhead " +
+                    "(when simulation is enabled). Tap Copy to copy the entire partition table to clipboard."
             )
         )
 

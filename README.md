@@ -1,12 +1,15 @@
 # Disk Partition Calculator (Kotlin / Android)
 
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 Windows Setup asks for a partition size in **MB**, but after formatting Explorer shows **GB**.
 This app does that conversion for you — for a single partition (*Calc*) and for splitting a whole
 disk into N equal partitions (*Split*) — and it tells you exactly which number to type.
 
-The implementation follows [`APP_LOGIC.md`](APP_LOGIC.md) (the Kotlin port of the original Dart v1.1.3
-logic, including the fixed Split tab) and ships with a clean **Solid Dark Mode & Light Mode** user
-interface built on Jetpack Compose.
+The implementation follows [`APP_LOGIC.md`](APP_LOGIC.md) which contains the complete mathematical
+logic and calculation formulas. The app is a Kotlin port of the original Dart v1.1.3 logic,
+including the fixed Split tab. It ships with a clean **Solid Dark Mode & Light Mode** user interface
+built on Jetpack Compose with smooth animated transitions when switching themes.
 
 ```
 ┌────────────────────────────────────────────┐
@@ -28,10 +31,30 @@ interface built on Jetpack Compose.
 |---|---|
 | **Calc** | Preset chips (20/50/100/250/500 GB, 1 TB), decimal keyboard, NTFS/FAT32 picker, Windows Setup simulation (Win 10 / Win 11 / custom MB), Calculate with spinner, result dialog with **Copy**. |
 | **Split** | Integer-only total MB field, 1–8 partition stepper, per-partition table (`type X MB · visible ≈ Y MB`), sum verification, warnings, Copy. |
-| **Settings** | Theme (Dark Mode/Light Mode), default filesystem and Setup profile, history controls, then Privacy Policy (full page), Guide (full page), Rate Us, Share App, About. |
+| **Settings** | Theme (Dark Mode/Light Mode) with **smooth animated transitions**, default filesystem and Setup profile, history controls, Privacy Policy (full page), Guide (full page), Rate Us, Share App, About. |
 | **History** | Last 100 conversions (UUID ids, newest first) stored as JSON in DataStore, viewable in a bottom sheet, individually deletable. |
 
-Full policy text: [`PRIVACY_POLICY.md`](PRIVACY_POLICY.md). Before publishing, host it at a publicly accessible URL, add that URL in Google Play Console, and ensure the contact details and Data Safety declarations match the production app.
+### Theme Features
+- **Smooth animated transitions** when switching between Dark Mode and Light Mode
+- Solid color schemes for both themes
+- Automatic system bar color updates
+- Consistent visual experience across the app
+
+## Privacy Policy
+
+Full policy text is available within the app under Settings > Privacy Policy. Before publishing to Google Play Console:
+
+1. Host the privacy policy at a publicly accessible URL
+2. Add that URL in Google Play Console under App Content > Privacy Policy
+3. Ensure the contact details and Data Safety declarations match the production app
+4. The privacy policy is embedded in the app code (InfoPages.kt) and covers all Google Play requirements
+
+The app follows these privacy principles:
+- No data collection or tracking
+- All data stays on the user's device
+- No third-party analytics or advertising
+- No access to sensitive permissions (contacts, location, camera, etc.)
+- No user accounts or registration required
 
 ### The maths (exactly as specified)
 
@@ -116,7 +139,13 @@ Release builds enable R8 + resource shrinking; the kotlinx.serialization keep ru
 DTOs are already in `app/proguard-rules.pro`. **Before publishing, add your own signing config** —
 see the TODO in `app/build.gradle.kts`.
 
-## Known limitations (from APP_LOGIC.md §12)
+## Documentation
+
+- [`APP_LOGIC.md`](APP_LOGIC.md) - Complete mathematical logic and calculation formulas
+- [`PRIVACY_POLICY.md`](PRIVACY_POLICY.md) - Full privacy policy for Google Play Console
+- [`APP_GUIDE.md`](APP_GUIDE.md) - Comprehensive user guide
+
+## Known limitations (from APP_LOGIC.md)
 
 1. The 4 MB and 566 MB constants are estimates — they vary with the Windows version and boot mode,
    so results can differ by 1–2 MB. The UI always says "≈".

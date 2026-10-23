@@ -1,5 +1,11 @@
 package com.diskcalc.ui
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -75,101 +81,111 @@ fun CalculatorScreen(
         )
     }
 
-    DiskCalcTheme(themeMode = settings.themeMode) {
-        LiquidBackdropHost(modifier = modifier) {
-            val palette = LocalLiquidPalette.current
-            val tokens = LocalGlassTokens.current
+    // Use AnimatedContent to provide smooth transitions when theme changes
+    AnimatedContent(
+        targetState = settings.themeMode,
+        transitionSpec = {
+            (fadeIn(animationSpec = tween(durationMillis = 500)) +
+                fadeOut(animationSpec = tween(durationMillis = 250))).togetherWith(tween(durationMillis = 500))
+        },
+        label = "ThemeTransition"
+    ) { themeMode ->
+        DiskCalcTheme(themeMode = themeMode) {
+            LiquidBackdropHost(modifier = modifier) {
+                val palette = LocalLiquidPalette.current
+                val tokens = LocalGlassTokens.current
 
-            Box(
-                Modifier
-                    .fillMaxSize()
-                    .background(palette.backdropBase)
-            ) {
-                Column(
+                Box(
                     Modifier
                         .fillMaxSize()
-                        .windowInsetsPadding(WindowInsets.safeDrawing)
-                        .padding(horizontal = tokens.screenPadding)
+                        .background(palette.backdropBase)
                 ) {
-                    AppHeader(
-                        isDark = palette.isDark,
-                        onToggleTheme = {
-                            viewModel.onThemeChange(
-                                if (palette.isDark) ThemeMode.LIGHT else ThemeMode.DARK
-                            )
-                        },
-                        onHistoryClick = { showHistory = true },
-                        historyCount = history.size
-                    )
-                    Spacer(Modifier.height(tokens.spaceMd))
-
-                    Box(
+                    Column(
                         Modifier
-                            .weight(1f)
-                            .fillMaxWidth()
+                            .fillMaxSize()
+                            .windowInsetsPadding(WindowInsets.safeDrawing)
+                            .padding(horizontal = tokens.screenPadding)
                     ) {
-                        when (selectedTabIndex) {
-                            0 -> CalcTab(
-                                state = calc,
-                                onVisibleGbChange = viewModel::onVisibleGbChange,
-                                onPresetSelected = viewModel::applyPreset,
-                                onFilesystemChange = viewModel::onCalcFilesystemChange,
-                                onSetupToggle = viewModel::onCalcSetupToggle,
-                                onProfileChange = viewModel::onSetupProfileChange,
-                                onCustomOverheadChange = viewModel::onCustomOverheadChange,
-                                onCalculate = viewModel::calculate
-                            )
+                        AppHeader(
+                            isDark = palette.isDark,
+                            onToggleTheme = {
+                                viewModel.onThemeChange(
+                                    if (palette.isDark) ThemeMode.LIGHT else ThemeMode.DARK
+                                )
+                            },
+                            onHistoryClick = { showHistory = true },
+                            historyCount = history.size
+                        )
+                        Spacer(Modifier.height(tokens.spaceMd))
 
-                            1 -> SplitTab(
-                                state = split,
-                                onTotalMbChange = viewModel::onTotalMbChange,
-                                onPartitionCountChange = viewModel::onPartitionCountChange,
-                                onFilesystemChange = viewModel::onSplitFilesystemChange,
-                                onSetupToggle = viewModel::onSplitSetupToggle,
-                                onSplit = { viewModel.split() }
-                            )
+                        Box(
+                            Modifier
+                                .weight(1f)
+                                .fillMaxWidth()
+                        ) {
+                            when (selectedTabIndex) {
+                                0 -> CalcTab(
+                                    state = calc,
+                                    onVisibleGbChange = viewModel::onVisibleGbChange,
+                                    onPresetSelected = viewModel::applyPreset,
+                                    onFilesystemChange = viewModel::onCalcFilesystemChange,
+                                    onSetupToggle = viewModel::onCalcSetupToggle,
+                                    onProfileChange = viewModel::onSetupProfileChange,
+                                    onCustomOverheadChange = viewModel::onCustomOverheadChange,
+                                    onCalculate = viewModel::calculate
+                                )
 
-                            else -> SettingsTab(
-                                settings = settings,
-                                historySize = history.size,
-                                onThemeChange = viewModel::onThemeChange,
-                                onDefaultFilesystemChange = viewModel::onDefaultFilesystemChange,
-                                onDefaultSetupChange = viewModel::onDefaultSetupChange,
-                                onDefaultProfileChange = viewModel::onDefaultProfileChange,
-                                onClearHistory = viewModel::onClearHistory,
-                                onShowHistory = { showHistory = true }
-                            )
+                                1 -> SplitTab(
+                                    state = split,
+                                    onTotalMbChange = viewModel::onTotalMbChange,
+                                    onPartitionCountChange = viewModel::onPartitionCountChange,
+                                    onFilesystemChange = viewModel::onSplitFilesystemChange,
+                                    onSetupToggle = viewModel::onSplitSetupToggle,
+                                    onSplit = { viewModel.split() }
+                                )
+
+                                else -> SettingsTab(
+                                    settings = settings,
+                                    historySize = history.size,
+                                    onThemeChange = viewModel::onThemeChange,
+                                    onDefaultFilesystemChange = viewModel::onDefaultFilesystemChange,
+                                    onDefaultSetupChange = viewModel::onDefaultSetupChange,
+                                    onDefaultProfileChange = viewModel::onDefaultProfileChange,
+                                    onClearHistory = viewModel::onClearHistory,
+                                    onShowHistory = { showHistory = true }
+                                )
+                            }
                         }
+
+                        Spacer(Modifier.height(tokens.spaceSm))
+                        GlassTabBar(
+                            items = tabs,
+                            selectedIndex = selectedTabIndex,
+                            onSelect = { selectedTabIndex = it },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Spacer(Modifier.height(tokens.spaceSm))
                     }
 
-                    Spacer(Modifier.height(tokens.spaceSm))
-                    GlassTabBar(
-                        items = tabs,
-                        selectedIndex = selectedTabIndex,
-                        onSelect = { selectedTabIndex = it },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    Spacer(Modifier.height(tokens.spaceSm))
-                }
-
-                SnackbarHost(
-                    hostState = snackbarHostState,
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .windowInsetsPadding(WindowInsets.safeDrawing)
-                        .padding(bottom = 92.dp, start = 24.dp, end = 24.dp)
-                ) { data ->
-                    LiquidGlassSurface(
-                        shape = RoundedCornerShape(percent = 50),
-                        tint = palette.glassTint,
-                        elevation = tokens.elevationSmall
-                    ) {
-                        Text(
-                            text = data.visuals.message,
-                            style = MaterialTheme.typography.labelLarge,
-                            color = palette.contentPrimary,
-                            modifier = Modifier.padding(horizontal = 18.dp, vertical = 12.dp)
-                        )
+                    SnackbarHost(
+                        hostState = snackbarHostState,
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .windowInsetsPadding(WindowInsets.safeDrawing)
+                            .padding(bottom = 92.dp, start = 24.dp, end = 24.dp)
+                    ) { data ->
+                        LiquidGlassSurface(
+                            shape = RoundedCornerShape(percent = 50),
+                            tint = palette.glassTint,
+                            elevation = tokens.elevationSmall
+                        ) {
+                            Text(
+                                text = data.visuals.message,
+                                style = MaterialTheme.typography.labelLarge,
+                                color = palette.contentPrimary,
+                                modifier = Modifier.padding(horizontal = 18.dp, vertical = 12.dp)
+                            )
+                        }
                     }
                 }
             }
@@ -207,6 +223,7 @@ fun CalculatorScreen(
                 )
             }
         }
+    }
     }
 }
 
