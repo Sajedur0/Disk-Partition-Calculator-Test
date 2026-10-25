@@ -37,7 +37,7 @@ import com.diskcalc.ui.theme.LocalGlassTokens
 import com.diskcalc.ui.theme.LocalLiquidPalette
 
 /** Shown on the Privacy Policy page. Update it whenever the data practices change. */
-private const val PRIVACY_LAST_UPDATED = "23 October 2026"
+private const val PRIVACY_LAST_UPDATED = "25 October 2026"
 
 /**
  * Full-screen Privacy Policy page opened from Settings > Privacy Policy.
@@ -58,6 +58,8 @@ fun PrivacyPolicyPage(onBack: () -> Unit, modifier: Modifier = Modifier) {
             bullets = listOf(
                 "Your calculations, history and preferences stay only on your device.",
                 "The app has no account, no sign-in, and no developer-operated server.",
+                "The app declares no Android permissions at all — not even internet access — so it cannot " +
+                    "reach the network, your files, your location, or your hardware.",
                 "The app does not ask for access to your contacts, location, camera, microphone, photos, or files.",
                 "The app contains no advertising, analytics, crash-reporting, or tracking SDKs.",
                 "The developer does not sell, rent, or share your data with anyone."
@@ -85,7 +87,10 @@ fun PrivacyPolicyPage(onBack: () -> Unit, modifier: Modifier = Modifier) {
                 "Calculation inputs: visible partition size in GB, total disk size in MB, partition count, " +
                     "filesystem type, Windows Setup simulation status, and custom Windows Setup overhead value.",
                 "Calculation results and history: up to 100 most recent conversions, including the mode " +
-                    "(Calc or Split), entered values, filesystem type, result values, text summary, and timestamp.",
+                    "(Calc or Split), entered values, filesystem type, result values, text summary, timestamp, " +
+                    "and the partition count for Split results.",
+                "Each history entry also stores a randomly generated identifier (UUID). It is created on your " +
+                    "device, is not a device or advertising identifier, and has no meaning outside the app.",
                 "App preferences: theme selection (Dark Mode or Light Mode), default filesystem, default Windows Setup " +
                     "simulation status, selected Windows Setup profile, and custom overhead value."
             )
@@ -121,7 +126,10 @@ fun PrivacyPolicyPage(onBack: () -> Unit, modifier: Modifier = Modifier) {
             ),
             bullets = listOf(
                 "Google Play Services: the in-app update check is handled by Google Play. The 'Rate Us' button opens " +
-                    "the Play Store listing. Google processes information under its own privacy policy.",
+                    "the Play Store listing. Google processes information under its own privacy policy. Apart from " +
+                    "AndroidX/Jetpack and the Google Play libraries used for in-app updates, the app bundles no " +
+                    "other third-party SDKs — no advertising, analytics, attribution, crash-reporting or " +
+                    "social-media SDK.",
                 "Android share sheet: The 'Share App' feature sends only a static Play Store link to the app you choose. " +
                     "That app handles the link under its own privacy policy. Your calculations and history " +
                     "are not attached or shared.",
@@ -180,7 +188,9 @@ fun PrivacyPolicyPage(onBack: () -> Unit, modifier: Modifier = Modifier) {
                 "You can turn off Android backup for this app in your device settings.",
                 "You can stop using the app and uninstall it at any time.",
                 "For questions about rights that apply to you under local privacy laws, contact the developer " +
-                    "using the details in the Developer and contact section."
+                    "using the details in the Developer and contact section.",
+                "Because the app does not collect personal information, the developer holds no personal data " +
+                    "about you to access, correct, export or delete, and there is nothing to opt out of."
             )
         )
 

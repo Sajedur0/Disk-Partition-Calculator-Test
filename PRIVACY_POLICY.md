@@ -1,6 +1,6 @@
 # Privacy Policy for Disk Partition Calculator
 
-**Last Updated: 23 October 2026**
+**Last Updated: 25 October 2026**
 
 This Privacy Policy describes how the Disk Partition Calculator app ("the App") handles information when you use our services.
 
@@ -8,6 +8,8 @@ This Privacy Policy describes how the Disk Partition Calculator app ("the App") 
 
 - Your calculations, history, and preferences stay **only on your device**
 - The app has **no account, no sign-in, and no developer-operated server**
+- The app declares **no Android permissions at all** — not even internet access — so it cannot reach
+  the network, your files, your location, or your hardware
 - The app does **not** ask for access to your contacts, location, camera, microphone, photos, or files
 - The app contains **no advertising, analytics, crash-reporting, or tracking SDKs**
 - The developer does **not** sell, rent, or share your data with anyone
@@ -38,6 +40,10 @@ The following information is processed and stored **only on your device**:
 - Result values
 - Text summary
 - Timestamp
+- Partition count (Split results only)
+- A randomly generated identifier (UUID) for each entry, used only to identify it in the list.
+  It is created by the app on your device, is **not** a device or advertising identifier, and has no
+  meaning outside the app
 
 ### App Preferences
 - Theme selection (Dark Mode or Light Mode)
@@ -81,6 +87,10 @@ The following features involve other services **only when you explicitly use the
 - The in-app update check is handled by Google Play
 - The "Rate Us" button opens the Play Store listing
 - Google processes information under its own privacy policy
+
+Apart from the AndroidX/Jetpack libraries and the Google Play libraries used for in-app updates,
+the app bundles **no other third-party SDKs** — no advertising, analytics, attribution,
+crash-reporting, or social-media SDK is included.
 
 ### Android Share Sheet
 - The "Share App" feature sends only a static Play Store link to the app you choose
@@ -133,6 +143,9 @@ You can:
 - Stop using the app and uninstall it at any time
 - For questions about rights that apply to you under local privacy laws, contact the developer using the details in the Developer and Contact section
 
+Because the app does not collect personal information, the developer holds **no personal data about
+you** to access, correct, export, or delete, and there is nothing to opt out of.
+
 ## Changes to This Policy
 
 This policy may be updated if the app's features or data practices change. The version in the app is the current one, and the date at the top shows when it was last updated.
@@ -141,4 +154,4 @@ This policy may be updated if the app's features or data practices change. The v
 
 **App Package Name:** com.diskcalc
 
-**Last Updated:** 23 October 2026
+**Last Updated:** 25 October 2026
