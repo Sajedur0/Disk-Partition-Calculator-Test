@@ -260,8 +260,9 @@ fun GuidePage(onBack: () -> Unit, modifier: Modifier = Modifier) {
             icon = Icons.Rounded.Dashboard,
             subtitle = "Use this when you want to divide a whole disk into equal partitions.",
             steps = listOf(
-                "Enter the Total disk size in whole MB (e.g., 476923). Only whole numbers are accepted. " +
-                    "Spaces and commas in the input are automatically ignored.",
+                "Enter the whole disk's total size in whole MB — the full capacity of the disk, not the size of one " +
+                    "partition. You can find it in Windows Setup: select the disk, tap New, and copy the MB value " +
+                    "shown in the Size box (do not convert the GB printed on the drive). Spaces and commas are ignored.",
                 "Use the minus (-) and plus (+) buttons to select the number of partitions (1 to 8).",
                 "Pick NTFS or FAT32 as the filesystem. Turn on 'Simulate Windows Setup' if the system partitions should be " +
                     "subtracted first. The overhead value comes from the Windows Setup profile set in the Calc tab.",

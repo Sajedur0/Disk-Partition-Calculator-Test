@@ -72,7 +72,9 @@ Use this when you want to divide a whole disk into equal partitions.
 ### Steps:
 
 1. **Enter the total disk size:**
-   - Type the Total size in whole MB (e.g., 476923)
+   - Type the **whole disk's** total size in MB — the full capacity of the disk, not the size of one partition
+   - Find it in Windows Setup: select the disk, tap **New**, and copy the MB value shown in the **Size** box
+   - Do not convert the GB printed on the drive; Setup's MB value is the exact one this app needs
    - Only whole numbers are accepted
    - Spaces and commas in the input are automatically ignored
 

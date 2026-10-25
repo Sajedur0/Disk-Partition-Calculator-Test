@@ -61,19 +61,21 @@ fun SplitTab(
     ) {
         // ----------------------------------------------------------- input panel
         GlassPanel(
-            title = "Disk layout",
-            subtitle = "Whole MB values only — Setup does not accept fractions",
+            title = "Disk to split",
+            subtitle = "The whole disk's capacity in MB — not the size of one partition",
             icon = Icons.Rounded.Storage
         ) {
             GlassTextField(
                 value = state.totalMbText,
                 onValueChange = onTotalMbChange,
-                label = "Total size",
-                placeholder = "e.g. 476923",
+                label = "Total disk size",
+                placeholder = "Full disk size",
                 suffix = "MB",
                 keyboardType = com.diskcalc.ui.components.NumericKeyboard,
                 isError = state.error != null,
                 supportingText = state.error,
+                hint = "Find it in Windows Setup: select the disk → New. Copy the MB value the Size box shows — " +
+                    "not the GB printed on the drive.",
                 onImeAction = onSplit
             )
 

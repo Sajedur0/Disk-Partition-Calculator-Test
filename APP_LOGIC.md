@@ -80,6 +80,10 @@ The app provides quick preset chips:
 2. Partition count must be between 1 and 8
 3. Total size must be large enough for the selected partition count
 
+> **Input guidance:** the Total disk size field starts empty (no sample value). Its hint tells the
+> user to copy the whole disk's MB value from Windows Setup (*select disk → New → Size*) instead of
+> the GB printed on the drive.
+
 ### Calculation Formula
 
 ```kotlin

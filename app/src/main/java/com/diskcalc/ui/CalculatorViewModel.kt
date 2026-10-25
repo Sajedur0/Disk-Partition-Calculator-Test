@@ -49,7 +49,9 @@ data class CalcUiState(
 }
 
 data class SplitUiState(
-    val totalMbText: String = "476923",
+    // Starts empty on purpose: seeding a sample number here made users split the sample disk
+    // instead of their own. The field now shows a hint explaining which size to enter.
+    val totalMbText: String = "",
     val partitionCount: Int = 3,
     val filesystem: FileSystemType = FileSystemType.NTFS,
     val simulateWindowsSetup: Boolean = false,

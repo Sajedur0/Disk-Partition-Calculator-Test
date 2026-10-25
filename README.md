@@ -30,7 +30,7 @@ built on Jetpack Compose with smooth animated transitions when switching themes.
 | Tab | What it does |
 |---|---|
 | **Calc** | Preset chips (20/50/100/250/500 GB, 1 TB), decimal keyboard, NTFS/FAT32 picker, Windows Setup simulation (Win 10 / Win 11 / custom MB), Calculate with spinner, result dialog with **Copy**. |
-| **Split** | Integer-only total MB field, 1–8 partition stepper, per-partition table (`type X MB · visible ≈ Y MB`), sum verification, warnings, Copy. |
+| **Split** | Whole-disk total MB field (starts empty, with a hint on where to find the value), 1–8 partition stepper, per-partition table (`type X MB · visible ≈ Y MB`), sum verification, warnings, Copy. |
 | **Settings** | Theme (Dark Mode/Light Mode) with **smooth animated transitions**, default filesystem and Setup profile, history controls, Privacy Policy (full page), Guide (full page), Rate Us, Share App, About. |
 | **History** | Last 100 conversions (UUID ids, newest first) stored as JSON in DataStore, viewable in a bottom sheet, individually deletable. |
 

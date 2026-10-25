@@ -26,7 +26,7 @@ object InputValidator {
     /** Split tab: total disk size in whole MB only — Windows Setup rejects fractions. */
     fun parseTotalMb(raw: String): ParsedValue<Long> {
         val text = raw.trim().replace(" ", "").replace(",", "")
-        if (text.isEmpty()) return ParsedValue(null, "Enter a total disk size in MB")
+        if (text.isEmpty()) return ParsedValue(null, "Enter the disk's total size in MB")
         val value = text.toLongOrNull()
         return when {
             value == null || value <= 0L -> ParsedValue(null, "Enter a valid positive MB value")

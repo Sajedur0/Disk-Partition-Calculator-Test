@@ -398,6 +398,7 @@ fun GlassTextField(
     imeAction: ImeAction = ImeAction.Done,
     isError: Boolean = false,
     supportingText: String? = null,
+    hint: String? = null,
     enabled: Boolean = true,
     textStyle: TextStyle? = null,
     onImeAction: (() -> Unit)? = null
@@ -474,6 +475,14 @@ fun GlassTextField(
                 text = supportingText,
                 style = MaterialTheme.typography.bodyMedium,
                 color = if (isError) palette.dangerContent else palette.contentTertiary,
+                modifier = Modifier.padding(start = 4.dp, top = 6.dp)
+            )
+        } else if (hint != null) {
+            // Shown only while there is no error, so the message never competes with validation text.
+            Text(
+                text = hint,
+                style = MaterialTheme.typography.bodyMedium,
+                color = palette.contentTertiary,
                 modifier = Modifier.padding(start = 4.dp, top = 6.dp)
             )
         }
