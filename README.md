@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="docs/app-icon.png" alt="Disk Partition Calculator app icon" width="148" height="148" />
+
 # 💽 Disk Partition Calculator
 
 **Type the exact MB value Windows Setup expects — every single time.**
@@ -176,6 +178,19 @@ history DTOs and the optional Play Core classes live in `app/proguard-rules.pro`
 ## Project structure
 
 ```text
+.
+├── app/                             # Android application module
+│   ├── build.gradle.kts
+│   └── src/main/
+│       ├── java/com/diskcalc/       # Kotlin sources (below)
+│       ├── res/                     # themes, strings, launcher mipmaps
+│       └── AndroidManifest.xml
+├── docs/app-icon.png                # app icon shown in this README
+├── Icon.png                         # master icon artwork
+├── gradle/libs.versions.toml        # version catalog
+├── PRIVACY_POLICY.md
+└── README.md
+
 app/src/main/java/com/diskcalc/
 ├── MainActivity.kt                  # edge-to-edge single activity, update check
 ├── DiskCalcApplication.kt           # owns AppContainer
