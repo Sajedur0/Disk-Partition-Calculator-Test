@@ -254,9 +254,9 @@ fun GuidePage(onBack: () -> Unit, modifier: Modifier = Modifier) {
             title = "Top bar and navigation",
             icon = Icons.Rounded.Dashboard,
             bullets = listOf(
-                "**Sun / moon** — switch between Light Mode and Dark Mode.",
                 "**Clock** — open History. It is highlighted when at least one conversion is saved.",
-                "**Bottom bar** — switch between the Calc, Split and Settings tabs."
+                "**Bottom bar** — switch between the Calc, Split and Settings tabs.",
+                "**Theme** — Light Mode or Dark Mode is chosen in **Settings → Appearance**."
             )
         )
 
@@ -333,7 +333,8 @@ fun GuidePage(onBack: () -> Unit, modifier: Modifier = Modifier) {
             title = "Settings",
             icon = Icons.Rounded.Settings,
             bullets = listOf(
-                "**Appearance** — Dark Mode or Light Mode, with a smooth animated switch.",
+                "**Appearance** — the only place to switch between Dark Mode and Light Mode; the change " +
+                    "animates smoothly and is remembered.",
                 "**Defaults** — filesystem, Setup simulation and Setup profile used as the starting values " +
                     "for new calculations.",
                 "**History** — how many conversions are saved, with **View history** and **Clear**.",

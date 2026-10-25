@@ -1,7 +1,6 @@
 package com.diskcalc.ui
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -17,15 +16,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Calculate
-import androidx.compose.material.icons.rounded.DarkMode
 import androidx.compose.material.icons.rounded.Dashboard
 import androidx.compose.material.icons.rounded.History
-import androidx.compose.material.icons.rounded.LightMode
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
@@ -43,7 +39,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.diskcalc.domain.ThemeMode
 import com.diskcalc.ui.components.GlassIconButton
 import com.diskcalc.ui.components.GlassTabBar
 import com.diskcalc.ui.components.GlassTabItem
@@ -107,12 +102,6 @@ fun CalculatorScreen(
                             .padding(horizontal = tokens.screenPadding)
                     ) {
                         AppHeader(
-                            isDark = palette.isDark,
-                            onToggleTheme = {
-                                viewModel.onThemeChange(
-                                    if (palette.isDark) ThemeMode.LIGHT else ThemeMode.DARK
-                                )
-                            },
                             onHistoryClick = { showHistory = true },
                             historyCount = history.size
                         )
@@ -224,13 +213,10 @@ fun CalculatorScreen(
             }
         }
     }
-    }
 }
 
 @Composable
 private fun AppHeader(
-    isDark: Boolean,
-    onToggleTheme: () -> Unit,
     onHistoryClick: () -> Unit,
     historyCount: Int
 ) {
@@ -250,13 +236,6 @@ private fun AppHeader(
                 color = palette.contentPrimary
             )
         }
-        GlassIconButton(
-            icon = if (isDark) Icons.Rounded.LightMode else Icons.Rounded.DarkMode,
-            contentDescription = "Toggle theme",
-            onClick = onToggleTheme,
-            tint = palette.accent
-        )
-        Spacer(Modifier.width(8.dp))
         GlassIconButton(
             icon = Icons.Rounded.History,
             contentDescription = "History",
