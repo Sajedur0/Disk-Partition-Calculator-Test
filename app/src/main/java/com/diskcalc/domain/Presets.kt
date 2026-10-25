@@ -1,7 +1,7 @@
 package com.diskcalc.domain
 
 /**
- * Quick-pick sizes for the Calc tab (APP_LOGIC.md §7). 1024 GB is labelled "1 TB" because that is
+ * Quick-pick sizes for the Calc tab. 1024 GB is labelled "1 TB" because that is
  * what most people search for, even though the app itself always works in binary GB.
  */
 object CalcPresets {

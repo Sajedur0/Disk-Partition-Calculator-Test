@@ -15,8 +15,7 @@ interface HistoryStore {
 }
 
 /**
- * Keeps at most [com.diskcalc.domain.PartitionConstants.MAX_HISTORY] entries, newest first,
- * exactly as described in APP_LOGIC.md §6.
+ * Keeps at most [com.diskcalc.domain.PartitionConstants.MAX_HISTORY] entries, newest first.
  */
 class HistoryManager(private val store: HistoryStore) {
 

@@ -41,8 +41,8 @@ import com.diskcalc.ui.theme.LocalLiquidPalette
 
 /**
  * Calc tab — "I want a partition of N GB, what do I type in Windows Setup?"
- * Layout follows APP_LOGIC.md §7: preset chips, decimal keyboard, filesystem toggle,
- * Windows Setup switch with profile/custom MB, Calculate button with spinner.
+ * Layout: preset chips, decimal keyboard, filesystem toggle, Windows Setup switch
+ * with profile/custom MB, Calculate button with spinner.
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable

@@ -1,8 +1,8 @@
 package com.diskcalc.domain
 
 /**
- * Turns raw text field content into typed values, returning the exact error messages
- * documented in APP_LOGIC.md §8 so the UI never invents its own wording.
+ * Turns raw text field content into typed values, returning the user-facing error messages
+ * so the UI never invents its own wording.
  */
 object InputValidator {
 

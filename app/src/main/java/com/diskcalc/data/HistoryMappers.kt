@@ -5,7 +5,7 @@ import com.diskcalc.domain.PartitionCalculationResult
 import com.diskcalc.domain.SplitResult
 import com.diskcalc.domain.Units
 
-/** Builds the Calc history row exactly as specified in APP_LOGIC.md §6. */
+/** Builds the Calc history row for a single-partition calculation. */
 fun PartitionCalculationResult.toHistory(): ConversionHistory = ConversionHistory(
     id = newHistoryId(),
     mode = ConversionHistory.Mode.CALC,
@@ -18,7 +18,7 @@ fun PartitionCalculationResult.toHistory(): ConversionHistory = ConversionHistor
     timestampMillis = System.currentTimeMillis()
 )
 
-/** Builds the Split history row exactly as specified in APP_LOGIC.md §6. */
+/** Builds the Split history row for a whole-disk split. */
 fun SplitResult.toHistory(): ConversionHistory = ConversionHistory(
     id = newHistoryId(),
     mode = ConversionHistory.Mode.SPLIT,

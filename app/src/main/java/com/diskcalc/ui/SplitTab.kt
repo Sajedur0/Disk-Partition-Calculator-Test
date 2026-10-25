@@ -37,7 +37,7 @@ import com.diskcalc.ui.theme.LocalLiquidPalette
 
 /**
  * Split tab — "I have N MB of disk, how big is each of the K partitions?"
- * Integer arithmetic only, the remainder goes to the last partition (APP_LOGIC.md §5).
+ * Integer arithmetic only, the remainder goes to the last partition.
  */
 @Composable
 fun SplitTab(

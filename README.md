@@ -6,10 +6,10 @@ Windows Setup asks for a partition size in **MB**, but after formatting Explorer
 This app does that conversion for you — for a single partition (*Calc*) and for splitting a whole
 disk into N equal partitions (*Split*) — and it tells you exactly which number to type.
 
-The implementation follows [`APP_LOGIC.md`](APP_LOGIC.md) which contains the complete mathematical
-logic and calculation formulas. The app is a Kotlin port of the original Dart v1.1.3 logic,
-including the fixed Split tab. It ships with a clean **Solid Dark Mode & Light Mode** user interface
-built on Jetpack Compose with smooth animated transitions when switching themes.
+The calculation rules live in `app/src/main/java/com/diskcalc/domain/` (`PartitionCalculator`,
+`SplitPartitionCalculator`, `PartitionConstants`). The app is a Kotlin port of the original Dart
+v1.1.3 logic, including the fixed Split tab. It ships with a clean **Solid Dark Mode & Light Mode**
+user interface built on Jetpack Compose with smooth animated transitions when switching themes.
 
 ```
 ┌────────────────────────────────────────────┐
@@ -90,7 +90,7 @@ app/src/main/java/com/diskcalc/
 │   ├── Models.kt                     # enums + result/history data classes
 │   ├── PartitionCalculator.kt        # Calc logic + warnings
 │   ├── SplitPartitionCalculator.kt   # floor division, remainder on the last slice
-│   ├── InputValidator.kt             # the exact error strings from APP_LOGIC.md §8
+│   ├── InputValidator.kt             # the user-facing input error strings
 │   └── Presets.kt
 ├── data/
 │   ├── HistoryManager.kt             # HistoryStore + DataStore + in-memory store
@@ -141,11 +141,12 @@ see the TODO in `app/build.gradle.kts`.
 
 ## Documentation
 
-- [`APP_LOGIC.md`](APP_LOGIC.md) - Complete mathematical logic and calculation formulas
 - [`PRIVACY_POLICY.md`](PRIVACY_POLICY.md) - Full privacy policy for Google Play Console
-- [`APP_GUIDE.md`](APP_GUIDE.md) - Comprehensive user guide
 
-## Known limitations (from APP_LOGIC.md)
+The end-user guide and the calculation reference are built into the app itself:
+**Settings → Guide** (`ui/InfoPages.kt`).
+
+## Known limitations
 
 1. The 4 MB and 566 MB constants are estimates — they vary with the Windows version and boot mode,
    so results can differ by 1–2 MB. The UI always says "≈".
