@@ -11,7 +11,6 @@
     <string name="cd_increase">Increase</string>
     <string name="cd_decrease">Decrease</string>
     <string name="cd_history">History</string>
-    <string name="cd_theme">Toggle theme</string>
 
     <string name="backdrop_description">Decorative background</string>
 </resources>
