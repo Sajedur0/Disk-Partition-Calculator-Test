@@ -77,12 +77,13 @@ fun SettingsTab(
     onShowHistory: () -> Unit,
     onOpenPrivacyPolicy: () -> Unit,
     onOpenGuide: () -> Unit,
+    onOpenAbout: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val palette = LocalLiquidPalette.current
     val tokens = LocalGlassTokens.current
     val context = LocalContext.current
-    var showAbout by remember { mutableStateOf(false) }
+
 
     Column(
         modifier = modifier
@@ -226,16 +227,13 @@ fun SettingsTab(
                 icon = Icons.Rounded.AutoAwesome,
                 title = "About",
                 subtitle = "Disk Partition Calculator v${BuildConfig.VERSION_NAME}",
-                onClick = { showAbout = true }
+                onClick = onOpenAbout
             )
         }
 
         Spacer(Modifier.height(tokens.spaceSm))
     }
 
-    if (showAbout) {
-        AboutDialog(onDismiss = { showAbout = false })
-    }
 }
 
 @Composable

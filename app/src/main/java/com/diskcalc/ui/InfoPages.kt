@@ -48,6 +48,25 @@ import com.diskcalc.ui.components.InfoBanner
 import com.diskcalc.ui.theme.LocalGlassTokens
 import com.diskcalc.ui.theme.LocalLiquidPalette
 
+@Composable
+fun AboutPage(onBack: () -> Unit, modifier: Modifier = Modifier) {
+    InfoPageScaffold(
+        title = "About",
+        subtitle = "Disk Partition Calculator v${com.diskcalc.BuildConfig.VERSION_NAME}",
+        onBack = onBack,
+        modifier = modifier
+    ) {
+        InfoPanel(
+            title = "Disk Partition Calculator",
+            icon = Icons.Rounded.AutoAwesome,
+            paragraphs = listOf(
+                "Calculate partition sizes for Windows Setup and split disk space into equal parts.",
+                "Version ${com.diskcalc.BuildConfig.VERSION_NAME}"
+            )
+        )
+    }
+}
+
 /** Shown on the Privacy Policy page. Update it whenever the data practices change. */
 private const val PRIVACY_LAST_UPDATED = "25 October 2026"
 

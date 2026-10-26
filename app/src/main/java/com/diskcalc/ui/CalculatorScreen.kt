@@ -120,6 +120,7 @@ fun CalculatorScreen(
                             when (infoPage) {
                                 "privacy" -> PrivacyPolicyPage(onBack = { infoPage = null })
                                 "guide" -> GuidePage(onBack = { infoPage = null })
+                                "about" -> AboutPage(onBack = { infoPage = null })
                                 null -> when (selectedTabIndex) {
                                 0 -> CalcTab(
                                     state = calc,
@@ -151,7 +152,8 @@ fun CalculatorScreen(
                                     onClearHistory = viewModel::onClearHistory,
                                     onShowHistory = { showHistory = true },
                                     onOpenPrivacyPolicy = { infoPage = "privacy" },
-                                    onOpenGuide = { infoPage = "guide" }
+                                    onOpenGuide = { infoPage = "guide" },
+                                    onOpenAbout = { infoPage = "about" }
                                 )
                             }
                             }
