@@ -68,7 +68,7 @@ fun AboutPage(onBack: () -> Unit, modifier: Modifier = Modifier) {
 }
 
 /** Shown on the Privacy Policy page. Update it whenever the data practices change. */
-private const val PRIVACY_LAST_UPDATED = "25 October 2026"
+private const val PRIVACY_LAST_UPDATED = "26 October 2026"
 
 /**
  * Full-screen Privacy Policy page opened from Settings > Privacy Policy.
@@ -89,10 +89,12 @@ fun PrivacyPolicyPage(onBack: () -> Unit, modifier: Modifier = Modifier) {
             bullets = listOf(
                 "Your calculations, history and preferences stay only on your device.",
                 "The app has no account, no sign-in, and no developer-operated server.",
-                "The app declares no Android permissions at all — not even internet access — so it cannot " +
-                    "reach the network, your files, your location, or your hardware.",
+                "The app requests no runtime permissions. The only network permission is INTERNET, used solely " +
+                    "by Google Play's flexible in-app update check; your files, location and hardware " +
+                    "are never accessed.",
                 "The app does not ask for access to your contacts, location, camera, microphone, photos, or files.",
-                "The app contains no advertising, analytics, crash-reporting, or tracking SDKs.",
+                "The app contains no advertising, analytics, crash-reporting, or tracking SDKs — the only " +
+                    "Google library is Play In-App Updates.",
                 "The developer does not sell, rent, or share your data with anyone."
             )
         )
@@ -156,10 +158,13 @@ fun PrivacyPolicyPage(onBack: () -> Unit, modifier: Modifier = Modifier) {
                     "involve other services only when you explicitly use them:"
             ),
             bullets = listOf(
-                "Google Play Services: the app has no update checks and no network code. Only the 'Rate Us' button " +
-                    "opens the Play Store listing, and Google processes that visit under its own privacy policy. " +
-                    "Apart from AndroidX/Jetpack, the app bundles no other third-party SDKs — no advertising, " +
-                    "analytics, attribution, crash-reporting, update or social-media SDK.",
+                "Google Play Services: the app uses Play In-App Updates (flexible flow with Play's native UI) to " +
+                    "check for a newer version and, if you accept, download and install it automatically. " +
+                    "That check sends no calculation, history or preference data. The 'Rate Us' button " +
+                    "opens the Play Store listing; Google processes those interactions under its own " +
+                    "privacy policy. Apart from AndroidX/Jetpack and Play In-App Updates, the app bundles " +
+                    "no other third-party SDKs — no advertising, analytics, attribution, " +
+                    "crash-reporting or social-media SDK.",
                 "Android share sheet: The 'Share App' feature sends only a static Play Store link to the app you choose. " +
                     "That app handles the link under its own privacy policy. Your calculations and history " +
                     "are not attached or shared.",
@@ -177,7 +182,7 @@ fun PrivacyPolicyPage(onBack: () -> Unit, modifier: Modifier = Modifier) {
                 "History and preferences are kept in app-private storage, which Android's app sandbox keeps " +
                     "away from other apps.",
                 "The app does not send your calculations, history or preferences over the network.",
-                "The app contains no networking, update-check or cloud-sync code of any kind.",
+                "The app contains no cloud-sync code; the only network code is the Google Play in-app update check.",
                 "No method of storage or transmission can be guaranteed to be completely secure."
             )
         )

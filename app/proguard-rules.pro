@@ -18,3 +18,6 @@
 }
 -keep,includedescriptorclasses class com.diskcalc.data.HistoryEntryDto$$serializer { *; }
 -keep,includedescriptorclasses class com.diskcalc.data.HistoryFileDto$$serializer { *; }
+
+# Play In-App Updates is optional at runtime (sideloaded builds have no Play).
+-dontwarn com.google.android.play.core.**

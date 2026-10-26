@@ -21,7 +21,7 @@ Second problem: splitting a disk into **N equal partitions** rarely divides even
 
 ## 2. Product Promise
 
-> Type the exact MB value Windows Setup expects, every time. Split a whole disk evenly without losing a single megabyte. Offline, free, no permissions, no ads.
+> Type the exact MB value Windows Setup expects, every time. Split a whole disk evenly without losing a single megabyte. Free, no ads — every calculation works offline; the optional Google Play flexible update check is the only network use.
 
 The app is a **read-only planning calculator**. It never touches a disk.
 
@@ -84,7 +84,7 @@ Priority: **P0** = ship-blocking, **P1** = MVP-included, polish.
 - **US-13 (P1)** History of the last **100** conversions, stored on-device, with per-row copy and delete.
 - **US-14 (P1)** Defaults remembered: filesystem, Setup simulation on/off, profile.
 - **US-15 (P1)** Dark and light themes with a smooth animated switch.
-- **US-16 (P0)** App works fully offline with **zero permissions**.
+- **US-16 (P0)** All calculations, history and settings work fully offline; no runtime permissions are requested. *Exception:* the Google Play In-App Updates check (see §7), which contributes `INTERNET` / `ACCESS_NETWORK_STATE` in the merged manifest.
 
 ## 6. Success Metrics
 
@@ -104,7 +104,8 @@ The coding agent MUST NOT implement any of the following without a PRD change:
 - ❌ Partitioning, formatting, mounting, or otherwise touching any disk or storage device.
 - ❌ Root access, storage permissions, or any Android runtime permission.
 - ❌ PC connection (USB, Wi-Fi, Bluetooth, ADB bridge).
-- ❌ Network access of any kind: analytics, crash reporting, update checks, ads, remote config.
+- ❌ Network access of any kind: analytics, crash reporting, ads, remote config.
+  - ✅ **Approved PRD change (26 Oct 2026):** Google Play In-App Updates — flexible flow with Play's native UI (`com.google.android.play:app-update-ktx`). This is the only network-aware component and it transmits no calculation, history or preference data.
 - ❌ Accounts, sign-in, cloud sync, backend servers.
 - ❌ Auto-detecting the real disk size.
 - ❌ Roadmap items (not MVP): reverse mode, dual-boot planner, SSD over-provisioning, 1 MiB alignment indicator, `diskpart` export, tablet/foldable layout, dynamic color, extra UI languages, unit toggle (TB/MiB).

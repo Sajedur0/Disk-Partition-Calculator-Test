@@ -82,6 +82,9 @@ Disk Partition Calculator does that arithmetic for you, in the binary units Wind
 - Defaults for new calculations: filesystem, Setup simulation, Setup profile, custom overhead
 - **History** controls (view, clear), full-page **Privacy Policy**, full-page **Guide**,
   **Rate Us**, **Share App** and **About**
+- **Flexible in-app updates** through Google Play's native update UI: accept → background
+  download → automatic install; cancel → the calculator keeps running normally, with no further
+  prompt in that session. Sideloaded or offline builds simply skip the check
 
 ### 🕘 History
 
@@ -165,12 +168,14 @@ have to convert anything by hand.
 | Build | Android Gradle Plugin 8.7.3, Gradle 8.9 (wrapper committed) |
 | SDK levels | `compileSdk` 35 · `targetSdk` 35 · `minSdk` 24 |
 | Persistence | DataStore Preferences 1.1.1 + kotlinx.serialization 1.7.3 |
+| Updates | Play In-App Updates (app-update-ktx) 2.1.0 · flexible / Play native UI |
 | Application ID | `com.diskcalc` — debug builds install as `com.diskcalc.debug` |
 | Version | 1.1.4 (versionCode 15) |
 | Architecture | Single activity · one `ViewModel` · hand-rolled DI (`AppContainer`) |
 
 Release builds enable **R8 + resource shrinking**; the kotlinx.serialization keep rules for the
-history DTOs live in `app/proguard-rules.pro`.
+history DTOs and a `-dontwarn` rule for the optional Play Core classes live in
+`app/proguard-rules.pro`.
 
 ---
 
@@ -214,7 +219,8 @@ app/src/main/java/com/diskcalc/
 │   ├── ResultDialogs.kt / HistorySheet.kt / ResultText.kt
 │   ├── InfoPages.kt                 # in-app Guide + Privacy Policy pages
 │   ├── components/                  # LiquidGlass, GlassControls, GlassDisplay, GlassTabBar
-│   └── theme/                       # GlassTokens, Theme, LiquidBackdrop
+│   ├── theme/                       # GlassTokens, Theme, LiquidBackdrop
+│   └── update/UpdateService.kt      # Play In-App Updates (flexible, Play native UI)
 ```
 
 ---
@@ -257,12 +263,22 @@ signkey/
 
 `signkey/` and `*.keystore` are ignored by Git, so keys are never committed.
 
+### Testing flexible updates
+
+The flexible update flow only runs for builds installed **from Google Play** (sideloaded and local
+debug builds silently skip the check). Use Play Console **Internal testing** or **internal app
+sharing** with a higher `versionCode` to verify both paths: accepting the Play dialog downloads and
+installs automatically (the app restarts), while cancelling it leaves the app running normally with
+no retry in the same session.
+
 ---
 
 ## Privacy
 
-- **No permissions are declared** in the manifest
-- **No analytics, no ads, no tracking, no accounts, no update checks** — the app contains no network code
+- The manifest declares only `INTERNET` (a normal permission, no runtime prompt); Play In-App
+  Updates also contributes `ACCESS_NETWORK_STATE` via manifest merging
+- **No analytics, no ads, no tracking, no accounts** — the only network-aware component is
+  Google Play's flexible in-app update check, which sends no calculation, history or preference data
 - Backup is disabled (`allowBackup=false`); all settings and history stay on the device (DataStore)
   and history can be cleared any time
 

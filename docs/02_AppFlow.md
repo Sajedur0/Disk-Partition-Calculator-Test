@@ -135,7 +135,7 @@ States: `Loading → Empty | Populated`.
 | Default filesystem | NTFS / FAT32 | yes |
 | Default: simulate Setup | switch | yes |
 | Default Setup profile | dropdown | yes |
-| About | version name/code, "No permissions · No network" statement | no |
+| About | version name/code, short app description | no |
 
 Changes apply immediately; no Save button.
 

@@ -1,6 +1,6 @@
 # 05 — Data Schema
 
-> **Important context:** this app is **offline, accountless, and has no backend**. The requested "Row-Level Security / Auth flow" does not apply as a server concept. §6 states the equivalent security model explicitly so the coding agent does **not** invent auth or RLS.
+> **Important context:** all user data stays **on-device**; the app is **accountless and has no backend** (the Google Play in-app update check is not a data backend). The requested "Row-Level Security / Auth flow" does not apply as a server concept. §6 states the equivalent security model explicitly so the coding agent does **not** invent auth or RLS.
 
 Storage: **Room (SQLite)** for history · **DataStore Preferences** for settings.
 Database name: `partition_calc.db` · Schema version: **1** · `exportSchema = true` (JSON committed under `app/schemas/`).
@@ -106,7 +106,7 @@ Unknown/corrupt values fall back to the default silently.
 | Sensitive data | None stored (sizes and timestamps only). |
 | Network sync | **None.** |
 
-If a future version adds cloud sync, a new schema version + this section must be rewritten **before** any code is written.
+The Google Play in-app update check (see `04_TRD.md §4`) is **not** a data sync: it only asks Play whether a newer APK exists. If a future version adds cloud sync, a new schema version + this section must be rewritten **before** any code is written.
 
 ## 7. Migrations
 - v1 is the initial schema. Any change requires: bump `version`, add a `Migration` object, an `androidTest` using `MigrationTestHelper`, and an updated `schemas/` JSON. `fallbackToDestructiveMigration()` is **forbidden**.

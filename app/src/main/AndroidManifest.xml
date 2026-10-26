@@ -1,7 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- Zero permissions declared: offline, accountless, no network (docs/04_TRD.md §6). -->
+    <!-- Needed only by Google Play In-App Updates (flexible). It is a normal permission:
+         no runtime prompt. The Play Core AAR also contributes ACCESS_NETWORK_STATE via
+         manifest merging. Nothing else in the app uses the network. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <application
         android:name=".DiskCalcApplication"
         android:allowBackup="false"
