@@ -80,8 +80,8 @@ fun CalculatorScreen(
     AnimatedContent(
         targetState = settings.themeMode,
         transitionSpec = {
-            (fadeIn(animationSpec = tween(durationMillis = 500)) +
-                fadeOut(animationSpec = tween(durationMillis = 250))).togetherWith(tween(durationMillis = 500))
+            fadeIn(animationSpec = tween(durationMillis = 500)) togetherWith
+                fadeOut(animationSpec = tween(durationMillis = 250))
         },
         label = "ThemeTransition"
     ) { themeMode ->

@@ -3,8 +3,6 @@ package com.diskcalc.ui.theme
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
-import androidx.compose.animation.core.AnimationSpec
-import androidx.compose.animation.core.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
