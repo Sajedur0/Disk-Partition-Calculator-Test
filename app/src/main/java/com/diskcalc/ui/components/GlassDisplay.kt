@@ -229,6 +229,7 @@ fun InfoBanner(
 @Composable
 fun GlassBadge(text: String, modifier: Modifier = Modifier) {
     val palette = LocalLiquidPalette.current
+    val tokens = LocalGlassTokens.current
     Box(
         modifier = modifier
             .glassLite(
