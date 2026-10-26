@@ -62,8 +62,6 @@ import com.diskcalc.ui.theme.LocalGlassTokens
 import com.diskcalc.ui.theme.LocalLiquidPalette
 
 /** Full-screen pages opened from the Settings tab actions. */
-private enum class SettingsPage { PRIVACY, GUIDE }
-
 /**
  * Settings tab — theme (Dark Mode / Light Mode), defaults and informational actions.
  */
@@ -77,24 +75,14 @@ fun SettingsTab(
     onDefaultProfileChange: (WindowsSetupProfile) -> Unit,
     onClearHistory: () -> Unit,
     onShowHistory: () -> Unit,
+    onOpenPrivacyPolicy: () -> Unit,
+    onOpenGuide: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val palette = LocalLiquidPalette.current
     val tokens = LocalGlassTokens.current
     val context = LocalContext.current
-    var page by rememberSaveable { mutableStateOf<SettingsPage?>(null) }
     var showAbout by remember { mutableStateOf(false) }
-
-    // Privacy Policy and Guide are full pages that replace the Settings content until dismissed.
-    val openPage = page
-    if (openPage != null) {
-        BackHandler { page = null }
-        when (openPage) {
-            SettingsPage.PRIVACY -> PrivacyPolicyPage(onBack = { page = null }, modifier = modifier)
-            SettingsPage.GUIDE -> GuidePage(onBack = { page = null }, modifier = modifier)
-        }
-        return
-    }
 
     Column(
         modifier = modifier
@@ -210,14 +198,14 @@ fun SettingsTab(
                 icon = Icons.Rounded.PrivacyTip,
                 title = "Privacy Policy",
                 subtitle = "How the app handles and stores information",
-                onClick = { page = SettingsPage.PRIVACY }
+                onClick = onOpenPrivacyPolicy
             )
             GlassDivider()
             SettingsAction(
                 icon = Icons.Rounded.MenuBook,
                 title = "Guide",
                 subtitle = "How to use every part of the app",
-                onClick = { page = SettingsPage.GUIDE }
+                onClick = onOpenGuide
             )
             GlassDivider()
             SettingsAction(
