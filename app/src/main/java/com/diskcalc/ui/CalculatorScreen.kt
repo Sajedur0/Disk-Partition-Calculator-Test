@@ -1,5 +1,6 @@
 package com.diskcalc.ui
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -64,6 +65,7 @@ fun CalculatorScreen(
     val history by viewModel.history.collectAsStateWithLifecycle()
 
     var selectedTabIndex by remember { mutableIntStateOf(0) }
+    var infoPage by remember { mutableStateOf<String?>(null) }
     var showHistory by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -90,6 +92,7 @@ fun CalculatorScreen(
                 val palette = LocalLiquidPalette.current
                 val tokens = LocalGlassTokens.current
 
+                BackHandler(enabled = infoPage != null) { infoPage = null }
                 Box(
                     Modifier
                         .fillMaxSize()
@@ -101,18 +104,24 @@ fun CalculatorScreen(
                             .windowInsetsPadding(WindowInsets.safeDrawing)
                             .padding(horizontal = tokens.screenPadding)
                     ) {
-                        AppHeader(
-                            onHistoryClick = { showHistory = true },
-                            historyCount = history.size
-                        )
-                        Spacer(Modifier.height(tokens.spaceMd))
+                        if (infoPage == null) {
+                            AppHeader(
+                                onHistoryClick = { showHistory = true },
+                                historyCount = history.size
+                            )
+                            Spacer(Modifier.height(tokens.spaceMd))
+                        }
 
                         Box(
                             Modifier
                                 .weight(1f)
                                 .fillMaxWidth()
                         ) {
-                            when (selectedTabIndex) {
+                            when (infoPage) {
+                                "privacy" -> PrivacyPolicyPage(onBack = { infoPage = null })
+                                "guide" -> GuidePage(onBack = { infoPage = null })
+                                "about" -> AboutPage(onBack = { infoPage = null })
+                                null -> when (selectedTabIndex) {
                                 0 -> CalcTab(
                                     state = calc,
                                     onVisibleGbChange = viewModel::onVisibleGbChange,
@@ -141,11 +150,16 @@ fun CalculatorScreen(
                                     onDefaultSetupChange = viewModel::onDefaultSetupChange,
                                     onDefaultProfileChange = viewModel::onDefaultProfileChange,
                                     onClearHistory = viewModel::onClearHistory,
-                                    onShowHistory = { showHistory = true }
+                                    onShowHistory = { showHistory = true },
+                                    onOpenPrivacyPolicy = { infoPage = "privacy" },
+                                    onOpenGuide = { infoPage = "guide" },
+                                    onOpenAbout = { infoPage = "about" }
                                 )
+                            }
                             }
                         }
 
+                        if (infoPage == null) {
                         Spacer(Modifier.height(tokens.spaceSm))
                         GlassTabBar(
                             items = tabs,
@@ -154,6 +168,7 @@ fun CalculatorScreen(
                             modifier = Modifier.fillMaxWidth()
                         )
                         Spacer(Modifier.height(tokens.spaceSm))
+                        }
                     }
 
                     SnackbarHost(
