@@ -5,7 +5,10 @@ import com.diskcalc.domain.PartitionCalculationResult
 import com.diskcalc.domain.SplitResult
 import com.diskcalc.domain.Units
 
-/** Builds the Calc history row for a single-partition calculation. */
+/**
+ * Builds the Calc history row for a single-partition calculation.
+ * The clipboard payload is digits only (`docs/02_AppFlow.md §2`).
+ */
 fun PartitionCalculationResult.toHistory(): ConversionHistory = ConversionHistory(
     id = newHistoryId(),
     mode = ConversionHistory.Mode.CALC,
@@ -15,10 +18,14 @@ fun PartitionCalculationResult.toHistory(): ConversionHistory = ConversionHistor
     filesystem = filesystem,
     primaryResultMb = requiredInputMb,
     summary = "${filesystem.label} - $requiredInputMb MB",
-    timestampMillis = System.currentTimeMillis()
+    timestampMillis = System.currentTimeMillis(),
+    copyValue = requiredInputMb.toString()
 )
 
-/** Builds the Split history row for a whole-disk split. */
+/**
+ * Builds the Split history row for a whole-disk split.
+ * Copy joins every partition size with a newline (`docs/02_AppFlow.md §5`).
+ */
 fun SplitResult.toHistory(): ConversionHistory = ConversionHistory(
     id = newHistoryId(),
     mode = ConversionHistory.Mode.SPLIT,
@@ -30,5 +37,6 @@ fun SplitResult.toHistory(): ConversionHistory = ConversionHistory(
     summary = "${partitions.size} partitions: " +
         partitions.joinToString(", ") { "${it.typeMb} MB" },
     timestampMillis = System.currentTimeMillis(),
-    splitCount = partitions.size
+    splitCount = partitions.size,
+    copyValue = partitions.joinToString("\n") { it.typeMb.toString() }
 )

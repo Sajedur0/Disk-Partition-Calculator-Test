@@ -7,21 +7,18 @@ import androidx.activity.enableEdgeToEdge
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.diskcalc.ui.CalculatorScreen
 import com.diskcalc.ui.CalculatorViewModel
-import com.diskcalc.update.UpdateService
 
 /**
- * Single-activity host. Edge-to-edge is enabled so the liquid backdrop can bleed under the
- * system bars, which is what makes the glass read as one continuous sheet.
+ * Single-activity host. Edge-to-edge is enabled so the solid backdrop runs under the
+ * system bars. The app has no Service, BroadcastReceiver, WorkManager or network call
+ * (`docs/04_TRD.md §2/§4`).
  */
 class MainActivity : ComponentActivity() {
 
-    private lateinit var updateService: UpdateService
-
     override fun onCreate(savedInstanceState: Bundle?) {
-        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
 
-        updateService = UpdateService(this)
         val container = (application as DiskCalcApplication).container
 
         setContent {
@@ -30,17 +27,5 @@ class MainActivity : ComponentActivity() {
             )
             CalculatorScreen(viewModel = viewModel)
         }
-
-        updateService.checkForUpdate()
-    }
-
-    override fun onResume() {
-        super.onResume()
-        updateService.onResume()
-    }
-
-    override fun onPause() {
-        updateService.onPause()
-        super.onPause()
     }
 }

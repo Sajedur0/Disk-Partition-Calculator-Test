@@ -39,11 +39,9 @@ import com.diskcalc.ui.theme.LocalLiquidPalette
 fun LiquidGlassSurface(
     modifier: Modifier = Modifier,
     shape: Shape = RoundedCornerShape(LocalGlassTokens.current.cornerLarge),
-    @Suppress("UNUSED_PARAMETER") blur: Dp = LocalGlassTokens.current.blur,
     tint: Color? = null,
     borderWidth: Dp = LocalGlassTokens.current.border,
-    elevation: Dp = LocalGlassTokens.current.elevation,
-    @Suppress("UNUSED_PARAMETER") sheen: Boolean = false,
+    elevation: Dp = LocalGlassTokens.current.elevationSmall,
     content: @Composable BoxScope.() -> Unit
 ) {
     val palette = LocalLiquidPalette.current
@@ -96,7 +94,7 @@ fun GlassPanel(
     subtitle: String? = null,
     icon: ImageVector? = null,
     trailing: @Composable (() -> Unit)? = null,
-    contentPadding: PaddingValues = PaddingValues(LocalGlassTokens.current.spaceMd),
+    contentPadding: PaddingValues = PaddingValues(LocalGlassTokens.current.cardPadding),
     shape: Shape = RoundedCornerShape(LocalGlassTokens.current.cornerLarge),
     content: @Composable ColumnScope.() -> Unit
 ) {
@@ -157,7 +155,7 @@ fun GlassIconButton(
     contentDescription: String?,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    size: Dp = 44.dp,
+    size: Dp = LocalGlassTokens.current.touchTarget,
     tint: Color? = null
 ) {
     val palette = LocalLiquidPalette.current

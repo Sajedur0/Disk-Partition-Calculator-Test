@@ -46,7 +46,7 @@ The following information is processed and stored **only on your device**:
   meaning outside the app
 
 ### App Preferences
-- Theme selection (Dark Mode or Light Mode)
+- Theme selection (System, Light or Dark)
 - Default filesystem
 - Default Windows Setup simulation status
 - Selected Windows Setup profile
@@ -84,13 +84,12 @@ The developer does **not** share your data with third parties.
 The following features involve other services **only when you explicitly use them**:
 
 ### Google Play Services
-- The in-app update check is handled by Google Play
+- The app has **no update checks and no network code**
 - The "Rate Us" button opens the Play Store listing
-- Google processes information under its own privacy policy
+- Google processes that visit under its own privacy policy
 
-Apart from the AndroidX/Jetpack libraries and the Google Play libraries used for in-app updates,
-the app bundles **no other third-party SDKs** — no advertising, analytics, attribution,
-crash-reporting, or social-media SDK is included.
+Apart from the AndroidX/Jetpack libraries, the app bundles **no other third-party SDKs** — no
+advertising, analytics, attribution, crash-reporting, update, or social-media SDK is included.
 
 ### Android Share Sheet
 - The "Share App" feature sends only a static Play Store link to the app you choose
@@ -98,8 +97,8 @@ crash-reporting, or social-media SDK is included.
 - Your calculations and history are **not** attached or shared
 
 ### Android Backup
-- If enabled in your device settings, Android may back up or transfer app data
-- The developer **cannot** access, view, or control those backups in any way
+- The app opts out of Android backup (`allowBackup="false"`)
+- History and preferences are **not** backed up or transferred to another device
 
 ### Clipboard
 - The Copy buttons place calculation results on your clipboard only when you tap them
@@ -109,7 +108,7 @@ crash-reporting, or social-media SDK is included.
 
 - History and preferences are kept in app-private storage, which Android's app sandbox keeps away from other apps
 - The app does **not** send your calculations, history, or preferences over the network
-- Update checks and the Play Store listing are handled by Google Play over encrypted connections
+- The app contains **no networking, update-check, or cloud-sync code** of any kind
 - No method of storage or transmission can be guaranteed to be completely secure
 
 ## Data Retention and Deletion
@@ -124,10 +123,10 @@ crash-reporting, or social-media SDK is included.
 
 ### Delete Options
 - **Delete one history entry**: Open History and tap the delete icon on that entry
-- **Delete all history**: Open Settings > History > Clear
+- **Delete all history**: Open Settings > History > Clear and confirm the dialog
 - **Delete all app data**: Open Android Settings > Apps > Disk Partition Calculator > Storage > Clear storage
 - **Uninstall**: Uninstalling the app also removes its private data from the device
-- **Android backup**: If backup is enabled, a copy may exist in your device or Google backup. You can manage or delete it in your device backup settings
+- **Android backup**: The app opts out of backup, so no copy exists in device or Google backups
 
 The developer does **not** hold copies of your data, so there is nothing on the developer's side to request or delete. The app has no account, so there is no account to delete.
 
@@ -139,7 +138,7 @@ This is a general-purpose utility for Windows users and is **not** directed to c
 
 You can:
 - View, delete, or change your history and preferences at any time inside the app
-- Turn off Android backup for this app in your device settings
+- No backup is created — Android backup is disabled for this app, so nothing leaves the device
 - Stop using the app and uninstall it at any time
 - For questions about rights that apply to you under local privacy laws, contact the developer using the details in the Developer and Contact section
 

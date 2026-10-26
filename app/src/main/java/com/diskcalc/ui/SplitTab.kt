@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material.icons.rounded.Layers
 import androidx.compose.material.icons.rounded.Storage
@@ -20,7 +21,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.unit.dp
 import com.diskcalc.domain.FileSystemType
 import com.diskcalc.domain.PartitionConstants
 import com.diskcalc.ui.components.GlassButton
@@ -47,6 +47,7 @@ fun SplitTab(
     onFilesystemChange: (FileSystemType) -> Unit,
     onSetupToggle: (Boolean) -> Unit,
     onSplit: () -> Unit,
+    onCopied: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val palette = LocalLiquidPalette.current
@@ -57,7 +58,7 @@ fun SplitTab(
         modifier = modifier
             .fillMaxWidth()
             .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(tokens.spaceMd)
+        verticalArrangement = Arrangement.spacedBy(tokens.cardGap)
     ) {
         // ----------------------------------------------------------- input panel
         GlassPanel(
@@ -79,7 +80,7 @@ fun SplitTab(
                 onImeAction = onSplit
             )
 
-            Spacer(Modifier.height(tokens.spaceMd))
+            Spacer(Modifier.height(tokens.spaceLg))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text(
@@ -100,12 +101,12 @@ fun SplitTab(
                 )
             }
 
-            Spacer(Modifier.height(tokens.spaceMd))
+            Spacer(Modifier.height(tokens.spaceLg))
             Text(
                 text = "Filesystem",
                 style = MaterialTheme.typography.labelMedium,
                 color = palette.contentSecondary,
-                modifier = Modifier.padding(bottom = 6.dp, start = 4.dp)
+                modifier = Modifier.padding(bottom = tokens.spaceSm, start = tokens.spaceXs)
             )
             GlassSegmentedControl(
                 options = FileSystemType.entries.toList(),
@@ -115,7 +116,7 @@ fun SplitTab(
                 modifier = Modifier.fillMaxWidth()
             )
 
-            Spacer(Modifier.height(tokens.spaceMd))
+            Spacer(Modifier.height(tokens.spaceLg))
             GlassToggleRow(
                 title = "Simulate Windows Setup",
                 description = "Subtract the system partitions from the total before splitting",
@@ -123,17 +124,21 @@ fun SplitTab(
                 onCheckedChange = onSetupToggle
             )
 
-            Spacer(Modifier.height(tokens.spaceLg))
+            Spacer(Modifier.height(tokens.spaceXl))
             GlassButton(
-                text = if (state.isCalculating) "Splitting…" else "Split disk",
+                text = "Split disk",
                 icon = Icons.Rounded.Layers,
-                loading = state.isCalculating,
+                enabled = state.totalMbText.isNotBlank() && state.error == null,
                 onClick = onSplit
             )
         }
 
         // ------------------------------------------------------ inline last result
         state.result?.let { result ->
+            val count = result.partitions.size
+            val baseMb = result.partitions.first().typeMb.toLong()
+            val remainderMb = result.usableMb - baseMb * count
+
             GlassPanel(
                 title = "Partition table",
                 subtitle = "Newest calculation",
@@ -144,21 +149,29 @@ fun SplitTab(
                         icon = Icons.Rounded.ContentCopy,
                         primary = false,
                         fillWidth = false,
-                        onClick = { clipboard.setText(AnnotatedString(ResultText.split(result))) }
+                        onClick = {
+                            clipboard.setText(AnnotatedString(ResultText.split(result)))
+                            onCopied()
+                        }
                     )
                 }
             ) {
                 result.partitions.forEach { partition ->
+                    val isLast = partition.index == count
+                    val note = if (isLast && remainderMb > 0) " · includes +$remainderMb MB remainder" else ""
                     KeyValueRow(
                         label = "Partition ${partition.index}",
-                        value = "${partition.typeMb} MB  ·  visible ≈ ${partition.expectedVisibleMb} MB"
+                        value = "${partition.typeMb} MB  ·  visible ≈ ${partition.expectedVisibleMb} MB$note"
                     )
                 }
                 Spacer(Modifier.height(tokens.spaceXs))
                 KeyValueRow("Total", "${result.totalMb} MB")
                 KeyValueRow("Usable after Setup", "${result.usableMb} MB")
                 Spacer(Modifier.height(tokens.spaceXs))
-                InfoBanner(text = "Sum of all partitions: ${result.sumOfTypeMb} MB — matches the usable space exactly.")
+                InfoBanner(
+                    text = "Σ partitions = ${result.sumOfTypeMb} MB ✓ equals usable (${result.usableMb} MB)",
+                    icon = Icons.Rounded.CheckCircle
+                )
                 Spacer(Modifier.height(tokens.spaceSm))
                 WarningList(result.warnings)
             }

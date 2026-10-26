@@ -2,47 +2,26 @@ package com.diskcalc.ui
 
 import com.diskcalc.domain.PartitionCalculationResult
 import com.diskcalc.domain.SplitResult
+import java.util.Locale
 
 /**
- * Plain-text renderings of the results, used by the Copy buttons.
- * Kept free of Compose so they can be formatted cleanly.
+ * Clipboard payloads for results.
+ *
+ * `docs/02_AppFlow.md §2` requires a digits-only string for Copy; §5 requires all split sizes
+ * joined by a newline. Keeping the wording out of the clipboard is what makes the value directly
+ * pasteable into Windows Setup.
  */
 object ResultText {
 
-    fun calc(result: PartitionCalculationResult): String = buildString {
-        appendLine("Disk Partition Calculator — Calc")
-        appendLine("Visible size: ${trim(result.visibleGb)} GB")
-        appendLine("Filesystem: ${result.filesystem.label}")
-        appendLine("Partition size: ${result.partitionSizeMb} MB")
-        appendLine("Type in Windows Setup: ${result.requiredInputMb} MB")
-        appendLine(
-            "Windows Setup overhead: " +
-                if (result.usesWindowsSetupOverhead) "Yes (+${result.setupOverheadMb} MB)" else "No"
-        )
-        appendLine("Expected visible size: ~${result.expectedVisibleMb} MB")
-        if (result.warnings.isNotEmpty()) {
-            appendLine()
-            result.warnings.forEach { appendLine("• $it") }
-        }
-    }.trimEnd()
+    /** Calc: the exact MB to type — digits only. */
+    fun calc(result: PartitionCalculationResult): String = result.requiredInputMb.toString()
 
-    fun split(result: SplitResult): String = buildString {
-        appendLine("Disk Partition Calculator — Split")
-        appendLine("Total: ${result.totalMb} MB")
-        appendLine("Usable after system partitions: ${result.usableMb} MB")
-        appendLine("Filesystem: ${result.filesystem.label}")
-        appendLine("Partitions: ${result.partitions.size}")
-        appendLine()
-        result.partitions.forEach { partition ->
-            appendLine("Partition ${partition.index}: ${partition.typeMb} MB (visible ≈ ${partition.expectedVisibleMb} MB)")
-        }
-        appendLine()
-        appendLine("Sum of all partitions: ${result.sumOfTypeMb} MB")
-        if (result.warnings.isNotEmpty()) {
-            appendLine()
-            result.warnings.forEach { appendLine("• $it") }
-        }
-    }.trimEnd()
+    /** Split: one MB value per partition, newest list order preserved. */
+    fun split(result: SplitResult): String =
+        result.partitions.joinToString(separator = "\n") { it.typeMb.toString() }
+
+    /** Explorer-visible size in GB, two decimals (docs/02_AppFlow.md §3). */
+    fun visibleGb(mb: Int): String = String.format(Locale.US, "%.2f", mb / 1024.0)
 
     /** Trims trailing zeros: 10.0 -> "10", 2.50 -> "2.5". */
     fun trim(value: Double): String =

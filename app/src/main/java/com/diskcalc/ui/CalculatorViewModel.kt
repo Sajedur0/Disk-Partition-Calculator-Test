@@ -19,7 +19,6 @@ import com.diskcalc.domain.SplitPartitionCalculator
 import com.diskcalc.domain.SplitResult
 import com.diskcalc.domain.ThemeMode
 import com.diskcalc.domain.WindowsSetupProfile
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -30,14 +29,15 @@ import kotlinx.coroutines.launch
 enum class AppTab(val title: String) { CALC("Calc"), SPLIT("Split"), SETTINGS("Settings") }
 
 data class CalcUiState(
-    val visibleGbText: String = "100",
+    // Empty is intentional: docs/02_AppFlow.md §3 — the user must enter (or pick) a size.
+    val visibleGbText: String = "",
     val filesystem: FileSystemType = FileSystemType.NTFS,
     val simulateWindowsSetup: Boolean = false,
-    val setupProfile: WindowsSetupProfile = WindowsSetupProfile.WIN10_UEFI,
-    val customOverheadText: String = PartitionConstants.WINDOWS_SETUP_OVERHEAD_MB.toString(),
-    val isCalculating: Boolean = false,
+    val setupProfile: WindowsSetupProfile = WindowsSetupProfile.WIN11,
+    val customOverheadText: String = "0",
     val result: PartitionCalculationResult? = null,
-    val error: String? = null
+    val error: String? = null,
+    val overheadError: String? = null
 ) {
     /** Overhead actually applied, honouring the Custom profile. */
     val effectiveOverheadMb: Int
@@ -46,16 +46,20 @@ data class CalcUiState(
         } else {
             setupProfile.overheadMb
         }
+
+    /** Calculate is enabled only when every input is valid (docs/02_AppFlow.md §2). */
+    val canCalculate: Boolean
+        get() = InputValidator.parseVisibleGb(visibleGbText).isValid &&
+            (!simulateWindowsSetup || setupProfile != WindowsSetupProfile.CUSTOM ||
+                InputValidator.parseOverheadMb(customOverheadText).isValid)
 }
 
 data class SplitUiState(
-    // Starts empty on purpose: seeding a sample number here made users split the sample disk
-    // instead of their own. The field now shows a hint explaining which size to enter.
+    // Starts empty on purpose: seeding a sample number made users split the sample disk.
     val totalMbText: String = "",
-    val partitionCount: Int = 3,
+    val partitionCount: Int = 2,
     val filesystem: FileSystemType = FileSystemType.NTFS,
     val simulateWindowsSetup: Boolean = false,
-    val isCalculating: Boolean = false,
     val result: SplitResult? = null,
     val error: String? = null
 )
@@ -76,6 +80,9 @@ class CalculatorViewModel(
 
     private val _history = MutableStateFlow<List<ConversionHistory>>(emptyList())
     val history: StateFlow<List<ConversionHistory>> = _history.asStateFlow()
+
+    /** Last deleted row, kept in memory only so "Undo" can restore it. */
+    private var lastDeleted: ConversionHistory? = null
 
     /** Tracks whether the user has touched the fields, so stored defaults only seed once. */
     private var calcSeeded = false
@@ -113,17 +120,20 @@ class CalculatorViewModel(
     // ---------------------------------------------------------------- Calc tab
 
     fun onVisibleGbChange(text: String) {
-        val filtered = text.filter { it.isDigit() || it == '.' || it == ',' }
+        val filtered = InputValidator.normalizeGbInput(text)
         _calc.update {
             it.copy(
                 visibleGbText = filtered,
-                error = if (filtered.isBlank()) null else InputValidator.parseVisibleGb(filtered).error
+                error = if (filtered.isBlank()) null else InputValidator.parseVisibleGb(filtered).error,
+                result = null
             )
         }
     }
 
     fun applyPreset(gb: Double) {
-        _calc.update { it.copy(visibleGbText = CalcPresets.inputText(gb), error = null, result = null) }
+        _calc.update {
+            it.copy(visibleGbText = CalcPresets.inputText(gb), error = null, result = null)
+        }
     }
 
     /** Filesystem choice in the Calc tab is remembered as the app default. */
@@ -138,14 +148,22 @@ class CalculatorViewModel(
     }
 
     fun onSetupProfileChange(profile: WindowsSetupProfile) {
-        _calc.update { it.copy(setupProfile = profile, result = null) }
+        _calc.update {
+            it.copy(setupProfile = profile, result = null, overheadError = null)
+        }
         viewModelScope.launch { settingsRepository.setSetupProfile(profile) }
     }
 
     fun onCustomOverheadChange(text: String) {
         val filtered = text.filter { it.isDigit() }
-        _calc.update { it.copy(customOverheadText = filtered, result = null) }
         val parsed = InputValidator.parseOverheadMb(filtered)
+        _calc.update {
+            it.copy(
+                customOverheadText = filtered,
+                overheadError = if (parsed.isValid) null else parsed.error,
+                result = null
+            )
+        }
         parsed.value?.let { value ->
             viewModelScope.launch { settingsRepository.setCustomOverheadMb(value) }
         }
@@ -153,108 +171,126 @@ class CalculatorViewModel(
 
     fun calculate() {
         val state = _calc.value
-        val parsed = InputValidator.parseVisibleGb(state.visibleGbText)
-        val overheadError = if (state.simulateWindowsSetup && state.setupProfile == WindowsSetupProfile.CUSTOM) {
-            InputValidator.parseOverheadMb(state.customOverheadText).error
-        } else {
-            null
-        }
-
-        if (parsed.error != null || overheadError != null) {
-            _calc.update { it.copy(error = parsed.error ?: overheadError, result = null) }
+        if (!state.canCalculate) {
+            _calc.update {
+                it.copy(
+                    error = InputValidator.parseVisibleGb(state.visibleGbText).error,
+                    overheadError = if (state.simulateWindowsSetup &&
+                        state.setupProfile == WindowsSetupProfile.CUSTOM
+                    ) InputValidator.parseOverheadMb(state.customOverheadText).error else null,
+                    result = null
+                )
+            }
             return
         }
 
-        val visibleGb = parsed.value ?: return
-        viewModelScope.launch {
-            _calc.update { it.copy(isCalculating = true, error = null) }
-            delay(CALCULATION_SPINNER_MILLIS) // keeps the spinner perceivable, taps feel deliberate
-            val result = PartitionCalculator.calculate(
+        val visibleGb = InputValidator.parseVisibleGb(state.visibleGbText).value ?: return
+        // Math is synchronous and takes < 1 ms: no spinner, no delay (docs/02_AppFlow.md §2).
+        val outcome = runCatching {
+            PartitionCalculator.calculate(
                 visibleGb = visibleGb,
                 filesystem = state.filesystem,
                 simulateWindowsSetup = state.simulateWindowsSetup,
                 setupOverheadMb = state.effectiveOverheadMb
             )
-            _calc.update { it.copy(isCalculating = false, result = result) }
-            historyManager.add(result.toHistory())
-            _history.value = historyManager.all()
         }
+        outcome.fold(
+            onSuccess = { result ->
+                _calc.update { it.copy(result = result, error = null, overheadError = null) }
+                // One history row per Calculate (US-01 side effect).
+                viewModelScope.launch {
+                    historyManager.add(result.toHistory())
+                    _history.value = historyManager.all()
+                }
+            },
+            onFailure = { error ->
+                _calc.update { it.copy(error = error.message, result = null) }
+            }
+        )
     }
 
     fun dismissCalcResult() = _calc.update { it.copy(result = null) }
 
     // --------------------------------------------------------------- Split tab
 
+    private fun splitError(state: SplitUiState): String? {
+        val parsed = InputValidator.parseTotalMb(state.totalMbText)
+        if (!parsed.isValid) return if (state.totalMbText.isBlank()) null else parsed.error
+        val overhead = if (state.simulateWindowsSetup) _calc.value.effectiveOverheadMb else 0
+        return InputValidator.validateSplit(parsed.value ?: return null, state.partitionCount, overhead)
+    }
+
     fun onTotalMbChange(text: String) {
         val filtered = text.filter { it.isDigit() }
         _split.update {
-            it.copy(
-                totalMbText = filtered,
-                error = if (filtered.isBlank()) null else InputValidator.parseTotalMb(filtered).error
-            )
+            val next = it.copy(totalMbText = filtered, result = null)
+            next.copy(error = splitError(next))
         }
     }
 
     fun onPartitionCountChange(count: Int) {
         _split.update {
-            it.copy(
+            val next = it.copy(
                 partitionCount = count.coerceIn(
                     PartitionConstants.MIN_SPLIT_COUNT,
                     PartitionConstants.MAX_SPLIT_COUNT
                 ),
-                result = null,
-                error = null
+                result = null
             )
+            next.copy(error = splitError(next))
         }
     }
 
     /** Split keeps its own filesystem pick — it does not change the app default. */
     fun onSplitFilesystemChange(type: FileSystemType) {
-        _split.update { it.copy(filesystem = type, result = null) }
+        _split.update {
+            val next = it.copy(filesystem = type, result = null)
+            next.copy(error = splitError(next))
+        }
     }
 
     fun onSplitSetupToggle(enabled: Boolean) {
-        _split.update { it.copy(simulateWindowsSetup = enabled, result = null) }
+        _split.update {
+            val next = it.copy(simulateWindowsSetup = enabled, result = null)
+            next.copy(error = splitError(next))
+        }
     }
 
     fun split() {
         val state = _split.value
-        val parsed = InputValidator.parseTotalMb(state.totalMbText)
-        if (parsed.error != null) {
-            _split.update { it.copy(error = parsed.error, result = null) }
+        val error = splitError(state)
+        if (error != null || !InputValidator.parseTotalMb(state.totalMbText).isValid) {
+            _split.update { it.copy(error = error, result = null) }
             return
         }
-        val totalMb = parsed.value ?: return
+        val totalMb = InputValidator.parseTotalMb(state.totalMbText).value ?: return
 
-        viewModelScope.launch {
-            _split.update { it.copy(isCalculating = true, error = null) }
-            delay(CALCULATION_SPINNER_MILLIS)
-            val result = runCatching {
-                SplitPartitionCalculator.split(
-                    totalMb = totalMb,
-                    partitionCount = state.partitionCount,
-                    filesystem = state.filesystem,
-                    simulateWindowsSetup = state.simulateWindowsSetup,
-                    setupOverheadMb = _calc.value.effectiveOverheadMb
-                )
-            }
-            result.fold(
-                onSuccess = { splitResult ->
-                    _split.update { it.copy(isCalculating = false, result = splitResult) }
-                    historyManager.add(splitResult.toHistory())
-                    _history.value = historyManager.all()
-                },
-                onFailure = { error ->
-                    _split.update {
-                        it.copy(
-                            isCalculating = false,
-                            result = null,
-                            error = error.message ?: "Total size too small for ${state.partitionCount} partitions"
-                        )
-                    }
-                }
+        val outcome = runCatching {
+            SplitPartitionCalculator.split(
+                totalMb = totalMb,
+                partitionCount = state.partitionCount,
+                filesystem = state.filesystem,
+                simulateWindowsSetup = state.simulateWindowsSetup,
+                setupOverheadMb = _calc.value.effectiveOverheadMb
             )
         }
+        outcome.fold(
+            onSuccess = { splitResult ->
+                _split.update { it.copy(result = splitResult, error = null) }
+                viewModelScope.launch {
+                    historyManager.add(splitResult.toHistory())
+                    _history.value = historyManager.all()
+                }
+            },
+            onFailure = { failure ->
+                _split.update {
+                    it.copy(
+                        result = null,
+                        error = failure.message ?: "Too small to split into ${state.partitionCount} partitions"
+                    )
+                }
+            }
+        )
     }
 
     fun dismissSplitResult() = _split.update { it.copy(result = null) }
@@ -283,6 +319,7 @@ class CalculatorViewModel(
     }
 
     fun onClearHistory() {
+        lastDeleted = null
         viewModelScope.launch {
             historyManager.clear()
             _history.value = historyManager.all()
@@ -290,15 +327,23 @@ class CalculatorViewModel(
     }
 
     fun onRemoveHistory(id: String) {
+        lastDeleted = _history.value.firstOrNull { it.id == id }
         viewModelScope.launch {
             historyManager.remove(id)
             _history.value = historyManager.all()
         }
     }
 
-    companion object {
-        const val CALCULATION_SPINNER_MILLIS = 320L
+    fun undoRemoveHistory() {
+        val entry = lastDeleted ?: return
+        lastDeleted = null
+        viewModelScope.launch {
+            historyManager.add(entry)
+            _history.value = historyManager.all()
+        }
+    }
 
+    companion object {
         fun factory(container: AppContainer): ViewModelProvider.Factory =
             object : ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST")

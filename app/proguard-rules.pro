@@ -18,6 +18,3 @@
 }
 -keep,includedescriptorclasses class com.diskcalc.data.HistoryEntryDto$$serializer { *; }
 -keep,includedescriptorclasses class com.diskcalc.data.HistoryFileDto$$serializer { *; }
-
-# Play Core in-app update is optional at runtime.
--dontwarn com.google.android.play.core.**

@@ -4,6 +4,9 @@ package com.diskcalc.domain
  * All numbers in this app are **MiB** based (1 GB = 1024 MB) because Windows Explorer
  * formats binary sizes while labelling them "GB". Windows Setup, however, wants a size
  * typed in **MB**, and the formatter always steals a few MB per partition.
+ *
+ * Normative values come from `docs/01_PRD.md §4` and the input caps from
+ * `docs/02_AppFlow.md §3/§4`. No screen or ViewModel may invent its own numbers.
  */
 object PartitionConstants {
 
@@ -16,6 +19,9 @@ object PartitionConstants {
      * Approximation — verify against the real disk you are partitioning.
      */
     const val OVERHEAD_MB_PER_PARTITION = 4
+
+    /** "Off (blank disk)" setup profile — no system partitions created. */
+    const val SETUP_OVERHEAD_OFF_MB = 0
 
     /**
      * The system partitions Windows Setup creates before the main one.
@@ -35,7 +41,7 @@ object PartitionConstants {
     /** FAT32 cannot store a single file bigger than 4 GB. */
     const val FAT32_MAX_FILE_GB = 4
 
-    /** History is capped so the JSON blob in DataStore stays small. */
+    /** History is capped so the persisted JSON stays small. */
     const val MAX_HISTORY = 100
 
     /** Primary-partition limit of an MBR disk (system partitions count towards it). */
@@ -44,4 +50,17 @@ object PartitionConstants {
     /** Stepper range for the Split tab. */
     const val MAX_SPLIT_COUNT = 8
     const val MIN_SPLIT_COUNT = 1
+
+    // ------------------------------------------------------------------ input caps
+    /** Calc: "Maximum is 65536 GB". */
+    const val MAX_VISIBLE_GB = 65536.0
+
+    /** Split: "Maximum is 134217728 MB". */
+    const val MAX_TOTAL_MB = 134_217_728L
+
+    /** Custom Setup overhead: "Maximum is 100000 MB". */
+    const val MAX_CUSTOM_OVERHEAD_MB = 100_000
+
+    /** Split: reject when `usable / n` is smaller than this. */
+    const val MIN_PARTITION_MB = 5L
 }

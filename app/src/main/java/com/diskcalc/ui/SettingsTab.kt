@@ -3,8 +3,6 @@ package com.diskcalc.ui
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.widget.Toast
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -36,7 +34,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -61,9 +58,9 @@ import com.diskcalc.ui.components.glassLite
 import com.diskcalc.ui.theme.LocalGlassTokens
 import com.diskcalc.ui.theme.LocalLiquidPalette
 
-/** Full-screen pages opened from the Settings tab actions. */
 /**
- * Settings tab — theme (Dark Mode / Light Mode), defaults and informational actions.
+ * Settings tab — theme (System / Light / Dark), defaults and informational actions.
+ * Changes apply immediately; there is no Save button (docs/02_AppFlow.md §6).
  */
 @Composable
 fun SettingsTab(
@@ -83,17 +80,17 @@ fun SettingsTab(
     val palette = LocalLiquidPalette.current
     val tokens = LocalGlassTokens.current
     val context = LocalContext.current
-
+    var showClearConfirm by remember { mutableStateOf(false) }
 
     Column(
         modifier = modifier
             .fillMaxWidth()
             .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(tokens.spaceMd)
+        verticalArrangement = Arrangement.spacedBy(tokens.cardGap)
     ) {
         GlassPanel(
             title = "Appearance",
-            subtitle = "Solid colour theme for Dark Mode and Light Mode",
+            subtitle = "System, Light or Dark — the change animates smoothly",
             icon = Icons.Rounded.DarkMode
         ) {
             GlassSegmentedControl(
@@ -114,7 +111,7 @@ fun SettingsTab(
                 text = "Default filesystem",
                 style = MaterialTheme.typography.labelMedium,
                 color = palette.contentSecondary,
-                modifier = Modifier.padding(bottom = 6.dp, start = 4.dp)
+                modifier = Modifier.padding(bottom = tokens.spaceSm, start = tokens.spaceXs)
             )
             GlassSegmentedControl(
                 options = FileSystemType.entries.toList(),
@@ -124,7 +121,7 @@ fun SettingsTab(
                 modifier = Modifier.fillMaxWidth()
             )
 
-            Spacer(Modifier.height(tokens.spaceMd))
+            Spacer(Modifier.height(tokens.spaceLg))
             GlassToggleRow(
                 title = "Windows Setup simulation",
                 description = "On by default in the Calc tab",
@@ -139,8 +136,9 @@ fun SettingsTab(
                 onSelect = onDefaultProfileChange,
                 label = { profile ->
                     when (profile) {
-                        WindowsSetupProfile.WIN10_UEFI -> "Win 10"
-                        WindowsSetupProfile.WIN11_UEFI -> "Win 11"
+                        WindowsSetupProfile.OFF -> "Off"
+                        WindowsSetupProfile.WIN10 -> "Win 10"
+                        WindowsSetupProfile.WIN11 -> "Win 11"
                         WindowsSetupProfile.CUSTOM -> "Custom"
                     }
                 },
@@ -149,13 +147,16 @@ fun SettingsTab(
             Spacer(Modifier.height(tokens.spaceXs))
             Text(
                 text = when (settings.setupProfile) {
-                    WindowsSetupProfile.WIN10_UEFI -> "Windows 10 UEFI/GPT overhead: ${PartitionConstants.WINDOWS_SETUP_OVERHEAD_MB} MB"
-                    WindowsSetupProfile.WIN11_UEFI -> "Windows 11 UEFI/GPT overhead: ${PartitionConstants.WINDOWS_SETUP_OVERHEAD_WIN11_MB} MB"
+                    WindowsSetupProfile.OFF -> "No system partitions — overhead: 0 MB"
+                    WindowsSetupProfile.WIN10 ->
+                        "Windows 10 UEFI/GPT overhead: ${PartitionConstants.WINDOWS_SETUP_OVERHEAD_MB} MB"
+                    WindowsSetupProfile.WIN11 ->
+                        "Windows 11 UEFI/GPT overhead: ${PartitionConstants.WINDOWS_SETUP_OVERHEAD_WIN11_MB} MB"
                     WindowsSetupProfile.CUSTOM -> "Custom overhead: ${settings.customOverheadMb} MB"
                 },
                 style = MaterialTheme.typography.bodyMedium,
                 color = palette.contentTertiary,
-                modifier = Modifier.padding(start = 4.dp)
+                modifier = Modifier.padding(start = tokens.spaceXs)
             )
         }
 
@@ -173,7 +174,7 @@ fun SettingsTab(
                 style = MaterialTheme.typography.bodyLarge,
                 color = palette.contentSecondary
             )
-            Spacer(Modifier.height(tokens.spaceMd))
+            Spacer(Modifier.height(tokens.spaceLg))
             Row(horizontalArrangement = Arrangement.spacedBy(tokens.spaceSm)) {
                 GlassButton(
                     text = "View history",
@@ -185,10 +186,7 @@ fun SettingsTab(
                     text = "Clear",
                     icon = Icons.Rounded.RestoreFromTrash,
                     primary = false,
-                    onClick = {
-                        onClearHistory()
-                        Toast.makeText(context, "History cleared", Toast.LENGTH_SHORT).show()
-                    },
+                    onClick = { showClearConfirm = true },
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -234,6 +232,47 @@ fun SettingsTab(
         Spacer(Modifier.height(tokens.spaceSm))
     }
 
+    if (showClearConfirm) {
+        ClearHistoryDialog(
+            onCancel = { showClearConfirm = false },
+            onConfirm = {
+                showClearConfirm = false
+                onClearHistory()
+            }
+        )
+    }
+}
+
+/** Confirmation required by docs/02_AppFlow.md §5 before "Clear all". */
+@Composable
+private fun ClearHistoryDialog(onCancel: () -> Unit, onConfirm: () -> Unit) {
+    val palette = LocalLiquidPalette.current
+    val tokens = LocalGlassTokens.current
+    Dialog(onDismissRequest = onCancel) {
+        LiquidGlassSurface(shape = RoundedCornerShape(tokens.cornerXl)) {
+            Column(Modifier.padding(tokens.cardPadding)) {
+                Text(
+                    text = "Delete all history?",
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = palette.contentPrimary
+                )
+                Spacer(Modifier.height(tokens.spaceLg))
+                Row(horizontalArrangement = Arrangement.spacedBy(tokens.spaceSm)) {
+                    GlassButton(
+                        text = "Cancel",
+                        primary = false,
+                        onClick = onCancel,
+                        modifier = Modifier.weight(1f)
+                    )
+                    GlassButton(
+                        text = "Delete",
+                        onClick = onConfirm,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+        }
+    }
 }
 
 @Composable
@@ -258,7 +297,7 @@ private fun SettingsAction(
                     shape = RoundedCornerShape(tokens.cornerSmall),
                     tint = palette.accentContainer
                 )
-                .padding(8.dp)
+                .padding(tokens.spaceSm)
         ) {
             Icon(
                 imageVector = icon,
@@ -286,37 +325,6 @@ private fun SettingsAction(
             tint = palette.contentTertiary,
             modifier = Modifier.size(20.dp)
         )
-    }
-}
-
-@Composable
-private fun AboutDialog(onDismiss: () -> Unit) {
-    val palette = LocalLiquidPalette.current
-    val tokens = LocalGlassTokens.current
-    Dialog(onDismissRequest = onDismiss) {
-        LiquidGlassSurface(shape = RoundedCornerShape(tokens.cornerLarge)) {
-            Column(Modifier.padding(tokens.spaceLg)) {
-                Text(
-                    text = "Disk Partition Calculator",
-                    style = MaterialTheme.typography.titleLarge,
-                    color = palette.contentPrimary
-                )
-                Spacer(Modifier.height(tokens.spaceSm))
-                Text(
-                    text = "Version ${BuildConfig.VERSION_NAME}",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = palette.contentSecondary
-                )
-                Spacer(Modifier.height(tokens.spaceSm))
-                Text(
-                    text = "Calculate partition sizes for Windows Setup and split disk space into equal parts.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = palette.contentSecondary
-                )
-                Spacer(Modifier.height(tokens.spaceLg))
-                GlassButton(text = "Got it", onClick = onDismiss)
-            }
-        }
     }
 }
 
