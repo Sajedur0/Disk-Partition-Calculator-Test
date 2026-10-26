@@ -89,11 +89,11 @@ Support system font scale up to 200 % without clipping (no fixed-height text con
 | **SegmentedControl** | selected · unselected | NTFS/FAT32, theme selector |
 | **DropdownField** | closed · open · disabled | Setup profile |
 | **ResultDialog** | default · with-warning | Large mono value, Copy primary, Close text button |
-| **PartitionRow** | default · remainder-badge | `type X MB · visible ≈ Y MB` + copy icon |
+| **PartitionRow** | default · remainder-badge | `type X MB · visible ≈ Y GB` + copy icon |
 | **SumCheckCard** | ok (secondary ✓) | Always ok by construction; shows equation |
 | **WarningBanner** | warning · info | Icon + text, container color per theme |
-| **HistoryRow** | default · expanded (split) · swipe-to-delete | Timestamp `labelSmall` |
-| **EmptyState** | history-empty · history-error (Retry) | Icon 48 dp + title + hint + action |
+| **HistoryRow** | default · expanded (split) · swipe-to-delete | GB headline + MB to type + timestamp `labelSmall` |
+| **EmptyState** | history-empty · history-error (Retry) | Icon 48 dp + title + hint |
 | **Snackbar** | info · with action (Undo) | Bottom, above nav bar |
 | **BottomNavBar** | selected · unselected | 4 items, icons + labels |
 

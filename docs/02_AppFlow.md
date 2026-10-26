@@ -74,6 +74,7 @@ ShowingResult ──Calculate success──► history row inserted (side effect
 ### Result dialog contents
 - **Type in Setup:** `inputMb` MB (large, monospace)
 - **Explorer will show:** ≈ `visibleMb` MB (and GB equivalent, 2 decimals)
+- **Partition size:** ≈ X GB (2 decimals), where `X = partitionMb / 1024`
 - Explanation line: `partition = X MB (+4 MB formatter) · Setup overhead = Y MB`
 - Warnings (if any): FAT32 > 32 GB format limit; FAT32 4 GB file limit
 - Buttons: **Copy** (primary), **Close**
@@ -98,7 +99,7 @@ Computed ──row Copy──► Snackbar "Copied"
 Live recompute; history entry saved only on the explicit **Save** action (prevents history spam while typing).
 
 ### Output
-- Row i: `Partition i — type X MB · visible ≈ Y MB` (`Y = X − 4`) with Copy icon.
+- Row i: `Partition i — type X MB · visible ≈ Y GB` (`Y = (X − 4) / 1024`, 2 decimals) with Copy icon.
 - Last row may be larger by `remainder`; show subtle label "includes +R MB remainder" when R > 0.
 - **Sum check** card: `Σ partitions = U MB ✓ equals usable (U MB)`; usable line shows `Disk − Setup overhead` when simulation is on.
 - Warnings (stacked, non-blocking):
@@ -118,10 +119,10 @@ Live recompute; history entry saved only on the explicit **Save** action (preven
 
 States: `Loading → Empty | Populated`.
 
-- **Empty**: illustration/icon + "No conversions yet" + hint "Results you calculate appear here" + button **Go to Calc** (navigates `calc`).
+- **Empty**: illustration/icon + "No conversions yet" + hint "Results you calculate appear here" (no action button).
 - **Populated**: list newest-first, max 100 (oldest evicted on insert #101).
-- Row (Calc entry): title `inputMb MB`, subtitle `wanted X GB · NTFS · Win11` + timestamp.
-- Row (Split entry): title `Split · n partitions`, subtitle `disk N MB · NTFS` + timestamp; expandable to show partition sizes.
+- Row (Calc entry): headline `X GB → inputMb MB` (GB accented, MB monospace), subtitle `filesystem · type this in Windows Setup` + timestamp.
+- Row (Split entry): headline `n × Y GB` per partition, subtitle `disk Z GB · type MB each · filesystem` + timestamp; expandable to show every partition's MB and GB.
 - Row actions: **Copy** (Calc: `inputMb`; Split: all sizes joined by newline), **Delete** (swipe or icon; Snackbar "Deleted · Undo" for 5 s).
 - Toolbar: **Clear all** → confirm dialog "Delete all history?" → [Cancel][Delete].
 - Tap a Calc row → navigates to `calc` with fields prefilled (does not auto-insert history).

@@ -37,9 +37,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.diskcalc.domain.ConversionHistory
+import com.diskcalc.domain.PartitionConstants
 import com.diskcalc.ui.components.GlassButton
 import com.diskcalc.ui.components.GlassDivider
 import com.diskcalc.ui.components.GlassIconButton
@@ -47,6 +54,7 @@ import com.diskcalc.ui.components.LiquidGlassSurface
 import com.diskcalc.ui.components.glassLite
 import com.diskcalc.ui.theme.LocalGlassTokens
 import com.diskcalc.ui.theme.LocalLiquidPalette
+import com.diskcalc.ui.theme.NumericMedium
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -60,7 +68,6 @@ fun HistorySheet(
     onClear: () -> Unit,
     onRemove: (String) -> Unit,
     onCopy: (ConversionHistory) -> Unit,
-    onGoToCalc: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val palette = LocalLiquidPalette.current
@@ -140,12 +147,6 @@ fun HistorySheet(
                         style = MaterialTheme.typography.bodyMedium,
                         color = palette.contentSecondary
                     )
-                    Spacer(Modifier.height(tokens.spaceLg))
-                    GlassButton(
-                        text = "Go to Calc",
-                        onClick = onGoToCalc,
-                        fillWidth = false
-                    )
                 }
             } else {
                 LazyColumn(
@@ -197,6 +198,11 @@ fun HistorySheet(
     }
 }
 
+/**
+ * A history row reads like the result it came from: the size people understand (GB) is the
+ * headline, the exact MB to type stays visible underneath, and Split rows can expand to a
+ * per-partition table. Copy still writes the digits-only MB payload.
+ */
 @Composable
 private fun HistoryRow(
     entry: ConversionHistory,
@@ -208,6 +214,23 @@ private fun HistoryRow(
     val clipboard = LocalClipboardManager.current
     var expanded by remember { mutableStateOf(false) }
 
+    val isCalc = entry.mode == ConversionHistory.Mode.CALC
+    // Split rows store every "type this" size joined by newlines; reuse it for the detail list.
+    val sizesMb: List<Int> = remember(entry.copyValue, isCalc) {
+        if (isCalc) emptyList()
+        else entry.copyValue.lines().mapNotNull { line -> line.trim().toIntOrNull() }
+    }
+    val count = entry.splitCount ?: sizesMb.size.coerceAtLeast(1)
+    val perPartitionMb = sizesMb.firstOrNull() ?: entry.primaryResultMb
+    val visibleMb = { mb: Int ->
+        ResultText.mbToGb((mb - PartitionConstants.OVERHEAD_MB_PER_PARTITION).coerceAtLeast(0))
+    }
+    val perPartitionGb = visibleMb(perPartitionMb)
+    val diskGb = ResultText.mbToGb(
+        entry.inputValue.toLong().coerceIn(0L, Int.MAX_VALUE.toLong()).toInt()
+    )
+    val wantedGb = ResultText.trim(entry.inputValue)
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -218,7 +241,7 @@ private fun HistoryRow(
         Column(
             Modifier
                 .weight(1f)
-                .clickable { expanded = !expanded }
+                .clickable(enabled = !isCalc) { expanded = !expanded }
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
@@ -231,7 +254,7 @@ private fun HistoryRow(
                         .padding(horizontal = tokens.spaceSm, vertical = tokens.spaceXs)
                 ) {
                     Text(
-                        text = if (entry.mode == ConversionHistory.Mode.CALC) "CALC" else "SPLIT",
+                        text = if (isCalc) "CALC" else "SPLIT",
                         style = MaterialTheme.typography.labelSmall,
                         color = palette.accent
                     )
@@ -243,37 +266,90 @@ private fun HistoryRow(
                     color = palette.contentTertiary
                 )
             }
+
             Spacer(Modifier.height(tokens.spaceXs))
             Text(
-                text = if (entry.mode == ConversionHistory.Mode.CALC) {
-                    "${entry.primaryResultMb} MB"
-                } else {
-                    "Split · ${entry.splitCount ?: 0} partitions"
+                text = buildAnnotatedString {
+                    withStyle(
+                        SpanStyle(
+                            color = palette.accent,
+                            fontFamily = FontFamily.Monospace,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    ) {
+                        append(if (isCalc) "$wantedGb GB" else "$count × $perPartitionGb GB")
+                    }
+                    if (isCalc) {
+                        withStyle(SpanStyle(color = palette.contentSecondary)) { append("  →  ") }
+                        withStyle(
+                            SpanStyle(
+                                color = palette.contentPrimary,
+                                fontFamily = FontFamily.Monospace
+                            )
+                        ) {
+                            append("${entry.primaryResultMb} MB")
+                        }
+                    }
                 },
                 style = MaterialTheme.typography.titleMedium,
                 color = palette.contentPrimary
             )
             Text(
-                text = if (entry.mode == ConversionHistory.Mode.CALC) {
-                    "wanted ${ResultText.trim(entry.inputValue)} GB · ${entry.filesystem.label}"
+                text = if (isCalc) {
+                    "${entry.filesystem.label} · type this in Windows Setup"
                 } else {
-                    "disk ${entry.inputValue.toLong()} MB · ${entry.filesystem.label}"
+                    "disk $diskGb GB · $perPartitionMb MB each · ${entry.filesystem.label}"
                 },
                 style = MaterialTheme.typography.bodyMedium,
                 color = palette.contentSecondary
             )
-            if (expanded && entry.mode == ConversionHistory.Mode.SPLIT) {
-                GlassDivider()
+
+            if (!isCalc) {
+                Spacer(Modifier.height(tokens.spaceXs))
                 Text(
-                    text = entry.summary,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = palette.contentSecondary
+                    text = if (expanded) "Hide partition sizes" else "View all $count sizes",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = palette.accent
                 )
+                if (expanded) {
+                    Spacer(Modifier.height(tokens.spaceXs))
+                    GlassDivider()
+                    if (sizesMb.size < 2) {
+                        // Older rows only kept the text summary; still show something useful.
+                        Text(
+                            text = entry.summary,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = palette.contentSecondary,
+                            modifier = Modifier.padding(vertical = tokens.spaceXs)
+                        )
+                    } else {
+                        sizesMb.forEachIndexed { index, mb ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = tokens.spaceXs),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Partition ${index + 1}",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = palette.contentSecondary
+                                )
+                                Text(
+                                    text = "$mb MB  ≈  ${visibleMb(mb)} GB",
+                                    style = NumericMedium.copy(fontSize = 12.sp, lineHeight = 16.sp),
+                                    color = palette.contentPrimary
+                                )
+                            }
+                        }
+                    }
+                }
             }
         }
         GlassIconButton(
             icon = Icons.Rounded.ContentCopy,
-            contentDescription = "Copy entry",
+            contentDescription = "Copy entry MB values",
             onClick = {
                 clipboard.setText(AnnotatedString(entry.copyValue))
                 onCopy()

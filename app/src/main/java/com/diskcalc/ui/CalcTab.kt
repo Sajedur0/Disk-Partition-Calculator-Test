@@ -212,7 +212,7 @@ private fun CalcResultSummary(result: PartitionCalculationResult) {
     Column {
         KeyValueRow("Visible size", "${ResultText.trim(result.visibleGb)} GB")
         KeyValueRow("Filesystem", result.filesystem.label)
-        KeyValueRow("Partition size", "${result.partitionSizeMb} MB")
+        KeyValueRow("Partition size", "${ResultText.mbToGb(result.partitionSizeMb)} GB")
         KeyValueRow("Type in Setup", "${result.requiredInputMb} MB", emphasise = true)
         KeyValueRow("Explorer will show", "≈ ${result.expectedVisibleMb} MB")
         KeyValueRow(

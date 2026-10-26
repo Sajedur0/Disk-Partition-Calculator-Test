@@ -291,8 +291,8 @@ fun GuidePage(onBack: () -> Unit, modifier: Modifier = Modifier) {
                 "Turn on **Simulate Windows Setup** if the disk will also hold Windows, then choose " +
                     "**Off** (**0 MB**), **Win 10** (**566 MB**), **Win 11** (**826 MB**) or **Custom** " +
                     "and type your own overhead.",
-                "Tap **Calculate**. The dialog shows the MB to type, the size Explorer is expected to show, " +
-                    "and any warnings.",
+                "Tap **Calculate**. The dialog shows the MB to type, the partition size in **GB**, the size " +
+                    "Explorer is expected to show, and any warnings.",
                 "Tap **Copy** to put the digits-only MB value on your clipboard."
             )
         )
@@ -322,7 +322,8 @@ fun GuidePage(onBack: () -> Unit, modifier: Modifier = Modifier) {
                 "Set the number of partitions (**1–8**) with **−** and **+**.",
                 "Pick the filesystem, and turn on Setup simulation if Windows system partitions already " +
                     "exist on the disk.",
-                "Tap **Split disk**. Each row shows the MB to type and the approximate size Explorer will show.",
+                "Tap **Split disk**. Each row shows the MB to type and the approximate **GB** size " +
+                    "Explorer will show, so you can see how big every partition really is.",
                 "Check the **sum** line — it must equal the usable space. Any leftover MB always goes to " +
                     "the **last** partition."
             )
@@ -365,7 +366,8 @@ fun GuidePage(onBack: () -> Unit, modifier: Modifier = Modifier) {
             icon = Icons.Rounded.History,
             bullets = listOf(
                 "Keeps the **last 100** conversions, newest first — both Calc and Split results.",
-                "Each row shows its mode (**CALC** or **SPLIT**), the time and a one-line summary.",
+                "Each row shows its mode (**CALC** or **SPLIT**), the time, the size in **GB** and the exact **MB** " +
+                    "to type. Split rows expand to list every partition.",
                 "Copy a row (digits only) or delete it with Undo; to remove everything use " +
                     "**Settings → History → Clear**.",
                 "History stays on your device and is never uploaded."

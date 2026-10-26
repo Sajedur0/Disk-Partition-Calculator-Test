@@ -74,7 +74,7 @@ Priority: **P0** = ship-blocking, **P1** = MVP-included, polish.
 
 ### Split
 - **US-07 (P0)** I enter the disk's real size in MB and choose 1–8 partitions.
-- **US-08 (P0)** I see a list; each row reads `type X MB · visible ≈ Y MB`.
+- **US-08 (P0)** I see a list; each row reads `type X MB · visible ≈ Y GB` (2 decimals).
 - **US-09 (P0)** A **sum check** line proves `sum(sizes) == usable`.
 - **US-10 (P0)** Warnings appear: FAT32 > 32 GB format-tool limit, FAT32 4 GB file limit, MBR four-primary-partition ceiling (when n > 4).
 - **US-11 (P1)** Setup simulation (profile/overhead) can be applied to Split so overhead is deducted from the disk first.

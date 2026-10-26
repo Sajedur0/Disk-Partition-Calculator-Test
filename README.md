@@ -63,14 +63,14 @@ Disk Partition Calculator does that arithmetic for you, in the binary units Wind
   - **Win 10 (UEFI/GPT)** — 100 MB EFI + 16 MB MSR + 450 MB Recovery = **566 MB**
   - **Win 11 (UEFI/GPT)** — bigger recovery partition = **826 MB**
   - **Custom** — enter your own overhead in MB
-- Result dialog shows the **MB to type**, the **expected visible size**, and a **Copy** button
+- Result dialog shows the **MB to type**, the **partition size in GB**, the **expected visible size**, and a **Copy** button
 
 ### 🗂️ Split — a whole disk
 
 - Enter the **whole disk's size in MB** — the field starts empty and shows a hint telling you
   exactly where to read that number (no more sample value to mistake for your own disk)
 - **1–8 partitions**, split with integer arithmetic only (Setup rejects fractions)
-- Every row shows `type X MB · visible ≈ Y MB`, so you can type the values straight down the list
+- Every row shows `type X MB · visible ≈ Y GB`, so you can type the values straight down the list and see how big each partition really is
 - **Sum verification** proves the partitions fill the disk exactly; the leftover MB always lands
   on the **last** partition
 - Warnings for FAT32 size limits and the MBR four-primary-partition limit
@@ -90,6 +90,8 @@ Disk Partition Calculator does that arithmetic for you, in the binary units Wind
 - Stored as JSON in AndroidX **DataStore**; corrupt or outdated JSON degrades to an empty list
   instead of crashing
 - Bottom-sheet list with per-row copy and delete
+- Rows lead with the size in **GB** (Calc: `100 GB → 102404 MB`, Split: `4 × 116.43 GB`) and keep the
+  exact **MB** to type visible; Split rows expand to list every partition
 
 ### 🎨 Interface
 

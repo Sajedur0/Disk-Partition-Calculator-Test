@@ -68,7 +68,7 @@ fun CalcResultDialog(
             value = result.requiredInputMb.toString(),
             unit = "MB",
             caption = "Explorer will show ≈ ${result.expectedVisibleMb} MB " +
-                "(${ResultText.visibleGb(result.expectedVisibleMb)} GB)",
+                "(${ResultText.mbToGb(result.expectedVisibleMb)} GB)",
             highlight = true,
             valueContentDescription = "Type ${result.requiredInputMb} megabytes in Windows Setup",
             modifier = Modifier.fillMaxWidth()
@@ -86,7 +86,7 @@ fun CalcResultDialog(
         Spacer(Modifier.height(tokens.spaceMd))
         KeyValueRow("Visible size", "${ResultText.trim(result.visibleGb)} GB")
         KeyValueRow("Filesystem", result.filesystem.label)
-        KeyValueRow("Partition size", "${result.partitionSizeMb} MB")
+        KeyValueRow("Partition size", "${ResultText.mbToGb(result.partitionSizeMb)} GB")
         KeyValueRow(
             label = "Required input",
             value = "${result.requiredInputMb} MB",
@@ -174,7 +174,9 @@ fun SplitResultDialog(
             SplitTableRow(
                 label = "Partition ${partition.index}",
                 typeText = "${partition.typeMb} MB",
-                visibleText = "${partition.expectedVisibleMb} MB",
+                // Visible is what Explorer shows — render it in GB so users can picture the
+                // real partition size at a glance. The MB to type stays in the first column.
+                visibleText = "${ResultText.mbToGb(partition.expectedVisibleMb)} GB",
                 note = note,
                 onCopy = {
                     clipboard.setText(AnnotatedString(partition.typeMb.toString()))
