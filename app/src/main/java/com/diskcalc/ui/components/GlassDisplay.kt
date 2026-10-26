@@ -24,10 +24,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.diskcalc.ui.theme.LocalGlassTokens
 import com.diskcalc.ui.theme.LocalLiquidPalette
+import com.diskcalc.ui.theme.NumericMedium
 
 /** Solid hairline separator. */
 @Composable
@@ -55,7 +57,7 @@ fun KeyValueRow(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = if (emphasise) 10.dp else 7.dp),
+            .padding(vertical = if (emphasise) tokens.spaceMd else tokens.spaceSm),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -68,11 +70,7 @@ fun KeyValueRow(
         Spacer(Modifier.width(tokens.spaceSm))
         Text(
             text = value,
-            style = if (emphasise) {
-                MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold)
-            } else {
-                MaterialTheme.typography.titleMedium
-            },
+            style = if (emphasise) NumericMedium else MaterialTheme.typography.titleMedium,
             color = valueColor ?: if (emphasise) palette.accent else palette.contentPrimary
         )
     }
@@ -86,7 +84,9 @@ fun StatTile(
     modifier: Modifier = Modifier,
     unit: String? = null,
     caption: String? = null,
-    highlight: Boolean = false
+    highlight: Boolean = false,
+    /** Screen-reader wording for the hero number (docs/03_UI_Spec.md §7). */
+    valueContentDescription: String? = null
 ) {
     val palette = LocalLiquidPalette.current
     val tokens = LocalGlassTokens.current
@@ -105,15 +105,18 @@ fun StatTile(
             style = MaterialTheme.typography.labelMedium,
             color = palette.contentSecondary
         )
-        Spacer(Modifier.height(2.dp))
+        Spacer(Modifier.height(tokens.spaceXs))
         Row(verticalAlignment = Alignment.Bottom) {
             Text(
                 text = value,
-                style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.SemiBold),
-                color = if (highlight) palette.accent else palette.contentPrimary
+                style = MaterialTheme.typography.displayMedium,
+                color = if (highlight) palette.accent else palette.contentPrimary,
+                modifier = valueContentDescription?.let { text ->
+                    Modifier.semantics { contentDescription = text }
+                } ?: Modifier
             )
             if (unit != null) {
-                Spacer(Modifier.width(6.dp))
+                Spacer(Modifier.width(tokens.spaceSm))
                 Text(
                     text = unit,
                     style = MaterialTheme.typography.titleMedium,
@@ -151,7 +154,7 @@ fun WarningList(
                 borderColor = palette.warningContent
             )
             .padding(tokens.spaceMd),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        verticalArrangement = Arrangement.spacedBy(tokens.spaceSm)
     ) {
         warnings.forEach { warning ->
             val isWarning = warning.startsWith("Warning")
@@ -164,7 +167,7 @@ fun WarningList(
                         .padding(top = 1.dp)
                         .size(16.dp)
                 )
-                Spacer(Modifier.width(8.dp))
+                Spacer(Modifier.width(tokens.spaceSm))
                 Text(
                     text = warning,
                     style = MaterialTheme.typography.bodyMedium,
@@ -233,7 +236,7 @@ fun GlassBadge(text: String, modifier: Modifier = Modifier) {
                 tint = palette.accentContainer,
                 borderColor = palette.glassBorderStart
             )
-            .padding(horizontal = 12.dp, vertical = 5.dp)
+            .padding(horizontal = tokens.spaceMd, vertical = tokens.spaceXs)
     ) {
         Text(
             text = text,

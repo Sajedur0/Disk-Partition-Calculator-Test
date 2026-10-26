@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Light Mode window theme -->
+    <!-- Edge-to-edge window theme: transparent system bars, tint handled in Theme.kt. -->
     <style name="Theme.DiskCalc" parent="android:Theme.Material.Light.NoActionBar">
         <item name="android:windowBackground">@color/backdrop_base_light</item>
-        <item name="android:statusBarColor">@color/backdrop_base_light</item>
-        <item name="android:navigationBarColor">@color/backdrop_base_light</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:windowDrawsSystemBarBackgrounds">true</item>
         <item name="android:windowLightStatusBar">true</item>
         <item name="android:windowLightNavigationBar">true</item>

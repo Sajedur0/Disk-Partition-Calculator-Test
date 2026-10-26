@@ -1,22 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Solid Dark Mode Palette -->
-    <color name="backdrop_base_dark">#FF0F172A</color>
-    <color name="surface_dark">#FF1E293B</color>
-    <color name="control_dark">#FF273549</color>
-    <color name="border_dark">#FF334155</color>
-    <color name="accent_dark">#FF4F8CFF</color>
-    <color name="text_primary_dark">#FFF8FAFC</color>
-    <color name="text_secondary_dark">#FF94A3B8</color>
-
-    <!-- Solid Light Mode Palette -->
-    <color name="backdrop_base_light">#FFF1F5F9</color>
-    <color name="surface_light">#FFFFFFFF</color>
-    <color name="control_light">#FFF1F5F9</color>
-    <color name="border_light">#FFCBD5E1</color>
-    <color name="accent_light">#FF2563EB</color>
-    <color name="text_primary_light">#FF0F172A</color>
-    <color name="text_secondary_light">#FF475569</color>
+    <!-- Window colours mirror the `background` tokens in docs/03_UI_Spec.md §2. -->
+    <color name="backdrop_base_dark">#FF0F1115</color>
+    <color name="backdrop_base_light">#FFF6F7FB</color>
 
     <color name="ic_launcher_background">#FF0F172A</color>
 </resources>

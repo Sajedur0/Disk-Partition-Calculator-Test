@@ -71,12 +71,12 @@ fun GlassTabBar(
             .height(68.dp),
         shape = RoundedCornerShape(tokens.cornerXl),
         tint = palette.glassTint,
-        elevation = tokens.elevation
+        elevation = tokens.elevationSmall
     ) {
         Box(
             Modifier
                 .fillMaxSize()
-                .padding(6.dp)
+                .padding(tokens.spaceSm)
                 .onSizeChanged { size ->
                     if (innerWidthPx != size.width) {
                         innerWidthPx = size.width
@@ -103,7 +103,7 @@ fun GlassTabBar(
                             .weight(1f)
                             .fillMaxHeight()
                             .clickableBounce { onSelect(index) }
-                            .padding(horizontal = 4.dp),
+                            .padding(horizontal = tokens.spaceXs),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {

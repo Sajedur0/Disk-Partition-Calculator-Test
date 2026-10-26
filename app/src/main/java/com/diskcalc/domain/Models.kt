@@ -13,16 +13,24 @@ enum class FileSystemType(val label: String) {
 
 /**
  * Preset for the partitions Windows Setup creates on its own.
+ * Overheads come from `docs/01_PRD.md §4`; stored names match `docs/05_Schema.md §5`.
  * [CUSTOM] means the user types their own value in the settings/calculator field.
  */
 enum class WindowsSetupProfile(val overheadMb: Int, val label: String) {
-    WIN10_UEFI(PartitionConstants.WINDOWS_SETUP_OVERHEAD_MB, "Windows 10 (UEFI/GPT)"),
-    WIN11_UEFI(PartitionConstants.WINDOWS_SETUP_OVERHEAD_WIN11_MB, "Windows 11 (UEFI/GPT, larger recovery)"),
+    OFF(PartitionConstants.SETUP_OVERHEAD_OFF_MB, "Off (blank disk)"),
+    WIN10(PartitionConstants.WINDOWS_SETUP_OVERHEAD_MB, "Windows 10 (UEFI/GPT)"),
+    WIN11(PartitionConstants.WINDOWS_SETUP_OVERHEAD_WIN11_MB, "Windows 11 (UEFI/GPT)"),
     CUSTOM(0, "Custom");
 
     companion object {
-        fun fromName(value: String?): WindowsSetupProfile =
-            entries.firstOrNull { it.name.equals(value, ignoreCase = true) } ?: WIN10_UEFI
+        /** Corrupt/unknown values fall back to WIN11, the default in `docs/05_Schema.md §5`. */
+        fun fromName(value: String?): WindowsSetupProfile = when (value?.uppercase()) {
+            "OFF" -> OFF
+            "WIN10", "WIN10" -> WIN10 // legacy key written by v1.1.4
+            "WIN11", "WIN11" -> WIN11 // legacy key written by v1.1.4
+            "CUSTOM" -> CUSTOM
+            else -> WIN11
+        }
     }
 }
 
@@ -30,7 +38,7 @@ enum class WindowsSetupProfile(val overheadMb: Int, val label: String) {
 data class PartitionCalculationResult(
     /** What the user asked for, e.g. 10.0 GB. */
     val visibleGb: Double,
-    /** Size that reaches `diskpart` — visible size + per-partition overhead. */
+    /** Size that reaches Windows Setup — visible size + per-partition overhead. */
     val partitionSizeMb: Int,
     /** What the user has to TYPE. Includes the Windows Setup overhead when enabled. */
     val requiredInputMb: Int,
@@ -78,19 +86,25 @@ data class ConversionHistory(
     val primaryResultMb: Int,
     val summary: String,
     val timestampMillis: Long,
-    val splitCount: Int? = null
+    val splitCount: Int? = null,
+    /** Clipboard payload: `inputMb` for Calc, newline-joined sizes for Split. */
+    val copyValue: String = ""
 ) {
     enum class Mode { CALC, SPLIT }
 }
 
-/** Explicit light or dark theme choice persisted in settings. */
+/**
+ * Theme choice persisted in settings. `SYSTEM` is the default
+ * (`docs/03_UI_Spec.md §3`, `docs/05_Schema.md §5`).
+ */
 enum class ThemeMode(val label: String) {
-    DARK("Dark Mode"),
-    LIGHT("Light Mode");
+    SYSTEM("System"),
+    LIGHT("Light"),
+    DARK("Dark");
 
     companion object {
         fun fromName(value: String?): ThemeMode =
-            entries.firstOrNull { it.name.equals(value, ignoreCase = true) } ?: LIGHT
+            entries.firstOrNull { it.name.equals(value, ignoreCase = true) } ?: SYSTEM
     }
 }
 

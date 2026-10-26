@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
@@ -19,6 +20,7 @@ import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material.icons.rounded.Layers
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -26,7 +28,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -38,14 +39,16 @@ import com.diskcalc.ui.components.GlassBadge
 import com.diskcalc.ui.components.GlassButton
 import com.diskcalc.ui.components.GlassDivider
 import com.diskcalc.ui.components.GlassIconButton
+import com.diskcalc.ui.components.InfoBanner
 import com.diskcalc.ui.components.KeyValueRow
 import com.diskcalc.ui.components.LiquidGlassSurface
 import com.diskcalc.ui.components.StatTile
 import com.diskcalc.ui.components.WarningList
 import com.diskcalc.ui.theme.LocalGlassTokens
 import com.diskcalc.ui.theme.LocalLiquidPalette
+import com.diskcalc.ui.theme.NumericMedium
 
-/** Result of the Calc tab: the value to type, plus every warning the spec requires. */
+/** Result of the Calc tab: the value to type, its reasoning and the FAT32 warnings. */
 @Composable
 fun CalcResultDialog(
     result: PartitionCalculationResult,
@@ -53,20 +56,34 @@ fun CalcResultDialog(
     onCopied: () -> Unit
 ) {
     val clipboard = LocalClipboardManager.current
+    val palette = LocalLiquidPalette.current
+    val tokens = LocalGlassTokens.current
+
     GlassDialog(onDismiss = onDismiss, title = "Single partition", icon = Icons.Rounded.CheckCircle) {
         GlassBadge(text = "${result.filesystem.label} · ${Units.VISIBLE_GB} → ${Units.REQUIRED_MB}")
 
-        Spacer(Modifier.height(14.dp))
+        Spacer(Modifier.height(tokens.spaceLg))
         StatTile(
-            label = "Type this in Windows Setup",
+            label = "Type in Setup",
             value = result.requiredInputMb.toString(),
             unit = "MB",
-            caption = "≈ ${result.expectedVisibleMb} MB visible after formatting",
+            caption = "Explorer will show ≈ ${result.expectedVisibleMb} MB " +
+                "(${ResultText.visibleGb(result.expectedVisibleMb)} GB)",
             highlight = true,
+            valueContentDescription = "Type ${result.requiredInputMb} megabytes in Windows Setup",
             modifier = Modifier.fillMaxWidth()
         )
 
-        Spacer(Modifier.height(16.dp))
+        // "Why" line so the number can be verified, not just believed (US-06).
+        Spacer(Modifier.height(tokens.spaceMd))
+        Text(
+            text = "partition = ${result.partitionSizeMb} MB (+4 MB formatter) · " +
+                "Setup overhead = ${result.setupOverheadMb} MB",
+            style = MaterialTheme.typography.bodyMedium,
+            color = palette.contentSecondary
+        )
+
+        Spacer(Modifier.height(tokens.spaceMd))
         KeyValueRow("Visible size", "${ResultText.trim(result.visibleGb)} GB")
         KeyValueRow("Filesystem", result.filesystem.label)
         KeyValueRow("Partition size", "${result.partitionSizeMb} MB")
@@ -84,12 +101,12 @@ fun CalcResultDialog(
             }
         )
 
-        Spacer(Modifier.height(10.dp))
+        Spacer(Modifier.height(tokens.spaceMd))
         GlassDivider()
-        Spacer(Modifier.height(14.dp))
+        Spacer(Modifier.height(tokens.spaceLg))
         WarningList(result.warnings)
 
-        Spacer(Modifier.height(18.dp))
+        Spacer(Modifier.height(tokens.spaceXl))
         Row(verticalAlignment = Alignment.CenterVertically) {
             GlassButton(
                 text = "Copy",
@@ -100,9 +117,9 @@ fun CalcResultDialog(
                 },
                 modifier = Modifier.weight(1f)
             )
-            Spacer(Modifier.width(10.dp))
+            Spacer(Modifier.width(tokens.spaceSm))
             GlassButton(
-                text = "Done",
+                text = "Close",
                 primary = false,
                 onClick = onDismiss,
                 fillWidth = false
@@ -126,12 +143,11 @@ fun SplitResultDialog(
     // Every partition except the last gets the same base value; the last one carries the remainder.
     val baseMb = result.partitions.first().typeMb.toLong()
     val remainderMb = result.usableMb - baseMb * count
-    val sumMatchesUsable = result.sumOfTypeMb == result.usableMb
 
     GlassDialog(onDismiss = onDismiss, title = "Split preview", icon = Icons.Rounded.Layers) {
         GlassBadge(text = "$count ${if (count == 1) "partition" else "partitions"} · ${result.filesystem.label}")
 
-        Spacer(Modifier.height(14.dp))
+        Spacer(Modifier.height(tokens.spaceLg))
         StatTile(
             label = "Space for partitions",
             value = result.usableMb.toString(),
@@ -145,7 +161,7 @@ fun SplitResultDialog(
             modifier = Modifier.fillMaxWidth()
         )
 
-        Spacer(Modifier.height(18.dp))
+        Spacer(Modifier.height(tokens.spaceXl))
         SplitTableHeader()
         GlassDivider()
         result.partitions.forEach { partition ->
@@ -159,22 +175,29 @@ fun SplitResultDialog(
                 label = "Partition ${partition.index}",
                 typeText = "${partition.typeMb} MB",
                 visibleText = "${partition.expectedVisibleMb} MB",
-                note = note
+                note = note,
+                onCopy = {
+                    clipboard.setText(AnnotatedString(partition.typeMb.toString()))
+                    onCopied()
+                }
             )
             GlassDivider()
         }
 
-        Spacer(Modifier.height(10.dp))
-        KeyValueRow("Sum of partitions", "${result.sumOfTypeMb} MB")
-        KeyValueRow("Matches usable space", if (sumMatchesUsable) "Yes" else "No")
+        Spacer(Modifier.height(tokens.spaceMd))
+        InfoBanner(
+            text = "Σ partitions = ${result.sumOfTypeMb} MB ✓ equals usable (${result.usableMb} MB)",
+            icon = Icons.Rounded.CheckCircle
+        )
+        Spacer(Modifier.height(tokens.spaceSm))
         KeyValueRow("Filesystem", result.filesystem.label)
 
-        Spacer(Modifier.height(10.dp))
+        Spacer(Modifier.height(tokens.spaceMd))
         GlassDivider()
-        Spacer(Modifier.height(14.dp))
+        Spacer(Modifier.height(tokens.spaceLg))
         WarningList(result.warnings)
 
-        Spacer(Modifier.height(18.dp))
+        Spacer(Modifier.height(tokens.spaceXl))
         Row(verticalAlignment = Alignment.CenterVertically) {
             GlassButton(
                 text = "Copy",
@@ -186,7 +209,7 @@ fun SplitResultDialog(
                 modifier = Modifier.weight(1f)
             )
             Spacer(Modifier.width(tokens.spaceSm))
-            GlassButton(text = "Done", primary = false, onClick = onDismiss, fillWidth = false)
+            GlassButton(text = "Close", primary = false, onClick = onDismiss, fillWidth = false)
         }
     }
 }
@@ -195,10 +218,11 @@ fun SplitResultDialog(
 @Composable
 private fun SplitTableHeader() {
     val palette = LocalLiquidPalette.current
+    val tokens = LocalGlassTokens.current
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(bottom = 6.dp),
+            .padding(bottom = tokens.spaceSm),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
@@ -215,7 +239,7 @@ private fun SplitTableHeader() {
             modifier = Modifier.weight(1f)
         )
         Text(
-            text = "Visible \u2248",
+            text = "Visible ≈",
             style = MaterialTheme.typography.labelMedium,
             color = palette.contentTertiary,
             textAlign = TextAlign.End,
@@ -224,16 +248,18 @@ private fun SplitTableHeader() {
     }
 }
 
-/** One partition row. The typed value is emphasised so it is the first thing the eye lands on. */
+/** One partition row. The typed value is emphasised and has its own Copy action (US-12). */
 @Composable
 private fun SplitTableRow(
     label: String,
     typeText: String,
     visibleText: String,
-    note: String?
+    note: String?,
+    onCopy: () -> Unit
 ) {
     val palette = LocalLiquidPalette.current
-    Column(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
+    val tokens = LocalGlassTokens.current
+    Column(modifier = Modifier.fillMaxWidth().padding(vertical = tokens.spaceSm)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
                 text = label,
@@ -243,7 +269,7 @@ private fun SplitTableRow(
             )
             Text(
                 text = typeText,
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                style = NumericMedium,
                 color = palette.accent,
                 textAlign = TextAlign.End,
                 modifier = Modifier.weight(1f)
@@ -255,6 +281,17 @@ private fun SplitTableRow(
                 textAlign = TextAlign.End,
                 modifier = Modifier.weight(1f)
             )
+            IconButton(
+                onClick = onCopy,
+                modifier = Modifier.size(tokens.touchTarget)
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.ContentCopy,
+                    contentDescription = "Copy $label MB value",
+                    tint = palette.contentSecondary,
+                    modifier = Modifier.size(16.dp)
+                )
+            }
         }
         if (note != null) {
             Text(
@@ -269,8 +306,8 @@ private fun SplitTableRow(
 }
 
 /**
- * Shared glass dialog shell: a full-bleed frosted pane, scrollable so long warning lists and
- * small screens both work.
+ * Shared dialog shell: scrollable so long warning lists and small screens both work.
+ * Dialogs use the 28 dp corner and 6 dp elevation from `docs/03_UI_Spec.md §5`.
  */
 @Composable
 private fun GlassDialog(
@@ -289,19 +326,19 @@ private fun GlassDialog(
         Box(
             Modifier
                 .fillMaxSize()
-                .padding(horizontal = 18.dp, vertical = 32.dp),
+                .padding(horizontal = tokens.screenPadding, vertical = tokens.spaceXxl),
             contentAlignment = Alignment.Center
         ) {
             LiquidGlassSurface(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .widthIn(max = 480.dp),
+                    .widthIn(max = tokens.maxContentWidth),
                 shape = RoundedCornerShape(tokens.cornerXl),
                 elevation = tokens.elevation
             ) {
                 Column(
                     Modifier
-                        .padding(tokens.spaceLg)
+                        .padding(tokens.cardPadding)
                         .verticalScroll(rememberScrollState())
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -309,22 +346,21 @@ private fun GlassDialog(
                             imageVector = icon,
                             contentDescription = null,
                             tint = palette.accent,
-                            modifier = Modifier.padding(end = 10.dp)
+                            modifier = Modifier.padding(end = tokens.spaceSm)
                         )
                         Text(
                             text = title,
-                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold),
+                            style = MaterialTheme.typography.headlineSmall,
                             color = palette.contentPrimary,
                             modifier = Modifier.weight(1f)
                         )
                         GlassIconButton(
                             icon = Icons.Rounded.Close,
                             contentDescription = "Close",
-                            onClick = onDismiss,
-                            size = 36.dp
+                            onClick = onDismiss
                         )
                     }
-                    Spacer(Modifier.height(14.dp))
+                    Spacer(Modifier.height(tokens.spaceLg))
                     content()
                 }
             }

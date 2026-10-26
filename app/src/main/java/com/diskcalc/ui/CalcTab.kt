@@ -21,7 +21,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.unit.dp
 import com.diskcalc.domain.CalcPresets
 import com.diskcalc.domain.FileSystemType
 import com.diskcalc.domain.PartitionCalculationResult
@@ -42,7 +41,7 @@ import com.diskcalc.ui.theme.LocalLiquidPalette
 /**
  * Calc tab — "I want a partition of N GB, what do I type in Windows Setup?"
  * Layout: preset chips, decimal keyboard, filesystem toggle, Windows Setup switch
- * with profile/custom MB, Calculate button with spinner.
+ * with profile/custom MB, Calculate button.
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -55,6 +54,7 @@ fun CalcTab(
     onProfileChange: (WindowsSetupProfile) -> Unit,
     onCustomOverheadChange: (String) -> Unit,
     onCalculate: () -> Unit,
+    onCopied: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val palette = LocalLiquidPalette.current
@@ -65,7 +65,7 @@ fun CalcTab(
         modifier = modifier
             .fillMaxWidth()
             .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(tokens.spaceMd)
+        verticalArrangement = Arrangement.spacedBy(tokens.cardGap)
     ) {
         // ------------------------------------------------------------ input panel
         GlassPanel(
@@ -74,8 +74,8 @@ fun CalcTab(
             icon = Icons.Rounded.Tune
         ) {
             FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(tokens.spaceSm),
+                verticalArrangement = Arrangement.spacedBy(tokens.spaceSm)
             ) {
                 CalcPresets.gb.forEach { preset ->
                     val label = CalcPresets.label(preset)
@@ -88,7 +88,7 @@ fun CalcTab(
                 }
             }
 
-            Spacer(Modifier.height(tokens.spaceMd))
+            Spacer(Modifier.height(tokens.spaceLg))
             GlassTextField(
                 value = state.visibleGbText,
                 onValueChange = onVisibleGbChange,
@@ -101,12 +101,12 @@ fun CalcTab(
                 onImeAction = onCalculate
             )
 
-            Spacer(Modifier.height(tokens.spaceMd))
+            Spacer(Modifier.height(tokens.spaceLg))
             Text(
                 text = "Filesystem",
                 style = MaterialTheme.typography.labelMedium,
                 color = palette.contentSecondary,
-                modifier = Modifier.padding(bottom = 6.dp, start = 4.dp)
+                modifier = Modifier.padding(bottom = tokens.spaceSm, start = tokens.spaceXs)
             )
             GlassSegmentedControl(
                 options = FileSystemType.entries.toList(),
@@ -116,7 +116,7 @@ fun CalcTab(
                 modifier = Modifier.fillMaxWidth()
             )
 
-            Spacer(Modifier.height(tokens.spaceMd))
+            Spacer(Modifier.height(tokens.spaceLg))
             GlassToggleRow(
                 title = "Simulate Windows Setup",
                 description = "Add the system partitions Setup creates before your partition",
@@ -130,8 +130,9 @@ fun CalcTab(
                         onSelect = onProfileChange,
                         label = { profile ->
                             when (profile) {
-                                WindowsSetupProfile.WIN10_UEFI -> "Win 10"
-                                WindowsSetupProfile.WIN11_UEFI -> "Win 11"
+                                WindowsSetupProfile.OFF -> "Off"
+                                WindowsSetupProfile.WIN10 -> "Win 10"
+                                WindowsSetupProfile.WIN11 -> "Win 11"
                                 WindowsSetupProfile.CUSTOM -> "Custom"
                             }
                         },
@@ -140,8 +141,13 @@ fun CalcTab(
                     Spacer(Modifier.height(tokens.spaceSm))
                     Text(
                         text = when (state.setupProfile) {
-                            WindowsSetupProfile.WIN10_UEFI -> "100 MB EFI + 16 MB MSR + 450 MB Recovery = ${PartitionConstants.WINDOWS_SETUP_OVERHEAD_MB} MB"
-                            WindowsSetupProfile.WIN11_UEFI -> "Windows 11 uses a bigger recovery partition ≈ ${PartitionConstants.WINDOWS_SETUP_OVERHEAD_WIN11_MB} MB"
+                            WindowsSetupProfile.OFF -> "No system partitions — overhead = 0 MB"
+                            WindowsSetupProfile.WIN10 ->
+                                "100 MB EFI + 16 MB MSR + 450 MB Recovery = " +
+                                    "${PartitionConstants.WINDOWS_SETUP_OVERHEAD_MB} MB"
+                            WindowsSetupProfile.WIN11 ->
+                                "Windows 11 uses a bigger recovery partition ≈ " +
+                                    "${PartitionConstants.WINDOWS_SETUP_OVERHEAD_WIN11_MB} MB"
                             WindowsSetupProfile.CUSTOM -> "Type the overhead of your own Setup layout"
                         },
                         style = MaterialTheme.typography.bodyMedium,
@@ -155,17 +161,19 @@ fun CalcTab(
                             label = "Custom overhead",
                             placeholder = "566",
                             suffix = "MB",
-                            keyboardType = com.diskcalc.ui.components.NumericKeyboard
+                            keyboardType = com.diskcalc.ui.components.NumericKeyboard,
+                            isError = state.overheadError != null,
+                            supportingText = state.overheadError
                         )
                     }
                 }
             }
 
-            Spacer(Modifier.height(tokens.spaceLg))
+            Spacer(Modifier.height(tokens.spaceXl))
             GlassButton(
-                text = if (state.isCalculating) "Calculating…" else "Calculate",
+                text = "Calculate",
                 icon = Icons.Rounded.Calculate,
-                loading = state.isCalculating,
+                enabled = state.canCalculate,
                 onClick = onCalculate
             )
         }
@@ -184,6 +192,7 @@ fun CalcTab(
                         fillWidth = false,
                         onClick = {
                             clipboard.setText(AnnotatedString(ResultText.calc(result)))
+                            onCopied()
                         }
                     )
                 }
@@ -204,7 +213,8 @@ private fun CalcResultSummary(result: PartitionCalculationResult) {
         KeyValueRow("Visible size", "${ResultText.trim(result.visibleGb)} GB")
         KeyValueRow("Filesystem", result.filesystem.label)
         KeyValueRow("Partition size", "${result.partitionSizeMb} MB")
-        KeyValueRow("Required input", "${result.requiredInputMb} MB", emphasise = true)
+        KeyValueRow("Type in Setup", "${result.requiredInputMb} MB", emphasise = true)
+        KeyValueRow("Explorer will show", "≈ ${result.expectedVisibleMb} MB")
         KeyValueRow(
             label = "Windows Setup",
             value = if (result.usesWindowsSetupOverhead) "Yes (+${result.setupOverheadMb} MB)" else "No"

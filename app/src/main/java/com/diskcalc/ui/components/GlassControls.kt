@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -29,7 +30,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Remove
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -58,6 +58,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.diskcalc.ui.theme.LocalGlassTokens
 import com.diskcalc.ui.theme.LocalLiquidPalette
+import com.diskcalc.ui.theme.NumericMedium
 import kotlin.math.roundToInt
 
 /** Press feedback shared by every tappable control: a gentle squeeze. */
@@ -89,7 +90,8 @@ fun Modifier.clickableBounce(
 
 /**
  * Primary actions get the solid accent colour; secondary actions use the solid control surface.
- * `loading` swaps the label for a spinner while the calculation runs.
+ * Math is synchronous and < 1 ms, so there is deliberately no loading state
+ * (`docs/02_AppFlow.md §2`).
  */
 @Composable
 fun GlassButton(
@@ -99,12 +101,12 @@ fun GlassButton(
     icon: ImageVector? = null,
     primary: Boolean = true,
     enabled: Boolean = true,
-    loading: Boolean = false,
     fillWidth: Boolean = true
 ) {
     val palette = LocalLiquidPalette.current
     val tokens = LocalGlassTokens.current
-    val shape = RoundedCornerShape(tokens.cornerMedium)
+    // Buttons are full pills, 52 dp high (docs/03_UI_Spec.md §5).
+    val shape = RoundedCornerShape(percent = 50)
 
     val base = if (fillWidth) modifier.fillMaxWidth() else modifier
     val container = if (primary) {
@@ -122,25 +124,16 @@ fun GlassButton(
 
     Row(
         modifier = container
-            .clickableBounce(enabled = enabled && !loading, onClick = onClick)
-            .padding(horizontal = tokens.spaceLg, vertical = 14.dp),
+            .height(tokens.buttonHeight)
+            .clickableBounce(enabled = enabled, onClick = onClick)
+            .padding(horizontal = tokens.spaceLg),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
     ) {
         val contentColor = if (primary) palette.onAccent else palette.contentPrimary
-        when {
-            loading -> {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(18.dp),
-                    strokeWidth = 2.dp,
-                    color = contentColor
-                )
-                Spacer(Modifier.width(tokens.spaceSm))
-            }
-            icon != null -> {
-                Icon(icon, contentDescription = null, tint = contentColor, modifier = Modifier.size(19.dp))
-                Spacer(Modifier.width(tokens.spaceSm))
-            }
+        if (icon != null) {
+            Icon(icon, contentDescription = null, tint = contentColor, modifier = Modifier.size(19.dp))
+            Spacer(Modifier.width(tokens.spaceSm))
         }
         Text(
             text = text,
@@ -162,7 +155,8 @@ fun GlassChip(
     enabled: Boolean = true
 ) {
     val palette = LocalLiquidPalette.current
-    val shape = RoundedCornerShape(percent = 50)
+    val tokens = LocalGlassTokens.current
+    val shape = RoundedCornerShape(tokens.cornerSmall)
     val animatedTint by animateColorAsState(
         targetValue = if (selected) palette.accent else palette.controlSurface,
         label = "chipTint"
@@ -174,9 +168,10 @@ fun GlassChip(
 
     Box(
         modifier = modifier
+            .heightIn(min = tokens.touchTarget)
             .glassLite(shape = shape, tint = animatedTint, borderColor = borderColor)
             .clickableBounce(enabled = enabled, onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 9.dp),
+            .padding(horizontal = tokens.spaceLg, vertical = tokens.spaceSm),
         contentAlignment = Alignment.Center
     ) {
         Text(
@@ -203,6 +198,7 @@ fun <T> GlassSegmentedControl(
 ) {
     if (options.isEmpty()) return
     val palette = LocalLiquidPalette.current
+    val tokens = LocalGlassTokens.current
     val density = LocalDensity.current
     var innerWidthPx by remember { mutableIntStateOf(0) }
     val index = options.indexOf(selected).coerceAtLeast(0)
@@ -219,7 +215,7 @@ fun <T> GlassSegmentedControl(
 
     Box(
         modifier = modifier
-            .height(48.dp)
+            .height(tokens.touchTarget)
             .glassLite(shape = shape, tint = palette.controlSurface)
             .padding(4.dp)
             .onSizeChanged { size ->
@@ -329,6 +325,7 @@ fun GlassStepper(
     ) {
         StepperButton(
             icon = Icons.Rounded.Remove,
+            contentDescription = "Decrease partition count",
             enabled = enabled && value > range.first,
             onClick = { onValueChange((value - 1).coerceIn(range)) }
         )
@@ -340,12 +337,13 @@ fun GlassStepper(
         ) {
             Text(
                 text = value.toString(),
-                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold),
+                style = NumericMedium,
                 color = palette.contentPrimary
             )
         }
         StepperButton(
             icon = Icons.Rounded.Add,
+            contentDescription = "Increase partition count",
             enabled = enabled && value < range.last,
             onClick = { onValueChange((value + 1).coerceIn(range)) }
         )
@@ -355,6 +353,7 @@ fun GlassStepper(
 @Composable
 private fun StepperButton(
     icon: ImageVector,
+    contentDescription: String,
     enabled: Boolean,
     onClick: () -> Unit
 ) {
@@ -376,7 +375,7 @@ private fun StepperButton(
         ) {
             Icon(
                 imageVector = icon,
-                contentDescription = null,
+                contentDescription = contentDescription,
                 tint = if (enabled) palette.accent else palette.contentTertiary,
                 modifier = Modifier.size(17.dp)
             )
@@ -406,9 +405,8 @@ fun GlassTextField(
     val palette = LocalLiquidPalette.current
     val tokens = LocalGlassTokens.current
     val shape = RoundedCornerShape(tokens.cornerMedium)
-    val resolvedStyle = (textStyle ?: MaterialTheme.typography.titleLarge.copy(
-        fontWeight = FontWeight.SemiBold
-    )).copy(color = palette.contentPrimary)
+    // Numeric inputs use the monospace token so digits line up (docs/03_UI_Spec.md §4).
+    val resolvedStyle = (textStyle ?: NumericMedium).copy(color = palette.contentPrimary)
 
     Column(modifier) {
         if (label != null) {
@@ -416,7 +414,7 @@ fun GlassTextField(
                 text = label,
                 style = MaterialTheme.typography.labelMedium,
                 color = palette.contentSecondary,
-                modifier = Modifier.padding(start = 4.dp, bottom = 6.dp)
+                modifier = Modifier.padding(start = tokens.spaceXs, bottom = tokens.spaceSm)
             )
         }
         Row(
@@ -427,7 +425,7 @@ fun GlassTextField(
                     tint = if (isError) palette.dangerContainer else palette.controlSurface,
                     borderColor = if (isError) palette.dangerContent else palette.glassBorderStart
                 )
-                .padding(horizontal = tokens.spaceMd, vertical = 14.dp),
+                .padding(horizontal = tokens.cardPadding, vertical = tokens.spaceLg),
             verticalAlignment = Alignment.CenterVertically
         ) {
             if (leadingIcon != null) {
@@ -475,7 +473,7 @@ fun GlassTextField(
                 text = supportingText,
                 style = MaterialTheme.typography.bodyMedium,
                 color = if (isError) palette.dangerContent else palette.contentTertiary,
-                modifier = Modifier.padding(start = 4.dp, top = 6.dp)
+                modifier = Modifier.padding(start = tokens.spaceXs, top = tokens.spaceSm)
             )
         } else if (hint != null) {
             // Shown only while there is no error, so the message never competes with validation text.
@@ -483,7 +481,7 @@ fun GlassTextField(
                 text = hint,
                 style = MaterialTheme.typography.bodyMedium,
                 color = palette.contentTertiary,
-                modifier = Modifier.padding(start = 4.dp, top = 6.dp)
+                modifier = Modifier.padding(start = tokens.spaceXs, top = tokens.spaceSm)
             )
         }
     }

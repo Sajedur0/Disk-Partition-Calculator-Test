@@ -1,26 +1,28 @@
 package com.diskcalc.domain
 
 /**
- * Single-partition ("Calc" tab) math.
+ * Single-partition ("Calc" tab) math — canonical formulas from `docs/01_PRD.md §4`:
  *
  * ```
- * partitionSizeMb   = round(visibleGb * 1024) + 4
- * requiredInputMb   = partitionSizeMb + (simulateWindowsSetup ? setupOverheadMb : 0)
- * expectedVisibleMb = partitionSizeMb - 4
+ * partitionMb = round(wantedGb * 1024) + 4
+ * inputMb     = partitionMb + setupOverheadMb   // value to type in Windows Setup
+ * visibleMb   = partitionMb - 4                 // value Explorer will show
  * ```
  *
- * The Windows Setup overhead is added **only** to [PartitionCalculationResult.requiredInputMb];
- * the partition itself is still created with `partitionSizeMb`.
- *
- * The maths is identical for NTFS and FAT32 — the filesystem only changes the warnings.
+ * The maths is identical for NTFS and FAT32 — the filesystem changes the warnings only
+ * (`docs/04_TRD.md §9.2`). The warning set is closed: only the two FAT32 rules are returned;
+ * explanatory text belongs in the result dialog, not in a warning banner.
  */
 object PartitionCalculator {
 
-    /** Converts a requested visible size in GB into the MB value `diskpart` needs. */
+    /** Converts a requested visible size in GB into the MB value Windows Setup needs. */
     fun visibleGbToPartitionMb(visibleGb: Double): Int {
-        require(visibleGb.isFinite()) { "Enter a valid positive GB value" }
-        return Math.round(visibleGb * PartitionConstants.MB_PER_GB).toInt() +
-            PartitionConstants.OVERHEAD_MB_PER_PARTITION
+        require(visibleGb.isFinite() && visibleGb > 0.0) { "Enter a size greater than 0" }
+        require(visibleGb <= PartitionConstants.MAX_VISIBLE_GB) { "Maximum is 65536 GB" }
+        val roundedMb = Math.round(visibleGb * PartitionConstants.MB_PER_GB)
+        return (roundedMb + PartitionConstants.OVERHEAD_MB_PER_PARTITION)
+            .coerceAtMost(Int.MAX_VALUE.toLong())
+            .toInt()
     }
 
     fun calculate(
@@ -29,8 +31,7 @@ object PartitionCalculator {
         simulateWindowsSetup: Boolean = false,
         setupOverheadMb: Int = PartitionConstants.WINDOWS_SETUP_OVERHEAD_MB
     ): PartitionCalculationResult {
-        require(visibleGb.isFinite() && visibleGb > 0) { "Enter a valid positive GB value" }
-        require(setupOverheadMb >= 0) { "Overhead cannot be negative" }
+        require(setupOverheadMb >= 0) { "Enter overhead in MB" }
 
         val partitionSizeMb = visibleGbToPartitionMb(visibleGb)
         val appliedOverhead = if (simulateWindowsSetup) setupOverheadMb else 0
@@ -44,7 +45,7 @@ object PartitionCalculator {
             usesWindowsSetupOverhead = simulateWindowsSetup,
             setupOverheadMb = appliedOverhead,
             filesystem = filesystem,
-            warnings = buildWarnings(partitionSizeMb, filesystem, simulateWindowsSetup, appliedOverhead)
+            warnings = buildWarnings(partitionSizeMb, filesystem)
         )
     }
 
@@ -57,19 +58,13 @@ object PartitionCalculator {
 
     private fun buildWarnings(
         partitionSizeMb: Int,
-        fs: FileSystemType,
-        setup: Boolean,
-        overhead: Int
+        fs: FileSystemType
     ): List<String> = buildList {
-        if (setup) {
-            add("Windows Setup creates system partitions (~$overhead MB). The value above includes this overhead.")
-        }
         if (fs == FileSystemType.FAT32) {
             if (!isFat32SizeValid(partitionSizeMb)) {
                 add("Warning: Partition size exceeds the 32 GB limit of the Windows FAT32 format tool.")
             }
             add("Note: FAT32 has a ${PartitionConstants.FAT32_MAX_FILE_GB} GB maximum file size limit.")
         }
-        add("Actual visible size may differ by 1\u20132 MB depending on the Windows version.")
     }
 }

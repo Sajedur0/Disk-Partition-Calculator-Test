@@ -20,7 +20,9 @@ data class HistoryEntryDto(
     val primaryResultMb: Int,
     val summary: String,
     val timestampMillis: Long,
-    val splitCount: Int? = null
+    val splitCount: Int? = null,
+    /** Default keeps JSON written by older versions readable. */
+    val copyValue: String = ""
 )
 
 @Serializable
@@ -43,7 +45,8 @@ fun ConversionHistory.toDto(): HistoryEntryDto = HistoryEntryDto(
     primaryResultMb = primaryResultMb,
     summary = summary,
     timestampMillis = timestampMillis,
-    splitCount = splitCount
+    splitCount = splitCount,
+    copyValue = copyValue
 )
 
 fun HistoryEntryDto.toDomain(): ConversionHistory = ConversionHistory(
@@ -56,5 +59,6 @@ fun HistoryEntryDto.toDomain(): ConversionHistory = ConversionHistory(
     primaryResultMb = primaryResultMb,
     summary = summary,
     timestampMillis = timestampMillis,
-    splitCount = splitCount
+    splitCount = splitCount,
+    copyValue = copyValue.ifEmpty { primaryResultMb.toString() }
 )

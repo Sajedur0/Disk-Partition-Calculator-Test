@@ -122,7 +122,7 @@ fun PrivacyPolicyPage(onBack: () -> Unit, modifier: Modifier = Modifier) {
                     "and the partition count for Split results.",
                 "Each history entry also stores a randomly generated identifier (UUID). It is created on your " +
                     "device, is not a device or advertising identifier, and has no meaning outside the app.",
-                "App preferences: theme selection (Dark Mode or Light Mode), default filesystem, default Windows Setup " +
+                "App preferences: theme selection (System, Light or Dark), default filesystem, default Windows Setup " +
                     "simulation status, selected Windows Setup profile, and custom overhead value."
             )
         )
@@ -156,16 +156,15 @@ fun PrivacyPolicyPage(onBack: () -> Unit, modifier: Modifier = Modifier) {
                     "involve other services only when you explicitly use them:"
             ),
             bullets = listOf(
-                "Google Play Services: the in-app update check is handled by Google Play. The 'Rate Us' button opens " +
-                    "the Play Store listing. Google processes information under its own privacy policy. Apart from " +
-                    "AndroidX/Jetpack and the Google Play libraries used for in-app updates, the app bundles no " +
-                    "other third-party SDKs — no advertising, analytics, attribution, crash-reporting or " +
-                    "social-media SDK.",
+                "Google Play Services: the app has no update checks and no network code. Only the 'Rate Us' button " +
+                    "opens the Play Store listing, and Google processes that visit under its own privacy policy. " +
+                    "Apart from AndroidX/Jetpack, the app bundles no other third-party SDKs — no advertising, " +
+                    "analytics, attribution, crash-reporting, update or social-media SDK.",
                 "Android share sheet: The 'Share App' feature sends only a static Play Store link to the app you choose. " +
                     "That app handles the link under its own privacy policy. Your calculations and history " +
                     "are not attached or shared.",
-                "Android backup: If enabled in your device settings, Android may back up or transfer app data. " +
-                    "The developer cannot access, view, or control those backups in any way.",
+                "Android backup: the app opts out of Android backup (allowBackup=false), so history and " +
+                    "preferences are not backed up or transferred to another device.",
                 "Clipboard: The Copy buttons place calculation results on your clipboard only when you tap them. " +
                     "The app does not read from the clipboard or access any other clipboard content."
             )
@@ -178,7 +177,7 @@ fun PrivacyPolicyPage(onBack: () -> Unit, modifier: Modifier = Modifier) {
                 "History and preferences are kept in app-private storage, which Android's app sandbox keeps " +
                     "away from other apps.",
                 "The app does not send your calculations, history or preferences over the network.",
-                "Update checks and the Play Store listing are handled by Google Play over encrypted connections.",
+                "The app contains no networking, update-check or cloud-sync code of any kind.",
                 "No method of storage or transmission can be guaranteed to be completely secure."
             )
         )
@@ -191,12 +190,11 @@ fun PrivacyPolicyPage(onBack: () -> Unit, modifier: Modifier = Modifier) {
                     "automatically. History stays until you delete it.",
                 "Preferences: kept until you change them or clear the app's data.",
                 "Delete one history entry: open History and tap the delete icon on that entry.",
-                "Delete all history: open Settings, then History, then Clear.",
+                "Delete all history: open Settings, then History, then Clear, and confirm.",
                 "Delete all app data: open Android Settings, then Apps, then Disk Partition Calculator, " +
                     "then Storage, then Clear storage. Uninstalling the app also removes its private data " +
                     "from the device.",
-                "Android backup: if backup is enabled, a copy may exist in your device or Google backup. " +
-                    "You can manage or delete it in your device backup settings.",
+                "Android backup: the app opts out of backup, so no copy is created in device or Google backups.",
                 "The developer does not hold copies of your data, so there is nothing on the developer's side " +
                     "to request or delete. The app has no account, so there is no account to delete."
             )
@@ -216,7 +214,7 @@ fun PrivacyPolicyPage(onBack: () -> Unit, modifier: Modifier = Modifier) {
             icon = Icons.Rounded.Settings,
             bullets = listOf(
                 "You can view, delete or change your history and preferences at any time inside the app.",
-                "You can turn off Android backup for this app in your device settings.",
+                "Android backup is disabled for this app, so nothing leaves the device.",
                 "You can stop using the app and uninstall it at any time.",
                 "For questions about rights that apply to you under local privacy laws, contact the developer " +
                     "using the details in the Developer and contact section.",
@@ -275,7 +273,7 @@ fun GuidePage(onBack: () -> Unit, modifier: Modifier = Modifier) {
             bullets = listOf(
                 "**Clock** — open History. It is highlighted when at least one conversion is saved.",
                 "**Bottom bar** — switch between the Calc, Split and Settings tabs.",
-                "**Theme** — Light Mode or Dark Mode is chosen in **Settings → Appearance**."
+                "**Theme** — System, Light or Dark is chosen in **Settings → Appearance**."
             )
         )
 
@@ -291,10 +289,11 @@ fun GuidePage(onBack: () -> Unit, modifier: Modifier = Modifier) {
                     "Decimals such as **2.5** are allowed.",
                 "Pick **NTFS** or **FAT32**. The choice is also saved as your default in Settings.",
                 "Turn on **Simulate Windows Setup** if the disk will also hold Windows, then choose " +
-                    "**Win 10** (**566 MB**), **Win 11** (**826 MB**) or **Custom** and type your own overhead.",
+                    "**Off** (**0 MB**), **Win 10** (**566 MB**), **Win 11** (**826 MB**) or **Custom** " +
+                    "and type your own overhead.",
                 "Tap **Calculate**. The dialog shows the MB to type, the size Explorer is expected to show, " +
                     "and any warnings.",
-                "Tap **Copy** to keep the result on your clipboard."
+                "Tap **Copy** to put the digits-only MB value on your clipboard."
             )
         )
 
@@ -352,8 +351,7 @@ fun GuidePage(onBack: () -> Unit, modifier: Modifier = Modifier) {
             title = "Settings",
             icon = Icons.Rounded.Settings,
             bullets = listOf(
-                "**Appearance** — the only place to switch between Dark Mode and Light Mode; the change " +
-                    "animates smoothly and is remembered.",
+                "**Appearance** — System, Light or Dark; the change animates smoothly and is remembered.",
                 "**Defaults** — filesystem, Setup simulation and Setup profile used as the starting values " +
                     "for new calculations.",
                 "**History** — how many conversions are saved, with **View history** and **Clear**.",
@@ -368,7 +366,8 @@ fun GuidePage(onBack: () -> Unit, modifier: Modifier = Modifier) {
             bullets = listOf(
                 "Keeps the **last 100** conversions, newest first — both Calc and Split results.",
                 "Each row shows its mode (**CALC** or **SPLIT**), the time and a one-line summary.",
-                "Copy or delete a single row; to remove everything use **Settings → History → Clear**.",
+                "Copy a row (digits only) or delete it with Undo; to remove everything use " +
+                    "**Settings → History → Clear**.",
                 "History stays on your device and is never uploaded."
             )
         )
