@@ -51,7 +51,7 @@ Auth note: this app has no accounts. Phase 1 "DB & Auth" is realized as **DB & S
 - [ ] **P4-4** — Warning matrix: FS × size(32767/32768/32769 MB) × n(4/5) · depends on: P2-4 · verify: unit
 - [ ] **P4-5** — History: 101st insert evicts oldest; delete+undo restores children; clear-all; cascade · depends on: P1-3 · verify: androidTest
 - [ ] **P4-6** — Process-death/rotation restore; locale decimal comma; very long input paste · depends on: P3-5, P3-6 · verify: UI test
-- [ ] **P4-7** — Offline/permission audit: merged manifest has 0 permissions; no network classes in dependency tree · depends on: P0-3 · verify: scripted check
+- [ ] **P4-7** — Offline/permission audit: merged manifest contains only Play In-App Updates' `INTERNET` / `ACCESS_NETWORK_STATE`; no other network classes in dependency tree · depends on: P0-3 · verify: scripted check
 - [ ] **P4-8** — Release build: R8 on, APK < 5 MB, smoke test on API 26 & API 36 · depends on: all above · verify: manual checklist
 - [ ] **P4-9** — Success-metric check: first-time user reaches copyable value < 30 s (5 testers) · depends on: P4-8 · verify: recorded timings
 

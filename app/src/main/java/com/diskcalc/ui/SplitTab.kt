@@ -161,7 +161,8 @@ fun SplitTab(
                     val note = if (isLast && remainderMb > 0) " · includes +$remainderMb MB remainder" else ""
                     KeyValueRow(
                         label = "Partition ${partition.index}",
-                        value = "${partition.typeMb} MB  ·  visible ≈ ${partition.expectedVisibleMb} MB$note"
+                        value = "${partition.typeMb} MB  ·  visible ≈ " +
+                            "${ResultText.mbToGb(partition.expectedVisibleMb)} GB$note"
                     )
                 }
                 Spacer(Modifier.height(tokens.spaceXs))

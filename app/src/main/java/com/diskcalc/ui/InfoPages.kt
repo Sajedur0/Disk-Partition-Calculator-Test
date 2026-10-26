@@ -68,7 +68,7 @@ fun AboutPage(onBack: () -> Unit, modifier: Modifier = Modifier) {
 }
 
 /** Shown on the Privacy Policy page. Update it whenever the data practices change. */
-private const val PRIVACY_LAST_UPDATED = "25 October 2026"
+private const val PRIVACY_LAST_UPDATED = "26 October 2026"
 
 /**
  * Full-screen Privacy Policy page opened from Settings > Privacy Policy.
@@ -89,10 +89,12 @@ fun PrivacyPolicyPage(onBack: () -> Unit, modifier: Modifier = Modifier) {
             bullets = listOf(
                 "Your calculations, history and preferences stay only on your device.",
                 "The app has no account, no sign-in, and no developer-operated server.",
-                "The app declares no Android permissions at all — not even internet access — so it cannot " +
-                    "reach the network, your files, your location, or your hardware.",
+                "The app requests no runtime permissions. The only network permission is INTERNET, used solely " +
+                    "by Google Play's flexible in-app update check; your files, location and hardware " +
+                    "are never accessed.",
                 "The app does not ask for access to your contacts, location, camera, microphone, photos, or files.",
-                "The app contains no advertising, analytics, crash-reporting, or tracking SDKs.",
+                "The app contains no advertising, analytics, crash-reporting, or tracking SDKs — the only " +
+                    "Google library is Play In-App Updates.",
                 "The developer does not sell, rent, or share your data with anyone."
             )
         )
@@ -156,10 +158,13 @@ fun PrivacyPolicyPage(onBack: () -> Unit, modifier: Modifier = Modifier) {
                     "involve other services only when you explicitly use them:"
             ),
             bullets = listOf(
-                "Google Play Services: the app has no update checks and no network code. Only the 'Rate Us' button " +
-                    "opens the Play Store listing, and Google processes that visit under its own privacy policy. " +
-                    "Apart from AndroidX/Jetpack, the app bundles no other third-party SDKs — no advertising, " +
-                    "analytics, attribution, crash-reporting, update or social-media SDK.",
+                "Google Play Services: the app uses Play In-App Updates (flexible flow with Play's native UI) to " +
+                    "check for a newer version and, if you accept, download and install it automatically. " +
+                    "That check sends no calculation, history or preference data. The 'Rate Us' button " +
+                    "opens the Play Store listing; Google processes those interactions under its own " +
+                    "privacy policy. Apart from AndroidX/Jetpack and Play In-App Updates, the app bundles " +
+                    "no other third-party SDKs — no advertising, analytics, attribution, " +
+                    "crash-reporting or social-media SDK.",
                 "Android share sheet: The 'Share App' feature sends only a static Play Store link to the app you choose. " +
                     "That app handles the link under its own privacy policy. Your calculations and history " +
                     "are not attached or shared.",
@@ -177,7 +182,7 @@ fun PrivacyPolicyPage(onBack: () -> Unit, modifier: Modifier = Modifier) {
                 "History and preferences are kept in app-private storage, which Android's app sandbox keeps " +
                     "away from other apps.",
                 "The app does not send your calculations, history or preferences over the network.",
-                "The app contains no networking, update-check or cloud-sync code of any kind.",
+                "The app contains no cloud-sync code; the only network code is the Google Play in-app update check.",
                 "No method of storage or transmission can be guaranteed to be completely secure."
             )
         )
@@ -291,8 +296,8 @@ fun GuidePage(onBack: () -> Unit, modifier: Modifier = Modifier) {
                 "Turn on **Simulate Windows Setup** if the disk will also hold Windows, then choose " +
                     "**Off** (**0 MB**), **Win 10** (**566 MB**), **Win 11** (**826 MB**) or **Custom** " +
                     "and type your own overhead.",
-                "Tap **Calculate**. The dialog shows the MB to type, the size Explorer is expected to show, " +
-                    "and any warnings.",
+                "Tap **Calculate**. The dialog shows the MB to type, the partition size in **GB**, the size " +
+                    "Explorer is expected to show, and any warnings.",
                 "Tap **Copy** to put the digits-only MB value on your clipboard."
             )
         )
@@ -322,7 +327,8 @@ fun GuidePage(onBack: () -> Unit, modifier: Modifier = Modifier) {
                 "Set the number of partitions (**1–8**) with **−** and **+**.",
                 "Pick the filesystem, and turn on Setup simulation if Windows system partitions already " +
                     "exist on the disk.",
-                "Tap **Split disk**. Each row shows the MB to type and the approximate size Explorer will show.",
+                "Tap **Split disk**. Each row shows the MB to type and the approximate **GB** size " +
+                    "Explorer will show, so you can see how big every partition really is.",
                 "Check the **sum** line — it must equal the usable space. Any leftover MB always goes to " +
                     "the **last** partition."
             )
@@ -365,7 +371,8 @@ fun GuidePage(onBack: () -> Unit, modifier: Modifier = Modifier) {
             icon = Icons.Rounded.History,
             bullets = listOf(
                 "Keeps the **last 100** conversions, newest first — both Calc and Split results.",
-                "Each row shows its mode (**CALC** or **SPLIT**), the time and a one-line summary.",
+                "Each row shows its mode (**CALC** or **SPLIT**), the time, the size in **GB** and the exact **MB** " +
+                    "to type. Split rows expand to list every partition.",
                 "Copy a row (digits only) or delete it with Undo; to remove everything use " +
                     "**Settings → History → Clear**.",
                 "History stays on your device and is never uploaded."

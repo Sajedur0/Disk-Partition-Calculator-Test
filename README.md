@@ -63,14 +63,14 @@ Disk Partition Calculator does that arithmetic for you, in the binary units Wind
   - **Win 10 (UEFI/GPT)** — 100 MB EFI + 16 MB MSR + 450 MB Recovery = **566 MB**
   - **Win 11 (UEFI/GPT)** — bigger recovery partition = **826 MB**
   - **Custom** — enter your own overhead in MB
-- Result dialog shows the **MB to type**, the **expected visible size**, and a **Copy** button
+- Result dialog shows the **MB to type**, the **partition size in GB**, the **expected visible size**, and a **Copy** button
 
 ### 🗂️ Split — a whole disk
 
 - Enter the **whole disk's size in MB** — the field starts empty and shows a hint telling you
   exactly where to read that number (no more sample value to mistake for your own disk)
 - **1–8 partitions**, split with integer arithmetic only (Setup rejects fractions)
-- Every row shows `type X MB · visible ≈ Y MB`, so you can type the values straight down the list
+- Every row shows `type X MB · visible ≈ Y GB`, so you can type the values straight down the list and see how big each partition really is
 - **Sum verification** proves the partitions fill the disk exactly; the leftover MB always lands
   on the **last** partition
 - Warnings for FAT32 size limits and the MBR four-primary-partition limit
@@ -82,6 +82,9 @@ Disk Partition Calculator does that arithmetic for you, in the binary units Wind
 - Defaults for new calculations: filesystem, Setup simulation, Setup profile, custom overhead
 - **History** controls (view, clear), full-page **Privacy Policy**, full-page **Guide**,
   **Rate Us**, **Share App** and **About**
+- **Flexible in-app updates** through Google Play's native update UI: accept → background
+  download → automatic install; cancel → the calculator keeps running normally, with no further
+  prompt in that session. Sideloaded or offline builds simply skip the check
 
 ### 🕘 History
 
@@ -90,6 +93,8 @@ Disk Partition Calculator does that arithmetic for you, in the binary units Wind
 - Stored as JSON in AndroidX **DataStore**; corrupt or outdated JSON degrades to an empty list
   instead of crashing
 - Bottom-sheet list with per-row copy and delete
+- Rows lead with the size in **GB** (Calc: `100 GB → 102404 MB`, Split: `4 × 116.43 GB`) and keep the
+  exact **MB** to type visible; Split rows expand to list every partition
 
 ### 🎨 Interface
 
@@ -163,12 +168,14 @@ have to convert anything by hand.
 | Build | Android Gradle Plugin 8.7.3, Gradle 8.9 (wrapper committed) |
 | SDK levels | `compileSdk` 35 · `targetSdk` 35 · `minSdk` 24 |
 | Persistence | DataStore Preferences 1.1.1 + kotlinx.serialization 1.7.3 |
+| Updates | Play In-App Updates (app-update-ktx) 2.1.0 · flexible / Play native UI |
 | Application ID | `com.diskcalc` — debug builds install as `com.diskcalc.debug` |
 | Version | 1.1.4 (versionCode 15) |
 | Architecture | Single activity · one `ViewModel` · hand-rolled DI (`AppContainer`) |
 
 Release builds enable **R8 + resource shrinking**; the kotlinx.serialization keep rules for the
-history DTOs live in `app/proguard-rules.pro`.
+history DTOs and a `-dontwarn` rule for the optional Play Core classes live in
+`app/proguard-rules.pro`.
 
 ---
 
@@ -212,7 +219,8 @@ app/src/main/java/com/diskcalc/
 │   ├── ResultDialogs.kt / HistorySheet.kt / ResultText.kt
 │   ├── InfoPages.kt                 # in-app Guide + Privacy Policy pages
 │   ├── components/                  # LiquidGlass, GlassControls, GlassDisplay, GlassTabBar
-│   └── theme/                       # GlassTokens, Theme, LiquidBackdrop
+│   ├── theme/                       # GlassTokens, Theme, LiquidBackdrop
+│   └── update/UpdateService.kt      # Play In-App Updates (flexible, Play native UI)
 ```
 
 ---
@@ -255,12 +263,22 @@ signkey/
 
 `signkey/` and `*.keystore` are ignored by Git, so keys are never committed.
 
+### Testing flexible updates
+
+The flexible update flow only runs for builds installed **from Google Play** (sideloaded and local
+debug builds silently skip the check). Use Play Console **Internal testing** or **internal app
+sharing** with a higher `versionCode` to verify both paths: accepting the Play dialog downloads and
+installs automatically (the app restarts), while cancelling it leaves the app running normally with
+no retry in the same session.
+
 ---
 
 ## Privacy
 
-- **No permissions are declared** in the manifest
-- **No analytics, no ads, no tracking, no accounts, no update checks** — the app contains no network code
+- The manifest declares only `INTERNET` (a normal permission, no runtime prompt); Play In-App
+  Updates also contributes `ACCESS_NETWORK_STATE` via manifest merging
+- **No analytics, no ads, no tracking, no accounts** — the only network-aware component is
+  Google Play's flexible in-app update check, which sends no calculation, history or preference data
 - Backup is disabled (`allowBackup=false`); all settings and history stay on the device (DataStore)
   and history can be cleared any time
 

@@ -265,10 +265,6 @@ fun CalculatorScreen(
                     },
                     onCopy = {
                         scope.launch { snackbarHostState.showSnackbar("Copied") }
-                    },
-                    onGoToCalc = {
-                        showHistory = false
-                        selectedTabIndex = 0
                     }
                 )
             }

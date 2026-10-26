@@ -1,6 +1,6 @@
 # Privacy Policy for Disk Partition Calculator
 
-**Last Updated: 25 October 2026**
+**Last Updated: 26 October 2026**
 
 This Privacy Policy describes how the Disk Partition Calculator app ("the App") handles information when you use our services.
 
@@ -8,10 +8,12 @@ This Privacy Policy describes how the Disk Partition Calculator app ("the App") 
 
 - Your calculations, history, and preferences stay **only on your device**
 - The app has **no account, no sign-in, and no developer-operated server**
-- The app declares **no Android permissions at all** — not even internet access — so it cannot reach
-  the network, your files, your location, or your hardware
+- The app requests **no runtime permissions**. The only network permission is `INTERNET`, used
+  solely by Google Play's flexible in-app update check; your files, location and hardware are
+  never accessed
 - The app does **not** ask for access to your contacts, location, camera, microphone, photos, or files
-- The app contains **no advertising, analytics, crash-reporting, or tracking SDKs**
+- The app contains **no advertising, analytics, crash-reporting, or tracking SDKs** — the only
+  Google library is Play In-App Updates
 - The developer does **not** sell, rent, or share your data with anyone
 
 ## Developer and Contact
@@ -84,12 +86,16 @@ The developer does **not** share your data with third parties.
 The following features involve other services **only when you explicitly use them**:
 
 ### Google Play Services
-- The app has **no update checks and no network code**
+- The app uses **Google Play In-App Updates** (flexible flow with Play's native UI) to check
+  whether a newer version is available and, if you accept, to download and install it automatically
+- The update check sends **no** calculation, history or preference data — it only asks Play about
+  a newer app version
 - The "Rate Us" button opens the Play Store listing
-- Google processes that visit under its own privacy policy
+- Google processes those interactions under its own privacy policy
 
-Apart from the AndroidX/Jetpack libraries, the app bundles **no other third-party SDKs** — no
-advertising, analytics, attribution, crash-reporting, update, or social-media SDK is included.
+Apart from the AndroidX/Jetpack libraries and Google Play In-App Updates, the app bundles **no
+other third-party SDKs** — no advertising, analytics, attribution, crash-reporting, or
+social-media SDK is included.
 
 ### Android Share Sheet
 - The "Share App" feature sends only a static Play Store link to the app you choose
@@ -108,7 +114,8 @@ advertising, analytics, attribution, crash-reporting, update, or social-media SD
 
 - History and preferences are kept in app-private storage, which Android's app sandbox keeps away from other apps
 - The app does **not** send your calculations, history, or preferences over the network
-- The app contains **no networking, update-check, or cloud-sync code** of any kind
+- The app contains **no cloud-sync code**; the only network code is the Google Play in-app
+  update check described above
 - No method of storage or transmission can be guaranteed to be completely secure
 
 ## Data Retention and Deletion
@@ -153,4 +160,4 @@ This policy may be updated if the app's features or data practices change. The v
 
 **App Package Name:** com.diskcalc
 
-**Last Updated:** 25 October 2026
+**Last Updated:** 26 October 2026

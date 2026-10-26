@@ -21,6 +21,7 @@
 | Persistence (settings) | DataStore Preferences | **1.1.7** |
 | DI | Hilt (`hilt-android`, `hilt-navigation-compose 1.3.0`) | **2.57.2** |
 | Concurrency | kotlinx-coroutines | **1.10.2** |
+| Updates | Play In-App Updates (`app-update-ktx`), flexible / native UI | **2.1.0** |
 | Unit tests | JUnit 4 | **4.13.2** |
 | Unit tests | MockK | **1.14.5** |
 | Unit tests | Turbine | **1.2.1** |
@@ -90,7 +91,7 @@ Package name: keep the project's existing `applicationId`; `<package>` above is 
 
 ## 4. Third-Party APIs & Services
 
-**None.** No HTTP clients, no Firebase, no analytics, no ads SDK, no crash reporters, no Play Services dependency. If a dependency pulls in `INTERNET`/other permissions transitively, the build **must fail** (see §6 check).
+**One:** Google Play In-App Updates (`com.google.android.play:app-update-ktx`, flexible flow, Play's native UI). It checks for a newer APK and downloads it in the background; when the download reaches `DOWNLOADED`, `completeUpdate()` installs it automatically (Play restarts the app). Cancelling the Play dialog is a no-op — no retry in the same process, the app keeps running. It never sees calculation, history or preference data. No HTTP client, Firebase, analytics, ads SDK or crash reporter is included. Its AAR contributes `INTERNET` / `ACCESS_NETWORK_STATE` via manifest merging — those two are allow-listed in the §6 check.
 
 ## 5. Data & State Storage
 - **History** → Room (`05_Schema.md`).
@@ -99,8 +100,8 @@ Package name: keep the project's existing `applicationId`; `<package>` above is 
 - No file I/O, no shared storage, no ContentProvider.
 
 ## 6. Security & Privacy Constraints
-1. `AndroidManifest.xml` contains **zero** `<uses-permission>`; CI/release check greps merged manifest to confirm.
-2. `android:allowBackup="false"`, `android:usesCleartextTraffic="false"`, `android:networkSecurityConfig` not needed (no network).
+1. The app manifest declares only `android.permission.INTERNET` (normal permission, no runtime prompt); the Play In-App Updates AAR adds `ACCESS_NETWORK_STATE`. CI/release check greps the merged manifest and allow-lists exactly those two.
+2. `android:allowBackup="false"`, `android:usesCleartextTraffic="false"` (Play handles its own HTTPS transport; no cleartext traffic).
 3. All components `android:exported="false"` except `MainActivity` (launcher).
 4. No logging of user input in release (`Log.*` stripped via R8 rules for `Log.d/v`).
 5. Clipboard: write-only (`setPrimaryClip`); never read the clipboard.
