@@ -1,5 +1,7 @@
 # 05 — Data Schema
 
+> **Historical planning document:** This predates the safety and reserve changes. Its formulas, UI flows, warnings and storage details may be outdated. Use the current in-app Guide, README and source/tests for current behaviour.
+
 > **Important context:** all user data stays **on-device**; the app is **accountless and has no backend** (the Google Play in-app update check is not a data backend). The requested "Row-Level Security / Auth flow" does not apply as a server concept. §6 states the equivalent security model explicitly so the coding agent does **not** invent auth or RLS.
 
 Storage: **Room (SQLite)** for history · **DataStore Preferences** for settings.

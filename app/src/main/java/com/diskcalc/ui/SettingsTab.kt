@@ -104,7 +104,7 @@ fun SettingsTab(
 
         GlassPanel(
             title = "Defaults",
-            subtitle = "Used as the starting point of every calculation",
+            subtitle = "Applied to both tabs and remembered for next time",
             icon = Icons.Rounded.Tune
         ) {
             Text(
@@ -123,8 +123,8 @@ fun SettingsTab(
 
             Spacer(Modifier.height(tokens.spaceLg))
             GlassToggleRow(
-                title = "Windows Setup simulation",
-                description = "On by default in the Calc tab",
+                title = "Plan future system space",
+                description = "Reserve only for system partitions not yet created",
                 checked = settings.setupSimulationEnabled,
                 onCheckedChange = onDefaultSetupChange
             )
@@ -136,7 +136,7 @@ fun SettingsTab(
                 onSelect = onDefaultProfileChange,
                 label = { profile ->
                     when (profile) {
-                        WindowsSetupProfile.OFF -> "Off"
+                        WindowsSetupProfile.OFF -> "None"
                         WindowsSetupProfile.WIN10 -> "Win 10"
                         WindowsSetupProfile.WIN11 -> "Win 11"
                         WindowsSetupProfile.CUSTOM -> "Custom"
@@ -147,12 +147,13 @@ fun SettingsTab(
             Spacer(Modifier.height(tokens.spaceXs))
             Text(
                 text = when (settings.setupProfile) {
-                    WindowsSetupProfile.OFF -> "No system partitions — overhead: 0 MB"
+                    WindowsSetupProfile.OFF -> "No future system reserve: 0 MB"
                     WindowsSetupProfile.WIN10 ->
-                        "Windows 10 UEFI/GPT overhead: ${PartitionConstants.WINDOWS_SETUP_OVERHEAD_MB} MB"
+                        "Legacy example: ${PartitionConstants.WINDOWS_SETUP_OVERHEAD_MB} MB, not a Microsoft sizing rule"
                     WindowsSetupProfile.WIN11 ->
-                        "Windows 11 UEFI/GPT overhead: ${PartitionConstants.WINDOWS_SETUP_OVERHEAD_WIN11_MB} MB"
-                    WindowsSetupProfile.CUSTOM -> "Custom overhead: ${settings.customOverheadMb} MB"
+                        "Legacy example: ${PartitionConstants.WINDOWS_SETUP_OVERHEAD_WIN11_MB} MB, not a Microsoft sizing rule"
+                    WindowsSetupProfile.CUSTOM ->
+                        "Last saved Custom reserve: ${settings.customOverheadMb} MB; edit it in Calc or Split"
                 },
                 style = MaterialTheme.typography.bodyMedium,
                 color = palette.contentTertiary,
@@ -349,7 +350,7 @@ private fun shareApp(context: Context) {
         type = "text/plain"
         putExtra(
             Intent.EXTRA_TEXT,
-            "Disk Partition Calculator — works out the exact MB to type into Windows Setup. " +
+            "Disk Partition Calculator — helps plan partition sizes for Windows Setup. " +
                 "https://play.google.com/store/apps/details?id=${context.packageName}"
         )
     }

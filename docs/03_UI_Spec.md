@@ -1,5 +1,7 @@
 # 03 — UI Specification (Design System)
 
+> **Historical planning document:** This predates the safety and reserve changes. Its formulas, UI flows, warnings and storage details may be outdated. Use the current in-app Guide, README and source/tests for current behaviour.
+
 > Single source of truth for visual tokens. Implement as Material 3 `ColorScheme`, `Typography`, `Shapes` and a `Spacing` object in `ui/theme/`. **Do not hard-code colors, sizes, or fonts in composables.**
 
 ---

@@ -1,44 +1,32 @@
 package com.diskcalc.domain
 
-/**
- * All numbers in this app are **MiB** based (1 GB = 1024 MB) because Windows Explorer
- * formats binary sizes while labelling them "GB". Windows Setup, however, wants a size
- * typed in **MB**, and the formatter always steals a few MB per partition.
- *
- * Normative values come from `docs/01_PRD.md §4` and the input caps from
- * `docs/02_AppFlow.md §3/§4`. No screen or ViewModel may invent its own numbers.
- */
+/** Binary-unit conversion, planning heuristics, and input limits shared by the app. */
 object PartitionConstants {
 
-    /** Windows Explorer semantics: 1 GB == 1024 MB. */
+    /** The app's binary sizing convention: one GiB is 1024 MiB. */
     const val MB_PER_GB = 1024
+    const val BYTES_PER_MB = 1024L * 1024L
+    const val BYTES_PER_GB = MB_PER_GB * BYTES_PER_MB
 
-    /**
-     * Slack the Windows formatter takes per partition, so a partition typed as
-     * `visible + 4` MB ends up showing as *visible* in Explorer.
-     * Approximation — verify against the real disk you are partitioning.
-     */
-    const val OVERHEAD_MB_PER_PARTITION = 4
+    /** App-selected safety buffer; not a Microsoft-mandated filesystem overhead. */
+    const val DISPLAY_SAFETY_BUFFER_MB = 4
 
-    /** "Off (blank disk)" setup profile — no system partitions created. */
+    /** No space reserved for future system partitions. */
     const val SETUP_OVERHEAD_OFF_MB = 0
 
-    /**
-     * The system partitions Windows Setup creates before the main one.
-     * 100 (EFI) + 16 (MSR) + 450 (Recovery) for Windows 10 on UEFI/GPT.
-     */
+    /** Historical example reserve, not a guaranteed Windows 10 setup layout. */
     const val WINDOWS_SETUP_OVERHEAD_MB = 566
 
-    /** Windows 10 Recovery partition size used by the Win10 UEFI preset. */
+    /** Windows 10 Recovery partition size used in the historical example. */
     const val WINDOWS_SETUP_RECOVERY_MB = 450
 
-    /** Windows 11 ships a bigger recovery partition — useful as a second preset. */
+    /** Historical example reserve, not a guaranteed Windows 11 setup layout. */
     const val WINDOWS_SETUP_OVERHEAD_WIN11_MB = 826
 
-    /** Upper bound of the Windows FAT32 *format tool* (not the FAT32 specification). */
+    /** Some older Windows FAT32 formatting tools impose this limit (not the FAT32 specification). */
     const val FAT32_MAX_PARTITION_MB = 32 * 1024
 
-    /** FAT32 cannot store a single file bigger than 4 GB. */
+    /** A FAT32 file must be strictly smaller than 4 GiB. */
     const val FAT32_MAX_FILE_GB = 4
 
     /** History is capped so the persisted JSON stays small. */
@@ -57,6 +45,9 @@ object PartitionConstants {
 
     /** Split: "Maximum is 134217728 MB". */
     const val MAX_TOTAL_MB = 134_217_728L
+
+    /** Measurement input limit, equal to the maximum supported unallocated region. */
+    const val MAX_SAMPLE_BYTES = MAX_TOTAL_MB * BYTES_PER_MB
 
     /** Custom Setup overhead: "Maximum is 100000 MB". */
     const val MAX_CUSTOM_OVERHEAD_MB = 100_000

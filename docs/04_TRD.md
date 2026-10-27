@@ -1,5 +1,7 @@
 # 04 — Technical Requirements Document (TRD)
 
+> **Historical planning document:** This predates the safety and reserve changes. Its formulas, UI flows, warnings and storage details may be outdated. Use the current in-app Guide, README and source/tests for current behaviour.
+
 > Locked stack, architecture, folder structure, constraints. Do **not** add dependencies or change versions without updating this file first.
 
 ---

@@ -1,71 +1,70 @@
 package com.diskcalc.domain
 
-/**
- * Turns raw text field content into typed values, returning the user-facing error messages
- * specified in `docs/02_AppFlow.md §3/§4` so the UI never invents its own wording.
- *
- * Pure Kotlin: the same rules are used by the ViewModel and by the domain calculators.
- */
+/** Parses inputs without silently discarding signs, decimal points, or other characters. */
 object InputValidator {
+
+    const val INVALID_GB_MESSAGE = "Enter a positive GB value with up to 2 decimals"
+    const val INVALID_TOTAL_MB_MESSAGE = "Enter a positive whole MB value using digits only"
+    const val INVALID_OVERHEAD_MESSAGE = "Enter a whole reserve from 0 to 100000 MB"
+    const val INVALID_SAMPLE_BYTES_MESSAGE = "Enter a positive whole byte count using digits only"
+    const val INVALID_SAMPLE_RELATION_MESSAGE = "Volume capacity must not exceed partition size"
+
+    private val gbPattern = Regex("(?:[0-9]+(?:\\.[0-9]{0,2})?|\\.[0-9]{1,2})")
+    private val wholeMbPattern = Regex("[0-9]+")
 
     /** @param value a usable value, or `null` when the field cannot be calculated. */
     data class ParsedValue<T>(val value: T?, val error: String?) {
         val isValid: Boolean get() = value != null
     }
 
-    /**
-     * Keeps digits and a single decimal separator, capped at two decimals.
-     * A decimal comma is normalized to `.` so locale-decimal keyboards work.
-     */
-    fun normalizeGbInput(raw: String): String {
-        val normalized = raw.replace(',', '.')
-        val out = StringBuilder(normalized.length)
-        var separatorSeen = false
-        var decimals = 0
-        for (char in normalized) {
-            when {
-                char.isDigit() -> {
-                    if (separatorSeen && decimals >= 2) continue
-                    out.append(char)
-                    if (separatorSeen) decimals++
-                }
-                char == '.' && !separatorSeen -> {
-                    separatorSeen = true
-                    out.append(char)
-                }
-            }
-        }
-        return out.toString()
-    }
+    /** Accept a locale decimal comma without removing any other characters or digits. */
+    fun normalizeGbInput(raw: String): String = raw.replace(',', '.')
 
-    /** Calc tab: "enter the visible size in GB". Empty is not an error, it just disables the action. */
+    /** Empty Calc input disables the action; invalid text remains visible for correction. */
     fun parseVisibleGb(raw: String): ParsedValue<Double> {
-        val text = raw.trim().replace(',', '.')
+        val text = normalizeGbInput(raw.trim())
         if (text.isEmpty()) return ParsedValue(null, null)
+        if (!gbPattern.matches(text)) return ParsedValue(null, INVALID_GB_MESSAGE)
         val value = text.toDoubleOrNull()
         return when {
             value == null || !value.isFinite() || value <= 0.0 ->
-                ParsedValue(null, "Enter a size greater than 0")
+                ParsedValue(null, INVALID_GB_MESSAGE)
             value > PartitionConstants.MAX_VISIBLE_GB ->
                 ParsedValue(null, "Maximum is 65536 GB")
             else -> ParsedValue(value, null)
         }
     }
 
-    /** Split tab: total disk size in whole MB only — Windows Setup rejects fractions. */
+    /**
+     * A single unallocated region in whole MB. Reject all separators rather than guessing
+     * whether a pasted comma or period was a decimal point or a thousands separator.
+     */
     fun parseTotalMb(raw: String): ParsedValue<Long> {
-        val text = raw.trim().replace(" ", "").replace(",", "")
+        val text = raw.trim()
         if (text.isEmpty()) return ParsedValue(null, null)
+        if (!wholeMbPattern.matches(text)) return ParsedValue(null, INVALID_TOTAL_MB_MESSAGE)
         val value = text.toLongOrNull()
         return when {
-            value == null || value <= 0L -> ParsedValue(null, "Enter disk size in MB")
-            value > PartitionConstants.MAX_TOTAL_MB ->
+            value == null || value > PartitionConstants.MAX_TOTAL_MB ->
                 ParsedValue(null, "Maximum is 134217728 MB")
+            value <= 0L -> ParsedValue(null, INVALID_TOTAL_MB_MESSAGE)
             else -> ParsedValue(value, null)
         }
     }
 
-    /** Split tab: partition count, 1..8. */
+    /** Raw byte counts from Windows partition and volume properties; do not guess separators. */
+    fun parseSampleBytes(raw: String): ParsedValue<Long> {
+        val text = raw.trim()
+        if (!wholeMbPattern.matches(text)) return ParsedValue(null, INVALID_SAMPLE_BYTES_MESSAGE)
+        val value = text.toLongOrNull()
+        return when {
+            value == null || value > PartitionConstants.MAX_SAMPLE_BYTES ->
+                ParsedValue(null, "Maximum is ${PartitionConstants.MAX_SAMPLE_BYTES} bytes")
+            value <= 0L -> ParsedValue(null, INVALID_SAMPLE_BYTES_MESSAGE)
+            else -> ParsedValue(value, null)
+        }
+    }
+
     fun parsePartitionCount(value: Int): ParsedValue<Int> = when {
         value < PartitionConstants.MIN_SPLIT_COUNT || value > PartitionConstants.MAX_SPLIT_COUNT ->
             ParsedValue(
@@ -75,27 +74,25 @@ object InputValidator {
         else -> ParsedValue(value, null)
     }
 
-    /** Custom Windows Setup overhead in MB. */
+    /** Space to reserve for system partitions not yet created, as a whole number of MB. */
     fun parseOverheadMb(raw: String): ParsedValue<Int> {
         val text = raw.trim()
-        if (text.isEmpty()) return ParsedValue(null, "Enter overhead in MB")
+        if (!wholeMbPattern.matches(text)) return ParsedValue(null, INVALID_OVERHEAD_MESSAGE)
         val value = text.toIntOrNull()
         return when {
-            value == null || value < 0 -> ParsedValue(null, "Enter overhead in MB")
-            value > PartitionConstants.MAX_CUSTOM_OVERHEAD_MB ->
+            value == null || value > PartitionConstants.MAX_CUSTOM_OVERHEAD_MB ->
                 ParsedValue(null, "Maximum is 100000 MB")
             else -> ParsedValue(value, null)
         }
     }
 
-    /**
-     * Split-only checks from `docs/02_AppFlow.md §4`: the Setup overhead must fit on the disk
-     * and every partition needs at least 5 MB. Returns the message to show, or `null` when valid.
-     */
+    /** The planned reserve must fit, and every calculated slice needs at least 5 MB. */
     fun validateSplit(totalMb: Long, partitionCount: Int, overheadMb: Int): String? {
+        parsePartitionCount(partitionCount).error?.let { return it }
+        if (overheadMb < 0) return INVALID_OVERHEAD_MESSAGE
         val usableMb = totalMb - overheadMb
         return when {
-            usableMb <= 0 -> "Disk is smaller than Setup overhead ($overheadMb MB)"
+            usableMb <= 0 -> "Unallocated space is smaller than the reserve ($overheadMb MB)"
             usableMb / partitionCount < PartitionConstants.MIN_PARTITION_MB ->
                 "Too small to split into $partitionCount partitions"
             else -> null

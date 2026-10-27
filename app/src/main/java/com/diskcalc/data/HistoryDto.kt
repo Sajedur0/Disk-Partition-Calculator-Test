@@ -21,8 +21,10 @@ data class HistoryEntryDto(
     val summary: String,
     val timestampMillis: Long,
     val splitCount: Int? = null,
-    /** Default keeps JSON written by older versions readable. */
-    val copyValue: String = ""
+    /** Defaults keep JSON written by older versions readable. */
+    val copyValue: String = "",
+    val calculationVersion: Int = ConversionHistory.LEGACY_CALCULATION_VERSION,
+    val measuredGapBytes: Long? = null
 )
 
 @Serializable
@@ -31,7 +33,7 @@ data class HistoryFileDto(
     val entries: List<HistoryEntryDto> = emptyList()
 ) {
     companion object {
-        const val CURRENT_VERSION = 1
+        const val CURRENT_VERSION = 3
     }
 }
 
@@ -46,7 +48,9 @@ fun ConversionHistory.toDto(): HistoryEntryDto = HistoryEntryDto(
     summary = summary,
     timestampMillis = timestampMillis,
     splitCount = splitCount,
-    copyValue = copyValue
+    copyValue = copyValue,
+    calculationVersion = calculationVersion,
+    measuredGapBytes = measuredGapBytes
 )
 
 fun HistoryEntryDto.toDomain(): ConversionHistory = ConversionHistory(
@@ -60,5 +64,7 @@ fun HistoryEntryDto.toDomain(): ConversionHistory = ConversionHistory(
     summary = summary,
     timestampMillis = timestampMillis,
     splitCount = splitCount,
-    copyValue = copyValue.ifEmpty { primaryResultMb.toString() }
+    copyValue = copyValue.ifEmpty { primaryResultMb.toString() },
+    calculationVersion = calculationVersion,
+    measuredGapBytes = measuredGapBytes
 )

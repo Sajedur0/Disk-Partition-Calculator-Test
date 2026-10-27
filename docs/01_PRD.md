@@ -1,7 +1,9 @@
 # 01 — Product Requirements Document (PRD)
 
+> **Historical planning document:** This predates the safety and reserve changes. Its formulas, UI flows, warnings and storage details may be outdated. Use the current in-app Guide, README and source/tests for current behaviour.
+
 > Product: **Disk Partition Calculator** · Platform: Android (Kotlin + Jetpack Compose) · Version baseline: v1.1.4
-> Source of truth for *what* we build and *why*. If another doc contradicts this one on scope, this one wins.
+> Original v1.1.4 product brief; retained for historical context.
 
 ---
 

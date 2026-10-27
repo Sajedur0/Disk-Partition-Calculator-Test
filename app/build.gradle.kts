@@ -102,4 +102,5 @@ dependencies {
     implementation(libs.play.app.update.ktx)
 
     debugImplementation(libs.androidx.compose.ui.tooling)
+    testImplementation(libs.junit)
 }

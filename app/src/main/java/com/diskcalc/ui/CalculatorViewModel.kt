@@ -6,9 +6,10 @@ import androidx.lifecycle.viewModelScope
 import com.diskcalc.data.AppContainer
 import com.diskcalc.data.AppSettings
 import com.diskcalc.data.HistoryManager
-import com.diskcalc.data.SettingsRepository
+import com.diskcalc.data.SettingsStore
 import com.diskcalc.data.toHistory
 import com.diskcalc.domain.CalcPresets
+import com.diskcalc.domain.CapacitySample
 import com.diskcalc.domain.ConversionHistory
 import com.diskcalc.domain.FileSystemType
 import com.diskcalc.domain.InputValidator
@@ -19,6 +20,7 @@ import com.diskcalc.domain.SplitPartitionCalculator
 import com.diskcalc.domain.SplitResult
 import com.diskcalc.domain.ThemeMode
 import com.diskcalc.domain.WindowsSetupProfile
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -35,14 +37,58 @@ data class CalcUiState(
     val simulateWindowsSetup: Boolean = false,
     val setupProfile: WindowsSetupProfile = WindowsSetupProfile.WIN11,
     val customOverheadText: String = "0",
+    val useMeasuredGap: Boolean = false,
+    val sampleIsTargetVolume: Boolean = false,
+    val samplePartitionBytesText: String = "",
+    val sampleVolumeBytesText: String = "",
     val result: PartitionCalculationResult? = null,
-    val error: String? = null,
-    val overheadError: String? = null
+    val error: String? = null
 ) {
-    /** Overhead actually applied, honouring the Custom profile. */
-    val effectiveOverheadMb: Int
+    val samplePartitionError: String?
+        get() = if (useMeasuredGap) InputValidator.parseSampleBytes(samplePartitionBytesText).error else null
+
+    val sampleVolumeError: String?
+        get() {
+            if (!useMeasuredGap) return null
+            val volume = InputValidator.parseSampleBytes(sampleVolumeBytesText)
+            volume.error?.let { return it }
+            val partition = InputValidator.parseSampleBytes(samplePartitionBytesText).value
+            return if (partition != null && volume.value != null && volume.value > partition) {
+                InputValidator.INVALID_SAMPLE_RELATION_MESSAGE
+            } else null
+        }
+
+    /** Null when calibration is off or either byte count is invalid. */
+    val capacitySample: CapacitySample?
+        get() {
+            if (!useMeasuredGap) return null
+            val partition = InputValidator.parseSampleBytes(samplePartitionBytesText).value ?: return null
+            val volume = InputValidator.parseSampleBytes(sampleVolumeBytesText).value ?: return null
+            if (volume > partition) return null
+            return CapacitySample(partition, volume, isTargetVolume = sampleIsTargetVolume)
+        }
+
+    /** A measurement from one filesystem must not silently carry over to another. */
+    fun withFilesystem(type: FileSystemType): CalcUiState =
+        if (type == filesystem) copy(result = null) else copy(
+            filesystem = type,
+            useMeasuredGap = false,
+            sampleIsTargetVolume = false,
+            samplePartitionBytesText = "",
+            sampleVolumeBytesText = "",
+            result = null
+        )
+
+    /** Derived from the field so both tabs always show the current validation error. */
+    val overheadError: String?
         get() = if (setupProfile == WindowsSetupProfile.CUSTOM) {
-            customOverheadText.trim().toIntOrNull() ?: 0
+            InputValidator.parseOverheadMb(customOverheadText).error
+        } else null
+
+    /** A custom reserve is null until it has passed the same validation used by both tabs. */
+    val effectiveOverheadMb: Int?
+        get() = if (setupProfile == WindowsSetupProfile.CUSTOM) {
+            InputValidator.parseOverheadMb(customOverheadText).value
         } else {
             setupProfile.overheadMb
         }
@@ -50,6 +96,7 @@ data class CalcUiState(
     /** Calculate is enabled only when every input is valid (docs/02_AppFlow.md §2). */
     val canCalculate: Boolean
         get() = InputValidator.parseVisibleGb(visibleGbText).isValid &&
+            (!useMeasuredGap || capacitySample != null) &&
             (!simulateWindowsSetup || setupProfile != WindowsSetupProfile.CUSTOM ||
                 InputValidator.parseOverheadMb(customOverheadText).isValid)
 }
@@ -62,13 +109,19 @@ data class SplitUiState(
     val simulateWindowsSetup: Boolean = false,
     val result: SplitResult? = null,
     val error: String? = null
-)
+) {
+    fun canSplit(reserve: CalcUiState): Boolean =
+        InputValidator.isSplitReady(totalMbText, partitionCount) && error == null &&
+            (!simulateWindowsSetup || reserve.effectiveOverheadMb != null)
+}
 
 class CalculatorViewModel(
     private val historyManager: HistoryManager,
-    private val settingsRepository: SettingsRepository
+    private val settingsRepository: SettingsStore,
+    private val scopeOverride: CoroutineScope? = null
 ) : ViewModel() {
 
+    private val workScope: CoroutineScope get() = scopeOverride ?: viewModelScope
     private val _calc = MutableStateFlow(CalcUiState())
     val calc: StateFlow<CalcUiState> = _calc.asStateFlow()
 
@@ -84,37 +137,43 @@ class CalculatorViewModel(
     /** Last deleted row, kept in memory only so "Undo" can restore it. */
     private var lastDeleted: ConversionHistory? = null
 
-    /** Tracks whether the user has touched the fields, so stored defaults only seed once. */
-    private var calcSeeded = false
-    private var splitSeeded = false
+    // A slow first DataStore emission must not overwrite choices already made on screen.
+    private var settingsSeeded = false
+    private var calcFilesystemTouched = false
+    private var splitFilesystemTouched = false
+    private var calcSetupTouched = false
+    private var splitSetupTouched = false
+    private var profileTouched = false
+    private var customReserveTouched = false
 
     init {
-        viewModelScope.launch {
+        workScope.launch {
             settingsRepository.settings.collect { stored ->
                 _settings.value = stored
-                if (!calcSeeded) {
-                    calcSeeded = true
+                if (!settingsSeeded) {
+                    settingsSeeded = true
                     _calc.update {
-                        it.copy(
-                            filesystem = stored.defaultFilesystem,
-                            simulateWindowsSetup = stored.setupSimulationEnabled,
-                            setupProfile = stored.setupProfile,
-                            customOverheadText = stored.customOverheadMb.toString()
+                        val profile = if (profileTouched) it.setupProfile else stored.setupProfile
+                        val custom = if (customReserveTouched) it.customOverheadText else stored.customOverheadMb.toString()
+                        it.withFilesystem(if (calcFilesystemTouched) it.filesystem else stored.defaultFilesystem).copy(
+                            simulateWindowsSetup = if (calcSetupTouched) it.simulateWindowsSetup else stored.setupSimulationEnabled,
+                            setupProfile = profile,
+                            customOverheadText = custom,
+                            result = null
                         )
                     }
-                }
-                if (!splitSeeded) {
-                    splitSeeded = true
                     _split.update {
-                        it.copy(
-                            filesystem = stored.defaultFilesystem,
-                            simulateWindowsSetup = stored.setupSimulationEnabled
+                        val next = it.copy(
+                            filesystem = if (splitFilesystemTouched) it.filesystem else stored.defaultFilesystem,
+                            simulateWindowsSetup = if (splitSetupTouched) it.simulateWindowsSetup else stored.setupSimulationEnabled,
+                            result = null
                         )
+                        next.copy(error = splitError(next))
                     }
                 }
             }
         }
-        viewModelScope.launch { _history.value = historyManager.all() }
+        workScope.launch { _history.value = historyManager.all() }
     }
 
     // ---------------------------------------------------------------- Calc tab
@@ -138,34 +197,54 @@ class CalculatorViewModel(
 
     /** Filesystem choice in the Calc tab is remembered as the app default. */
     fun onCalcFilesystemChange(type: FileSystemType) {
-        _calc.update { it.copy(filesystem = type, result = null) }
-        viewModelScope.launch { settingsRepository.setDefaultFilesystem(type) }
+        calcFilesystemTouched = true
+        _calc.update { it.withFilesystem(type) }
+        workScope.launch { settingsRepository.setDefaultFilesystem(type) }
     }
 
+    /** Calibration inputs are deliberately session-only; only the resulting gap is in history. */
+    fun onCalibrationToggle(enabled: Boolean) {
+        _calc.update { it.copy(useMeasuredGap = enabled, result = null) }
+    }
+
+    fun onSampleTargetToggle(isTarget: Boolean) {
+        _calc.update { it.copy(sampleIsTargetVolume = isTarget, result = null) }
+    }
+
+    fun onSamplePartitionBytesChange(text: String) {
+        _calc.update { it.copy(samplePartitionBytesText = text, result = null) }
+    }
+
+    fun onSampleVolumeBytesChange(text: String) {
+        _calc.update { it.copy(sampleVolumeBytesText = text, result = null) }
+    }
+
+    /** Per-tab choice; only Settings changes the remembered default for both tabs. */
     fun onCalcSetupToggle(enabled: Boolean) {
+        calcSetupTouched = true
         _calc.update { it.copy(simulateWindowsSetup = enabled, result = null) }
-        viewModelScope.launch { settingsRepository.setSetupSimulationEnabled(enabled) }
+    }
+
+    private fun applySetupProfile(profile: WindowsSetupProfile) {
+        profileTouched = true
+        _calc.update { it.copy(setupProfile = profile, result = null) }
+        refreshSplitForReserveChange()
     }
 
     fun onSetupProfileChange(profile: WindowsSetupProfile) {
-        _calc.update {
-            it.copy(setupProfile = profile, result = null, overheadError = null)
-        }
-        viewModelScope.launch { settingsRepository.setSetupProfile(profile) }
+        applySetupProfile(profile)
+        workScope.launch { settingsRepository.setSetupProfile(profile) }
     }
 
     fun onCustomOverheadChange(text: String) {
-        val filtered = text.filter { it.isDigit() }
-        val parsed = InputValidator.parseOverheadMb(filtered)
+        customReserveTouched = true
+        val parsed = InputValidator.parseOverheadMb(text)
         _calc.update {
-            it.copy(
-                customOverheadText = filtered,
-                overheadError = if (parsed.isValid) null else parsed.error,
-                result = null
-            )
+            it.copy(customOverheadText = text, result = null)
         }
+        refreshSplitForReserveChange()
         parsed.value?.let { value ->
-            viewModelScope.launch { settingsRepository.setCustomOverheadMb(value) }
+            workScope.launch { settingsRepository.setCustomOverheadMb(value) }
         }
     }
 
@@ -175,9 +254,6 @@ class CalculatorViewModel(
             _calc.update {
                 it.copy(
                     error = InputValidator.parseVisibleGb(state.visibleGbText).error,
-                    overheadError = if (state.simulateWindowsSetup &&
-                        state.setupProfile == WindowsSetupProfile.CUSTOM
-                    ) InputValidator.parseOverheadMb(state.customOverheadText).error else null,
                     result = null
                 )
             }
@@ -185,20 +261,21 @@ class CalculatorViewModel(
         }
 
         val visibleGb = InputValidator.parseVisibleGb(state.visibleGbText).value ?: return
-        // Math is synchronous and takes < 1 ms: no spinner, no delay (docs/02_AppFlow.md §2).
+        val reserveMb = if (state.simulateWindowsSetup) state.effectiveOverheadMb ?: return else 0
         val outcome = runCatching {
             PartitionCalculator.calculate(
                 visibleGb = visibleGb,
                 filesystem = state.filesystem,
                 simulateWindowsSetup = state.simulateWindowsSetup,
-                setupOverheadMb = state.effectiveOverheadMb
+                setupOverheadMb = reserveMb,
+                sample = state.capacitySample
             )
         }
         outcome.fold(
             onSuccess = { result ->
-                _calc.update { it.copy(result = result, error = null, overheadError = null) }
+                _calc.update { it.copy(result = result, error = null) }
                 // One history row per Calculate (US-01 side effect).
-                viewModelScope.launch {
+                workScope.launch {
                     historyManager.add(result.toHistory())
                     _history.value = historyManager.all()
                 }
@@ -215,15 +292,22 @@ class CalculatorViewModel(
 
     private fun splitError(state: SplitUiState): String? {
         val parsed = InputValidator.parseTotalMb(state.totalMbText)
-        if (!parsed.isValid) return if (state.totalMbText.isBlank()) null else parsed.error
-        val overhead = if (state.simulateWindowsSetup) _calc.value.effectiveOverheadMb else 0
+        if (!parsed.isValid) return parsed.error
+        // Invalid custom reserve is shown alongside that field, never silently replaced by zero.
+        val overhead = if (state.simulateWindowsSetup) _calc.value.effectiveOverheadMb ?: return null else 0
         return InputValidator.validateSplit(parsed.value ?: return null, state.partitionCount, overhead)
     }
 
-    fun onTotalMbChange(text: String) {
-        val filtered = text.filter { it.isDigit() }
+    private fun refreshSplitForReserveChange() {
         _split.update {
-            val next = it.copy(totalMbText = filtered, result = null)
+            val next = it.copy(result = null)
+            next.copy(error = splitError(next))
+        }
+    }
+
+    fun onTotalMbChange(text: String) {
+        _split.update {
+            val next = it.copy(totalMbText = text, result = null)
             next.copy(error = splitError(next))
         }
     }
@@ -243,6 +327,7 @@ class CalculatorViewModel(
 
     /** Split keeps its own filesystem pick — it does not change the app default. */
     fun onSplitFilesystemChange(type: FileSystemType) {
+        splitFilesystemTouched = true
         _split.update {
             val next = it.copy(filesystem = type, result = null)
             next.copy(error = splitError(next))
@@ -250,6 +335,7 @@ class CalculatorViewModel(
     }
 
     fun onSplitSetupToggle(enabled: Boolean) {
+        splitSetupTouched = true
         _split.update {
             val next = it.copy(simulateWindowsSetup = enabled, result = null)
             next.copy(error = splitError(next))
@@ -258,12 +344,14 @@ class CalculatorViewModel(
 
     fun split() {
         val state = _split.value
+        val reserve = _calc.value
         val error = splitError(state)
-        if (error != null || !InputValidator.parseTotalMb(state.totalMbText).isValid) {
+        if (error != null || !state.canSplit(reserve)) {
             _split.update { it.copy(error = error, result = null) }
             return
         }
         val totalMb = InputValidator.parseTotalMb(state.totalMbText).value ?: return
+        val overheadMb = if (state.simulateWindowsSetup) reserve.effectiveOverheadMb ?: return else 0
 
         val outcome = runCatching {
             SplitPartitionCalculator.split(
@@ -271,13 +359,13 @@ class CalculatorViewModel(
                 partitionCount = state.partitionCount,
                 filesystem = state.filesystem,
                 simulateWindowsSetup = state.simulateWindowsSetup,
-                setupOverheadMb = _calc.value.effectiveOverheadMb
+                setupOverheadMb = overheadMb
             )
         }
         outcome.fold(
             onSuccess = { splitResult ->
                 _split.update { it.copy(result = splitResult, error = null) }
-                viewModelScope.launch {
+                workScope.launch {
                     historyManager.add(splitResult.toHistory())
                     _history.value = historyManager.all()
                 }
@@ -299,28 +387,39 @@ class CalculatorViewModel(
 
     fun onThemeChange(mode: ThemeMode) {
         _settings.update { it.copy(themeMode = mode) }
-        viewModelScope.launch { settingsRepository.setThemeMode(mode) }
+        workScope.launch { settingsRepository.setThemeMode(mode) }
     }
 
     fun onDefaultFilesystemChange(type: FileSystemType) {
+        calcFilesystemTouched = true
+        splitFilesystemTouched = true
         _settings.update { it.copy(defaultFilesystem = type) }
-        _calc.update { it.copy(filesystem = type) }
-        viewModelScope.launch { settingsRepository.setDefaultFilesystem(type) }
+        _calc.update { it.withFilesystem(type) }
+        _split.update { it.copy(filesystem = type, result = null) }
+        workScope.launch { settingsRepository.setDefaultFilesystem(type) }
     }
 
     fun onDefaultSetupChange(enabled: Boolean) {
+        calcSetupTouched = true
+        splitSetupTouched = true
         _settings.update { it.copy(setupSimulationEnabled = enabled) }
-        viewModelScope.launch { settingsRepository.setSetupSimulationEnabled(enabled) }
+        _calc.update { it.copy(simulateWindowsSetup = enabled, result = null) }
+        _split.update {
+            val next = it.copy(simulateWindowsSetup = enabled, result = null)
+            next.copy(error = splitError(next))
+        }
+        workScope.launch { settingsRepository.setSetupSimulationEnabled(enabled) }
     }
 
     fun onDefaultProfileChange(profile: WindowsSetupProfile) {
         _settings.update { it.copy(setupProfile = profile) }
-        viewModelScope.launch { settingsRepository.setSetupProfile(profile) }
+        applySetupProfile(profile)
+        workScope.launch { settingsRepository.setSetupProfile(profile) }
     }
 
     fun onClearHistory() {
         lastDeleted = null
-        viewModelScope.launch {
+        workScope.launch {
             historyManager.clear()
             _history.value = historyManager.all()
         }
@@ -328,7 +427,7 @@ class CalculatorViewModel(
 
     fun onRemoveHistory(id: String) {
         lastDeleted = _history.value.firstOrNull { it.id == id }
-        viewModelScope.launch {
+        workScope.launch {
             historyManager.remove(id)
             _history.value = historyManager.all()
         }
@@ -337,7 +436,7 @@ class CalculatorViewModel(
     fun undoRemoveHistory() {
         val entry = lastDeleted ?: return
         lastDeleted = null
-        viewModelScope.launch {
+        workScope.launch {
             historyManager.add(entry)
             _history.value = historyManager.all()
         }

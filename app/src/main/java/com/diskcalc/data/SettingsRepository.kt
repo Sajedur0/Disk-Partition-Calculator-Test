@@ -23,26 +23,28 @@ data class AppSettings(
     val setupSimulationEnabled: Boolean = false,
     val setupProfile: WindowsSetupProfile = WindowsSetupProfile.WIN11,
     val customOverheadMb: Int = 0
-) {
-    /** The overhead that actually gets applied, honouring the Custom profile. */
-    val effectiveOverheadMb: Int
-        get() = if (setupProfile == WindowsSetupProfile.CUSTOM) customOverheadMb else setupProfile.overheadMb
+)
+
+/** Settings boundary, also usable by a deterministic in-memory test implementation. */
+interface SettingsStore {
+    val settings: Flow<AppSettings>
+    suspend fun setThemeMode(mode: ThemeMode)
+    suspend fun setDefaultFilesystem(type: FileSystemType)
+    suspend fun setSetupSimulationEnabled(enabled: Boolean)
+    suspend fun setSetupProfile(profile: WindowsSetupProfile)
+    suspend fun setCustomOverheadMb(mb: Int)
 }
 
-/**
- * DataStore-backed preferences. Only prefs live here — the conversion history has its own store
- * so a corrupt history can never take the settings down with it. Unknown/corrupt values fall back
- * to the built-in defaults silently (`docs/02_AppFlow.md §7`).
- */
-class SettingsRepository(private val dataStore: DataStore<Preferences>) {
+/** DataStore-backed preferences, separate from conversion history. */
+class SettingsRepository(private val dataStore: DataStore<Preferences>) : SettingsStore {
 
-    val settings: Flow<AppSettings> = dataStore.data.map { prefs ->
+    override val settings: Flow<AppSettings> = dataStore.data.map { prefs ->
         AppSettings(
             themeMode = ThemeMode.fromName(prefs[KEY_THEME]),
             defaultFilesystem = FileSystemType.fromName(prefs[KEY_FILESYSTEM]),
-            setupSimulationEnabled = prefs[KEY_SETUP_ENABLED]
-                ?: prefs[LEGACY_KEY_SETUP_ENABLED]
-                ?: false,
+            // The previous "simulation" switch had different semantics. Do not carry it over:
+            // users must opt in to reserving space for partitions not yet created.
+            setupSimulationEnabled = prefs[KEY_SETUP_ENABLED] ?: false,
             setupProfile = WindowsSetupProfile.fromName(
                 prefs[KEY_SETUP_PROFILE] ?: prefs[LEGACY_KEY_SETUP_PROFILE]
             ),
@@ -51,29 +53,34 @@ class SettingsRepository(private val dataStore: DataStore<Preferences>) {
         )
     }
 
-    suspend fun setThemeMode(mode: ThemeMode) = dataStore.edit { it[KEY_THEME] = mode.name }
+    override suspend fun setThemeMode(mode: ThemeMode) {
+        dataStore.edit { it[KEY_THEME] = mode.name }
+    }
 
-    suspend fun setDefaultFilesystem(type: FileSystemType) =
+    override suspend fun setDefaultFilesystem(type: FileSystemType) {
         dataStore.edit { it[KEY_FILESYSTEM] = type.name }
+    }
 
-    suspend fun setSetupSimulationEnabled(enabled: Boolean) =
+    override suspend fun setSetupSimulationEnabled(enabled: Boolean) {
         dataStore.edit { it[KEY_SETUP_ENABLED] = enabled }
+    }
 
-    suspend fun setSetupProfile(profile: WindowsSetupProfile) =
+    override suspend fun setSetupProfile(profile: WindowsSetupProfile) {
         dataStore.edit { it[KEY_SETUP_PROFILE] = profile.name }
+    }
 
-    suspend fun setCustomOverheadMb(mb: Int) =
+    override suspend fun setCustomOverheadMb(mb: Int) {
         dataStore.edit { it[KEY_CUSTOM_OVERHEAD] = mb.coerceIn(0, MAX_OVERHEAD_MB) }
+    }
 
     companion object {
         val KEY_THEME = stringPreferencesKey("theme_mode")
         val KEY_FILESYSTEM = stringPreferencesKey("default_filesystem")
-        val KEY_SETUP_ENABLED = booleanPreferencesKey("default_setup_enabled")
+        val KEY_SETUP_ENABLED = booleanPreferencesKey("future_system_reserve_enabled")
         val KEY_SETUP_PROFILE = stringPreferencesKey("default_setup_profile")
         val KEY_CUSTOM_OVERHEAD = intPreferencesKey("default_custom_overhead_mb")
 
-        /** Keys written by v1.1.4 — read as a fallback so an upgrade keeps the user's defaults. */
-        private val LEGACY_KEY_SETUP_ENABLED = booleanPreferencesKey("setup_simulation_enabled")
+        /** Older profile and custom values remain available if the user opts into a reserve. */
         private val LEGACY_KEY_SETUP_PROFILE = stringPreferencesKey("setup_profile")
         private val LEGACY_KEY_CUSTOM_OVERHEAD = intPreferencesKey("custom_overhead_mb")
 

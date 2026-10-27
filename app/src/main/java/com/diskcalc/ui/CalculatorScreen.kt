@@ -125,6 +125,10 @@ fun CalculatorScreen(
                                         onVisibleGbChange = viewModel::onVisibleGbChange,
                                         onPresetSelected = viewModel::applyPreset,
                                         onFilesystemChange = viewModel::onCalcFilesystemChange,
+                                        onCalibrationToggle = viewModel::onCalibrationToggle,
+                                        onSampleTargetToggle = viewModel::onSampleTargetToggle,
+                                        onSamplePartitionBytesChange = viewModel::onSamplePartitionBytesChange,
+                                        onSampleVolumeBytesChange = viewModel::onSampleVolumeBytesChange,
                                         onSetupToggle = viewModel::onCalcSetupToggle,
                                         onProfileChange = viewModel::onSetupProfileChange,
                                         onCustomOverheadChange = viewModel::onCustomOverheadChange,
@@ -136,10 +140,13 @@ fun CalculatorScreen(
 
                                     1 -> SplitTab(
                                         state = split,
+                                        reserve = calc,
                                         onTotalMbChange = viewModel::onTotalMbChange,
                                         onPartitionCountChange = viewModel::onPartitionCountChange,
                                         onFilesystemChange = viewModel::onSplitFilesystemChange,
                                         onSetupToggle = viewModel::onSplitSetupToggle,
+                                        onProfileChange = viewModel::onSetupProfileChange,
+                                        onCustomOverheadChange = viewModel::onCustomOverheadChange,
                                         onSplit = { viewModel.split() },
                                         onCopied = {
                                             scope.launch { snackbarHostState.showSnackbar("Copied") }

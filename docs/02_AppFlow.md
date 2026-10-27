@@ -1,5 +1,7 @@
 # 02 — App Flow (Screen-by-Screen State Machine)
 
+> **Historical planning document:** This predates the safety and reserve changes. Its formulas, UI flows, warnings and storage details may be outdated. Use the current in-app Guide, README and source/tests for current behaviour.
+
 > Defines navigation, per-screen states, transitions, button actions, and error/empty handling.
 > Formulas live in `01_PRD.md §4`; visuals in `03_UI_Spec.md`.
 

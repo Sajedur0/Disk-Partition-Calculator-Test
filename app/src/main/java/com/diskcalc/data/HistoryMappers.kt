@@ -19,7 +19,9 @@ fun PartitionCalculationResult.toHistory(): ConversionHistory = ConversionHistor
     primaryResultMb = requiredInputMb,
     summary = "${filesystem.label} - $requiredInputMb MB",
     timestampMillis = System.currentTimeMillis(),
-    copyValue = requiredInputMb.toString()
+    copyValue = requiredInputMb.toString(),
+    calculationVersion = ConversionHistory.CURRENT_CALCULATION_VERSION,
+    measuredGapBytes = measuredGapBytes
 )
 
 /**
@@ -38,5 +40,6 @@ fun SplitResult.toHistory(): ConversionHistory = ConversionHistory(
         partitions.joinToString(", ") { "${it.typeMb} MB" },
     timestampMillis = System.currentTimeMillis(),
     splitCount = partitions.size,
-    copyValue = partitions.joinToString("\n") { it.typeMb.toString() }
+    copyValue = partitions.joinToString("\n") { it.typeMb.toString() },
+    calculationVersion = ConversionHistory.CURRENT_CALCULATION_VERSION
 )

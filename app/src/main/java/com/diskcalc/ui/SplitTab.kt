@@ -10,8 +10,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.ContentCopy
+import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Layers
 import androidx.compose.material.icons.rounded.Storage
 import androidx.compose.material3.MaterialTheme
@@ -23,6 +23,7 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import com.diskcalc.domain.FileSystemType
 import com.diskcalc.domain.PartitionConstants
+import com.diskcalc.domain.WindowsSetupProfile
 import com.diskcalc.ui.components.GlassButton
 import com.diskcalc.ui.components.GlassPanel
 import com.diskcalc.ui.components.GlassSegmentedControl
@@ -31,6 +32,7 @@ import com.diskcalc.ui.components.GlassTextField
 import com.diskcalc.ui.components.GlassToggleRow
 import com.diskcalc.ui.components.InfoBanner
 import com.diskcalc.ui.components.KeyValueRow
+import com.diskcalc.ui.components.SetupProfileFields
 import com.diskcalc.ui.components.WarningList
 import com.diskcalc.ui.theme.LocalGlassTokens
 import com.diskcalc.ui.theme.LocalLiquidPalette
@@ -42,10 +44,13 @@ import com.diskcalc.ui.theme.LocalLiquidPalette
 @Composable
 fun SplitTab(
     state: SplitUiState,
+    reserve: CalcUiState,
     onTotalMbChange: (String) -> Unit,
     onPartitionCountChange: (Int) -> Unit,
     onFilesystemChange: (FileSystemType) -> Unit,
     onSetupToggle: (Boolean) -> Unit,
+    onProfileChange: (WindowsSetupProfile) -> Unit,
+    onCustomOverheadChange: (String) -> Unit,
     onSplit: () -> Unit,
     onCopied: () -> Unit,
     modifier: Modifier = Modifier
@@ -62,22 +67,27 @@ fun SplitTab(
     ) {
         // ----------------------------------------------------------- input panel
         GlassPanel(
-            title = "Disk to split",
-            subtitle = "The whole disk's capacity in MB — not the size of one partition",
+            title = "Unallocated space to split",
+            subtitle = "One contiguous unallocated region, in whole MB",
             icon = Icons.Rounded.Storage
         ) {
             GlassTextField(
                 value = state.totalMbText,
                 onValueChange = onTotalMbChange,
-                label = "Total disk size",
-                placeholder = "Full disk size",
+                label = "Available unallocated space",
+                placeholder = "e.g. 476923",
                 suffix = "MB",
                 keyboardType = com.diskcalc.ui.components.NumericKeyboard,
                 isError = state.error != null,
                 supportingText = state.error,
-                hint = "Find it in Windows Setup: select the disk → New. Copy the MB value the Size box shows — " +
-                    "not the GB printed on the drive.",
+                hint = "In Setup, select the target Unallocated Space → New and read Size before applying. " +
+                    "It may be only part of the disk. Use digits only, without separators.",
                 onImeAction = onSplit
+            )
+            Spacer(Modifier.height(tokens.spaceSm))
+            InfoBanner(
+                text = "Back up your data and verify the disk and unallocated region before making changes.",
+                icon = Icons.Rounded.Info
             )
 
             Spacer(Modifier.height(tokens.spaceLg))
@@ -116,19 +126,34 @@ fun SplitTab(
                 modifier = Modifier.fillMaxWidth()
             )
 
+            Spacer(Modifier.height(tokens.spaceSm))
+            Text(
+                text = "Selection changes warnings only; it does not format the disk. The Windows OS partition needs NTFS.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = palette.contentTertiary
+            )
+
             Spacer(Modifier.height(tokens.spaceLg))
             GlassToggleRow(
-                title = "Simulate Windows Setup",
-                description = "Subtract the system partitions from the total before splitting",
+                title = "Reserve future system space",
+                description = "Subtract only space for system partitions still to be created in this region. Existing partitions are already excluded.",
                 checked = state.simulateWindowsSetup,
                 onCheckedChange = onSetupToggle
-            )
+            ) {
+                SetupProfileFields(
+                    profile = reserve.setupProfile,
+                    customOverheadText = reserve.customOverheadText,
+                    overheadError = reserve.overheadError,
+                    onProfileChange = onProfileChange,
+                    onCustomOverheadChange = onCustomOverheadChange
+                )
+            }
 
             Spacer(Modifier.height(tokens.spaceXl))
             GlassButton(
                 text = "Split disk",
                 icon = Icons.Rounded.Layers,
-                enabled = state.totalMbText.isNotBlank() && state.error == null,
+                enabled = state.canSplit(reserve),
                 onClick = onSplit
             )
         }
@@ -141,7 +166,7 @@ fun SplitTab(
 
             GlassPanel(
                 title = "Partition table",
-                subtitle = "Newest calculation",
+                subtitle = "Proposed sizes — check Setup after each partition",
                 icon = Icons.Rounded.Layers,
                 trailing = {
                     GlassButton(
@@ -161,17 +186,16 @@ fun SplitTab(
                     val note = if (isLast && remainderMb > 0) " · includes +$remainderMb MB remainder" else ""
                     KeyValueRow(
                         label = "Partition ${partition.index}",
-                        value = "${partition.typeMb} MB  ·  visible ≈ " +
-                            "${ResultText.mbToGb(partition.expectedVisibleMb)} GB$note"
+                        value = "${partition.typeMb} MB  ·  ${ResultText.mbToGb(partition.typeMb)} GiB input$note"
                     )
                 }
                 Spacer(Modifier.height(tokens.spaceXs))
-                KeyValueRow("Total", "${result.totalMb} MB")
-                KeyValueRow("Usable after Setup", "${result.usableMb} MB")
+                KeyValueRow("Selected unallocated space", "${result.totalMb} MB")
+                KeyValueRow("Planned partition budget", "${result.usableMb} MB")
                 Spacer(Modifier.height(tokens.spaceXs))
                 InfoBanner(
-                    text = "Σ partitions = ${result.sumOfTypeMb} MB ✓ equals usable (${result.usableMb} MB)",
-                    icon = Icons.Rounded.CheckCircle
+                    text = "Proposed sizes sum to ${result.sumOfTypeMb} MB. GiB values only convert the inputs; formatted capacity is unknown. Check remaining space in Setup each time.",
+                    icon = Icons.Rounded.Info
                 )
                 Spacer(Modifier.height(tokens.spaceSm))
                 WarningList(result.warnings)

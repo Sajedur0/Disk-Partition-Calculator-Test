@@ -46,7 +46,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.diskcalc.domain.ConversionHistory
-import com.diskcalc.domain.PartitionConstants
 import com.diskcalc.ui.components.GlassButton
 import com.diskcalc.ui.components.GlassDivider
 import com.diskcalc.ui.components.GlassIconButton
@@ -200,8 +199,8 @@ fun HistorySheet(
 
 /**
  * A history row reads like the result it came from: the size people understand (GB) is the
- * headline, the exact MB to type stays visible underneath, and Split rows can expand to a
- * per-partition table. Copy still writes the digits-only MB payload.
+ * headline, the saved MB stays visible underneath, and Split rows can expand to a
+ * per-partition table. Old calculations are marked for recalculation.
  */
 @Composable
 private fun HistoryRow(
@@ -215,6 +214,7 @@ private fun HistoryRow(
     var expanded by remember { mutableStateOf(false) }
 
     val isCalc = entry.mode == ConversionHistory.Mode.CALC
+    val needsRecalculation = entry.calculationVersion != ConversionHistory.CURRENT_CALCULATION_VERSION
     // Split rows store every "type this" size joined by newlines; reuse it for the detail list.
     val sizesMb: List<Int> = remember(entry.copyValue, isCalc) {
         if (isCalc) emptyList()
@@ -222,13 +222,8 @@ private fun HistoryRow(
     }
     val count = entry.splitCount ?: sizesMb.size.coerceAtLeast(1)
     val perPartitionMb = sizesMb.firstOrNull() ?: entry.primaryResultMb
-    val visibleMb = { mb: Int ->
-        ResultText.mbToGb((mb - PartitionConstants.OVERHEAD_MB_PER_PARTITION).coerceAtLeast(0))
-    }
-    val perPartitionGb = visibleMb(perPartitionMb)
-    val diskGb = ResultText.mbToGb(
-        entry.inputValue.toLong().coerceIn(0L, Int.MAX_VALUE.toLong()).toInt()
-    )
+    val perPartitionGb = ResultText.mbToGb(perPartitionMb)
+    val savedInputMb = entry.inputValue.toLong()
     val wantedGb = ResultText.trim(entry.inputValue)
 
     Row(
@@ -277,7 +272,7 @@ private fun HistoryRow(
                             fontWeight = FontWeight.SemiBold
                         )
                     ) {
-                        append(if (isCalc) "$wantedGb GB" else "$count × $perPartitionGb GB")
+                        append(if (isCalc) "$wantedGb GB target" else "$count × ≈ $perPartitionGb GiB input")
                     }
                     if (isCalc) {
                         withStyle(SpanStyle(color = palette.contentSecondary)) { append("  →  ") }
@@ -296,13 +291,29 @@ private fun HistoryRow(
             )
             Text(
                 text = if (isCalc) {
-                    "${entry.filesystem.label} · type this in Windows Setup"
+                    val measuredGap = entry.measuredGapBytes
+                    val method = when {
+                        needsRecalculation -> "saved suggestion"
+                        measuredGap != null -> "sample gap ${ResultText.bytes(measuredGap)} bytes + 4 MB buffer"
+                        else -> "unverified +4 MB buffer"
+                    }
+                    val sizeKind = if (needsRecalculation) "saved size" else "new volume total"
+                    "${entry.filesystem.label} · $sizeKind · $method · verify in Windows"
                 } else {
-                    "disk $diskGb GB · $perPartitionMb MB each · ${entry.filesystem.label}"
+                    val inputLabel = if (needsRecalculation) "saved input" else "unallocated"
+                    "$inputLabel $savedInputMb MB · first $perPartitionMb MB · ${entry.filesystem.label}"
                 },
                 style = MaterialTheme.typography.bodyMedium,
                 color = palette.contentSecondary
             )
+            if (needsRecalculation) {
+                Text(
+                    text = "Saved by a different calculation version — recalculate before use.",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = palette.warningContent,
+                    modifier = Modifier.padding(top = tokens.spaceXs)
+                )
+            }
 
             if (!isCalc) {
                 Spacer(Modifier.height(tokens.spaceXs))
@@ -337,7 +348,7 @@ private fun HistoryRow(
                                     color = palette.contentSecondary
                                 )
                                 Text(
-                                    text = "$mb MB  ≈  ${visibleMb(mb)} GB",
+                                    text = "$mb MB  ≈  ${ResultText.mbToGb(mb)} GiB input",
                                     style = NumericMedium.copy(fontSize = 12.sp, lineHeight = 16.sp),
                                     color = palette.contentPrimary
                                 )

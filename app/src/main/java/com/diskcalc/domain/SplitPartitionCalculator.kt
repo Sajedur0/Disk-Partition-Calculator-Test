@@ -1,18 +1,9 @@
 package com.diskcalc.domain
 
 /**
- * Splits a disk into N equally sized partitions using integer arithmetic only —
- * Windows Setup cannot accept fractional MB values (`docs/01_PRD.md §4`).
- *
- * Rules:
- * 1. The total is an integer number of MB ([Long]).
- * 2. With the Windows Setup simulation on, `usable = total - setupOverhead`, otherwise `total`.
- * 3. `base = usable / n` (floor) and `remainder = usable - base * n`.
- * 4. Every partition gets `base`, the **last one** gets `base + remainder`, so
- *    `sum(sizes) == usable` ALWAYS and the disk is never over-committed.
- * 5. `expectedVisibleMb = typeMb - 4`, matching [PartitionCalculator].
- *
- * Warnings are exactly the three rules in `docs/02_AppFlow.md §4` / US-10.
+ * Divides one contiguous unallocated region. A reserve, if requested, is subtracted once for
+ * system partitions that are still to be created in that region. Integer arithmetic ensures the
+ * proposed sizes add up to the planned budget, not that Windows will create them exactly.
  */
 object SplitPartitionCalculator {
 
@@ -26,9 +17,11 @@ object SplitPartitionCalculator {
         require(partitionCount in PartitionConstants.MIN_SPLIT_COUNT..PartitionConstants.MAX_SPLIT_COUNT) {
             "Partition count must be between ${PartitionConstants.MIN_SPLIT_COUNT} and ${PartitionConstants.MAX_SPLIT_COUNT}"
         }
-        require(totalMb > 0) { "Enter disk size in MB" }
+        require(totalMb > 0) { InputValidator.INVALID_TOTAL_MB_MESSAGE }
         require(totalMb <= PartitionConstants.MAX_TOTAL_MB) { "Maximum is 134217728 MB" }
-        require(setupOverheadMb >= 0) { "Enter overhead in MB" }
+        require(setupOverheadMb in 0..PartitionConstants.MAX_CUSTOM_OVERHEAD_MB) {
+            InputValidator.INVALID_OVERHEAD_MESSAGE
+        }
 
         val appliedOverhead = if (simulateWindowsSetup) setupOverheadMb else 0
         val usableMb = totalMb - appliedOverhead
@@ -40,22 +33,15 @@ object SplitPartitionCalculator {
 
         val partitions = (1..partitionCount).map { index ->
             val typeMb = (if (index == partitionCount) base + remainder else base).toInt()
-            SplitPartition(
-                index = index,
-                typeMb = typeMb,
-                expectedVisibleMb = typeMb - PartitionConstants.OVERHEAD_MB_PER_PARTITION
-            )
+            SplitPartition(index = index, typeMb = typeMb)
         }
 
         val warnings = buildList {
-            if (filesystem == FileSystemType.FAT32) {
-                if (partitions.any { it.typeMb > PartitionConstants.FAT32_MAX_PARTITION_MB }) {
-                    add("Warning: Some partitions exceed the 32 GB limit of the Windows FAT32 format tool.")
-                }
-                add("Note: FAT32 has a ${PartitionConstants.FAT32_MAX_FILE_GB} GB maximum file size limit.")
-            }
+            addAll(PartitionCalculator.filesystemWarnings(partitions.maxOf { it.typeMb }.toLong(), filesystem))
             if (partitionCount > PartitionConstants.MBR_MAX_PRIMARY_PARTITIONS) {
-                add("MBR disks allow only ${PartitionConstants.MBR_MAX_PRIMARY_PARTITIONS} primary partitions (system partitions count too). Use GPT for more.")
+                add("On MBR these cannot all be primary: existing primary and extended partitions use the four table entries. Logical partitions require an extended partition; GPT supports more.")
+            } else {
+                add("On MBR, four table entries allow four primary partitions or three plus one extended. Existing primary and extended partitions, including system/recovery primaries, count.")
             }
         }
 
@@ -68,6 +54,6 @@ object SplitPartitionCalculator {
         )
     }
 
-    /** Convenience for the UI: sums the "type this" values, used to prove the disk is filled. */
+    /** Sum of proposed sizes in the calculation, not a guarantee about the real disk. */
     fun sumOfTypeMb(result: SplitResult): Long = result.partitions.sumOf { it.typeMb.toLong() }
 }

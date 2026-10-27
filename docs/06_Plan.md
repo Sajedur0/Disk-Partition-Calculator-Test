@@ -1,5 +1,7 @@
 # 06 — Implementation Plan (Living Checklist)
 
+> **Historical planning document:** This predates the safety and reserve changes. Its formulas, UI flows, warnings and storage details may be outdated. Use the current in-app Guide, README and source/tests for current behaviour.
+
 > **Rules for the coding agent**
 > 1. Read `docs/01`–`06` before starting any step.
 > 2. Work **top-to-bottom**; never start a step whose dependencies are unchecked.

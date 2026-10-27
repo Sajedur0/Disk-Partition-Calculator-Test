@@ -18,6 +18,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.ContentCopy
+import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Layers
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -58,47 +59,47 @@ fun CalcResultDialog(
     val clipboard = LocalClipboardManager.current
     val palette = LocalLiquidPalette.current
     val tokens = LocalGlassTokens.current
+    val extraMb = ResultText.calcAdditional(result)
 
     GlassDialog(onDismiss = onDismiss, title = "Single partition", icon = Icons.Rounded.CheckCircle) {
         GlassBadge(text = "${result.filesystem.label} · ${Units.VISIBLE_GB} → ${Units.REQUIRED_MB}")
 
         Spacer(Modifier.height(tokens.spaceLg))
         StatTile(
-            label = "Type in Setup",
-            value = result.requiredInputMb.toString(),
+            label = if (extraMb != null) "Existing NTFS: estimated extra" else "New volume: suggested total size",
+            value = extraMb ?: result.requiredInputMb.toString(),
             unit = "MB",
-            caption = "Explorer will show ≈ ${result.expectedVisibleMb} MB " +
-                "(${ResultText.mbToGb(result.expectedVisibleMb)} GB)",
+            caption = if (extraMb != null) {
+                "Estimated space to add, not the new-volume total; conditions apply."
+            } else {
+                "Target total capacity: ${ResultText.trim(result.visibleGb)} binary GB (GiB)"
+            },
             highlight = true,
-            valueContentDescription = "Type ${result.requiredInputMb} megabytes in Windows Setup",
+            valueContentDescription = if (extraMb != null) {
+                "Estimated additional space $extraMb megabytes"
+            } else {
+                "Suggested new partition total ${result.requiredInputMb} megabytes"
+            },
             modifier = Modifier.fillMaxWidth()
         )
 
-        // "Why" line so the number can be verified, not just believed (US-06).
         Spacer(Modifier.height(tokens.spaceMd))
         Text(
-            text = "partition = ${result.partitionSizeMb} MB (+4 MB formatter) · " +
-                "Setup overhead = ${result.setupOverheadMb} MB",
+            text = ResultText.capacityCaution(result),
             style = MaterialTheme.typography.bodyMedium,
             color = palette.contentSecondary
         )
 
         Spacer(Modifier.height(tokens.spaceMd))
-        KeyValueRow("Visible size", "${ResultText.trim(result.visibleGb)} GB")
-        KeyValueRow("Filesystem", result.filesystem.label)
-        KeyValueRow("Partition size", "${ResultText.mbToGb(result.partitionSizeMb)} GB")
-        KeyValueRow(
-            label = "Required input",
-            value = "${result.requiredInputMb} MB",
-            emphasise = true
-        )
-        KeyValueRow(
-            label = "Windows Setup",
-            value = if (result.usesWindowsSetupOverhead) {
-                "Yes (+${result.setupOverheadMb} MB)"
-            } else {
-                "No"
-            }
+        CalcCapacityRows(result)
+        ResultText.targetVolumeAdvice(result)?.let { advice ->
+            Spacer(Modifier.height(tokens.spaceMd))
+            InfoBanner(text = advice, icon = Icons.Rounded.Info)
+        }
+        Spacer(Modifier.height(tokens.spaceMd))
+        InfoBanner(
+            text = "Back up first. For a new volume, enter the suggested TOTAL MB, not an extension amount. The reserve is separate. Setup may create or resize system partitions; verify the actual layout and space.",
+            icon = Icons.Rounded.Info
         )
 
         Spacer(Modifier.height(tokens.spaceMd))
@@ -107,12 +108,24 @@ fun CalcResultDialog(
         WarningList(result.warnings)
 
         Spacer(Modifier.height(tokens.spaceXl))
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        if (extraMb != null) {
             GlassButton(
-                text = "Copy",
+                text = "Copy new total",
                 icon = Icons.Rounded.ContentCopy,
+                primary = false,
                 onClick = {
                     clipboard.setText(AnnotatedString(ResultText.calc(result)))
+                    onCopied()
+                }
+            )
+            Spacer(Modifier.height(tokens.spaceSm))
+        }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            GlassButton(
+                text = if (extraMb != null) "Copy extra MB" else "Copy new total",
+                icon = Icons.Rounded.ContentCopy,
+                onClick = {
+                    clipboard.setText(AnnotatedString(extraMb ?: ResultText.calc(result)))
                     onCopied()
                 },
                 modifier = Modifier.weight(1f)
@@ -128,7 +141,7 @@ fun CalcResultDialog(
     }
 }
 
-/** Result of the Split tab: the per-partition table with the exact values to type. */
+/** Result of the Split tab: proposed per-partition sizes, subject to Setup verification. */
 @Composable
 fun SplitResultDialog(
     result: SplitResult,
@@ -149,13 +162,13 @@ fun SplitResultDialog(
 
         Spacer(Modifier.height(tokens.spaceLg))
         StatTile(
-            label = "Space for partitions",
+            label = "Planned partition budget",
             value = result.usableMb.toString(),
             unit = "MB",
             caption = if (overheadMb > 0) {
-                "${result.totalMb} MB total minus $overheadMb MB Windows Setup overhead"
+                "${result.totalMb} MB selected unallocated space minus $overheadMb MB future system reserve"
             } else {
-                "${result.totalMb} MB total, no Setup overhead"
+                "${result.totalMb} MB selected unallocated space, no future reserve"
             },
             highlight = true,
             modifier = Modifier.fillMaxWidth()
@@ -174,9 +187,8 @@ fun SplitResultDialog(
             SplitTableRow(
                 label = "Partition ${partition.index}",
                 typeText = "${partition.typeMb} MB",
-                // Visible is what Explorer shows — render it in GB so users can picture the
-                // real partition size at a glance. The MB to type stays in the first column.
-                visibleText = "${ResultText.mbToGb(partition.expectedVisibleMb)} GB",
+                // Nominal conversion of the input, not the formatted volume capacity.
+                nominalText = "${ResultText.mbToGb(partition.typeMb)} GiB",
                 note = note,
                 onCopy = {
                     clipboard.setText(AnnotatedString(partition.typeMb.toString()))
@@ -188,8 +200,8 @@ fun SplitResultDialog(
 
         Spacer(Modifier.height(tokens.spaceMd))
         InfoBanner(
-            text = "Σ partitions = ${result.sumOfTypeMb} MB ✓ equals usable (${result.usableMb} MB)",
-            icon = Icons.Rounded.CheckCircle
+            text = "Proposed sizes sum to ${result.sumOfTypeMb} MB. GiB values only convert the inputs, not formatted capacity. Setup may use space differently; verify each size and remaining space before applying.",
+            icon = Icons.Rounded.Info
         )
         Spacer(Modifier.height(tokens.spaceSm))
         KeyValueRow("Filesystem", result.filesystem.label)
@@ -234,14 +246,14 @@ private fun SplitTableHeader() {
             modifier = Modifier.weight(1f)
         )
         Text(
-            text = "Type in Setup",
+            text = "Suggested",
             style = MaterialTheme.typography.labelMedium,
             color = palette.contentTertiary,
             textAlign = TextAlign.End,
             modifier = Modifier.weight(1f)
         )
         Text(
-            text = "Visible ≈",
+            text = "Input GiB ≈",
             style = MaterialTheme.typography.labelMedium,
             color = palette.contentTertiary,
             textAlign = TextAlign.End,
@@ -255,7 +267,7 @@ private fun SplitTableHeader() {
 private fun SplitTableRow(
     label: String,
     typeText: String,
-    visibleText: String,
+    nominalText: String,
     note: String?,
     onCopy: () -> Unit
 ) {
@@ -277,7 +289,7 @@ private fun SplitTableRow(
                 modifier = Modifier.weight(1f)
             )
             Text(
-                text = visibleText,
+                text = nominalText,
                 style = MaterialTheme.typography.bodyMedium,
                 color = palette.contentSecondary,
                 textAlign = TextAlign.End,
