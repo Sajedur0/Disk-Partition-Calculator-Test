@@ -1,24 +1,77 @@
-*.iml
-.gradle
-/local.properties
-/.idea
-.DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
-local.properties
-/app/build
-/app/release
+# ------------------------------------------------------------------
+# Android / Gradle build output
+# ------------------------------------------------------------------
 *.apk
 *.aab
+*.ap_
+*.dex
+*.class
+*.hprof
+output-metadata.json
+mapping/release/
+
+.gradle/
+build/
+captures/
+.externalNativeBuild/
+.cxx/
+.kotlin/
+
+# APK/AAB output folders produced by convention
+release/
+
+# ------------------------------------------------------------------
+# Local configuration & secrets (never commit)
+# ------------------------------------------------------------------
+local.properties
+keystore.properties
+
 *.keystore
 *.jks
+# keep the well-known public debug key if one is ever added
 !debug.keystore
-keystore.properties
-/signkey
-.kotlin
 
-# python helper cache
+# Release signing material
+/signkey/
+
+# ------------------------------------------------------------------
+# IDE / editor
+# ------------------------------------------------------------------
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+.vscode/
+.fleet/
+.vs/
+*.suo
+*.user
+
+# ------------------------------------------------------------------
+# OS noise
+# ------------------------------------------------------------------
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# ------------------------------------------------------------------
+# Logs & temp
+# ------------------------------------------------------------------
+*.log
+*.tmp
+*.swp
+*.orig
+*.rej
+*~
+
+# ------------------------------------------------------------------
+# Python helper cache
+# ------------------------------------------------------------------
 __pycache__/
 *.pyc
