@@ -16,9 +16,13 @@ captures/
 .externalNativeBuild/
 .cxx/
 .kotlin/
+.gradletasknamecache
 
-# APK/AAB output folders produced by convention
-release/
+# APK/AAB output folders produced by convention.
+# Anchored to the repo root so Gradle variant source sets such as
+# app/src/release/ are still tracked.
+/release/
+app/release/
 
 # ------------------------------------------------------------------
 # Local configuration & secrets (never commit)
@@ -26,8 +30,17 @@ release/
 local.properties
 keystore.properties
 
+# Environment files may hold API keys or signing paths
+.env
+.env.*
+
 *.keystore
 *.jks
+*.p12
+*.pfx
+*.pem
+*.cer
+*.crt
 # keep the well-known public debug key if one is ever added
 !debug.keystore
 
@@ -56,16 +69,23 @@ out/
 ._*
 .Spotlight-V100
 .Trashes
+.Trash-*
+.fuse_hidden*
 Thumbs.db
 ehthumbs.db
 Desktop.ini
+$RECYCLE.BIN/
+*.stackdump
 
 # ------------------------------------------------------------------
 # Logs & temp
 # ------------------------------------------------------------------
 *.log
 *.tmp
+*.bak
 *.swp
+*.swo
+*.pid
 *.orig
 *.rej
 *~
@@ -75,3 +95,9 @@ Desktop.ini
 # ------------------------------------------------------------------
 __pycache__/
 *.pyc
+*.pyo
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
