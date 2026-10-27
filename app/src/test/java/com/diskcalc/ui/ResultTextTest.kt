@@ -3,6 +3,7 @@ package com.diskcalc.ui
 import com.diskcalc.domain.CapacitySample
 import com.diskcalc.domain.FileSystemType
 import com.diskcalc.domain.PartitionCalculator
+import com.diskcalc.domain.SplitPartitionCalculator
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -23,6 +24,14 @@ class ResultTextTest {
         assertEquals("50.00", ResultText.mbToGb(51200))
         assertNull(ResultText.targetVolumeAdvice(measured))
         assertNull(ResultText.calcAdditional(measured))
+    }
+
+    @Test
+    fun `split clipboard copies final sizes with the automatic buffer exactly once`() {
+        val split = SplitPartitionCalculator.split(102408, 2, FileSystemType.NTFS)
+        assertEquals("51204\n51204", ResultText.split(split))
+        assertTrue(ResultText.capacityCaution(PartitionCalculator.calculate(50.0, FileSystemType.NTFS))
+            .contains("already included"))
     }
 
     @Test

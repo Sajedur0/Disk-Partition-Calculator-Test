@@ -23,6 +23,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Calculate
 import androidx.compose.material.icons.rounded.Dashboard
 import androidx.compose.material.icons.rounded.History
+import androidx.compose.material.icons.rounded.MenuBook
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarDuration
@@ -52,7 +53,7 @@ import com.diskcalc.ui.theme.LocalLiquidPalette
 import kotlinx.coroutines.launch
 
 /**
- * Host of the three tabs. Owns the theme, solid backdrop and dialogs.
+ * Host of Calc, Split, Guide and Settings. Owns the theme, solid backdrop and dialogs.
  * All business state lives in [CalculatorViewModel]. Theme switching is animated inside
  * [DiskCalcTheme] (300 ms token crossfade) rather than by swapping the whole content tree.
  */
@@ -74,9 +75,10 @@ fun CalculatorScreen(
 
     val tabs = remember {
         listOf(
-            GlassTabItem(title = "Calc", icon = Icons.Rounded.Calculate),
-            GlassTabItem(title = "Split", icon = Icons.Rounded.Dashboard),
-            GlassTabItem(title = "Settings", icon = Icons.Rounded.Settings)
+            GlassTabItem(title = AppTab.CALC.title, icon = Icons.Rounded.Calculate),
+            GlassTabItem(title = AppTab.SPLIT.title, icon = Icons.Rounded.Dashboard),
+            GlassTabItem(title = AppTab.GUIDE.title, icon = Icons.Rounded.MenuBook),
+            GlassTabItem(title = AppTab.SETTINGS.title, icon = Icons.Rounded.Settings)
         )
     }
 
@@ -117,10 +119,9 @@ fun CalculatorScreen(
                         ) {
                             when (infoPage) {
                                 "privacy" -> PrivacyPolicyPage(onBack = { infoPage = null })
-                                "guide" -> GuidePage(onBack = { infoPage = null })
                                 "about" -> AboutPage(onBack = { infoPage = null })
                                 null -> when (selectedTabIndex) {
-                                    0 -> CalcTab(
+                                    AppTab.CALC.ordinal -> CalcTab(
                                         state = calc,
                                         onVisibleGbChange = viewModel::onVisibleGbChange,
                                         onPresetSelected = viewModel::applyPreset,
@@ -138,7 +139,7 @@ fun CalculatorScreen(
                                         }
                                     )
 
-                                    1 -> SplitTab(
+                                    AppTab.SPLIT.ordinal -> SplitTab(
                                         state = split,
                                         reserve = calc,
                                         onTotalMbChange = viewModel::onTotalMbChange,
@@ -153,6 +154,8 @@ fun CalculatorScreen(
                                         }
                                     )
 
+                                    AppTab.GUIDE.ordinal -> GuideTab()
+
                                     else -> SettingsTab(
                                         settings = settings,
                                         historySize = history.size,
@@ -163,7 +166,7 @@ fun CalculatorScreen(
                                         onClearHistory = viewModel::onClearHistory,
                                         onShowHistory = { showHistory = true },
                                         onOpenPrivacyPolicy = { infoPage = "privacy" },
-                                        onOpenGuide = { infoPage = "guide" },
+                                        onOpenGuide = { selectedTabIndex = AppTab.GUIDE.ordinal },
                                         onOpenAbout = { infoPage = "about" }
                                     )
                                 }

@@ -109,6 +109,12 @@ fun CalcTab(
                 onImeAction = onCalculate
             )
 
+            Spacer(Modifier.height(tokens.spaceSm))
+            InfoBanner(
+                text = "+${PartitionConstants.DISPLAY_SAFETY_BUFFER_MB} MB is added automatically to the suggested size; do not add it again.",
+                icon = Icons.Rounded.Info
+            )
+
             Spacer(Modifier.height(tokens.spaceLg))
             Text(
                 text = "Filesystem",
@@ -254,7 +260,7 @@ internal fun CalcCapacityRows(result: PartitionCalculationResult) {
     KeyValueRow("Target capacity", "${ResultText.bytes(result.targetCapacityBytes)} bytes")
     KeyValueRow("Baseline input", "${result.baselineMb} MB")
     KeyValueRow("New volume input", "${result.requiredInputMb} MB", emphasise = true)
-    KeyValueRow("App safety buffer", "+${PartitionConstants.DISPLAY_SAFETY_BUFFER_MB} MB")
+    KeyValueRow("Automatic addition", "+${PartitionConstants.DISPLAY_SAFETY_BUFFER_MB} MB")
     result.measuredGapBytes?.let { measuredGap ->
         KeyValueRow("Measured gap", "${ResultText.bytes(measuredGap)} bytes")
         result.estimatedCapacityBytes?.let {

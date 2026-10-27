@@ -34,6 +34,12 @@ class CalculatorViewModelTest {
     fun tearDown() = scope.cancel()
 
     @Test
+    fun `guide has a dedicated tab between Split and Settings`() {
+        assertEquals(listOf("Calc", "Split", "Guide", "Settings"), AppTab.entries.map { it.title })
+        assertEquals(2, AppTab.GUIDE.ordinal)
+    }
+
+    @Test
     fun `pasted invalid values are visible and cannot be calculated`() {
         model.onVisibleGbChange("-100")
         assertEquals("-100", model.calc.value.visibleGbText)
@@ -125,6 +131,24 @@ class CalculatorViewModelTest {
         assertFalse(model.split.value.simulateWindowsSetup)
         model.split()
         assertEquals(1000L, model.split.value.result!!.usableMb)
+    }
+
+    @Test
+    fun `split includes four MB once per partition and saves typed values`() {
+        model.onTotalMbChange("102408")
+        model.onPartitionCountChange(2)
+        model.split()
+        val result = model.split.value.result!!
+        assertEquals(listOf(51200, 51200), result.partitions.map { it.baseMb })
+        assertEquals(listOf(51204, 51204), result.partitions.map { it.typeMb })
+        assertEquals(8L, result.totalBufferMb)
+        assertEquals(102408L, result.sumOfTypeMb)
+        assertEquals("51204\n51204", model.history.value.first().copyValue)
+        assertTrue(model.history.value.first().summary.contains("+4 MB each included"))
+
+        model.onTotalMbChange("9")
+        assertEquals("Too small for 2 partitions including +4 MB each", model.split.value.error)
+        assertFalse(model.split.value.canSplit(model.calc.value))
     }
 
     @Test

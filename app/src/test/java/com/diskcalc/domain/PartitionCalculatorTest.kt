@@ -50,6 +50,20 @@ class PartitionCalculatorTest {
     }
 
     @Test
+    fun `every uncalibrated Calc partition gets four MB automatically`() {
+        val targets = listOf(0.01, 1.0, 2.5, 50.0, 100.0, 1024.0, 65536.0)
+        for (filesystem in FileSystemType.entries) {
+            for (target in targets) {
+                val result = PartitionCalculator.calculate(target, filesystem)
+                val withReserve = PartitionCalculator.calculate(target, filesystem, true, 566)
+                assertEquals(4, result.requiredInputMb - result.baselineMb)
+                assertEquals(result.requiredInputMb, withReserve.requiredInputMb)
+                assertEquals(result.requiredInputMb.toLong() + 566, withReserve.estimatedTotalMb)
+            }
+        }
+    }
+
+    @Test
     fun `50 binary GB separates target baseline fallback and sampled model`() {
         val uncalibrated = PartitionCalculator.calculate(50.0, FileSystemType.NTFS)
         assertEquals(53_687_091_200L, uncalibrated.targetCapacityBytes)
@@ -229,12 +243,39 @@ class PartitionCalculatorTest {
     @Test
     fun `split examples subtract only requested future reserve`() {
         val noReserve = SplitPartitionCalculator.split(476923, 4, FileSystemType.NTFS)
+        assertEquals(listOf(119226, 119226, 119226, 119229), noReserve.partitions.map { it.baseMb })
         assertEquals(listOf(119230, 119230, 119230, 119233), noReserve.partitions.map { it.typeMb })
+        assertEquals(16L, noReserve.totalBufferMb)
+        assertEquals(476907L, noReserve.baseBudgetMb)
+        assertEquals(3L, noReserve.remainderMb)
         assertEquals(476923L, noReserve.usableMb)
+        assertEquals(noReserve.usableMb, noReserve.sumOfTypeMb)
+
         val reserve = SplitPartitionCalculator.split(476923, 4, FileSystemType.NTFS, true, 566)
+        assertEquals(listOf(119085, 119085, 119085, 119086), reserve.partitions.map { it.baseMb })
         assertEquals(listOf(119089, 119089, 119089, 119090), reserve.partitions.map { it.typeMb })
+        assertEquals(16L, reserve.totalBufferMb)
+        assertEquals(476341L, reserve.baseBudgetMb)
+        assertEquals(1L, reserve.remainderMb)
         assertEquals(476357L, reserve.usableMb)
+        assertEquals(reserve.usableMb, reserve.sumOfTypeMb)
         assertEquals(566L, reserve.totalMb - reserve.usableMb)
+    }
+
+    @Test
+    fun `two 50 GB nominal shares require room for both automatic buffers`() {
+        for (filesystem in FileSystemType.entries) {
+            val enough = SplitPartitionCalculator.split(102408, 2, filesystem)
+            assertEquals(listOf(51200, 51200), enough.partitions.map { it.baseMb })
+            assertEquals(listOf(51204, 51204), enough.partitions.map { it.typeMb })
+            assertEquals(8L, enough.totalBufferMb)
+            assertEquals(102408L, enough.sumOfTypeMb)
+
+            val fixedRegion = SplitPartitionCalculator.split(102400, 2, filesystem)
+            assertEquals(listOf(51196, 51196), fixedRegion.partitions.map { it.baseMb })
+            assertEquals(listOf(51200, 51200), fixedRegion.partitions.map { it.typeMb })
+            assertEquals(102400L, fixedRegion.sumOfTypeMb)
+        }
     }
 
     @Test
@@ -248,10 +289,18 @@ class PartitionCalculatorTest {
             assertEquals(budget, result.usableMb)
             assertEquals(budget, result.sumOfTypeMb)
             assertEquals(n, result.partitions.size)
-            val base = (budget / n).toInt()
-            val remainder = (budget % n).toInt()
-            assertTrue(result.partitions.dropLast(1).all { it.typeMb == base })
-            assertEquals(base + remainder, result.partitions.last().typeMb)
+            val buffer = PartitionConstants.DISPLAY_SAFETY_BUFFER_MB
+            val baseBudget = budget - buffer * n
+            val base = (baseBudget / n).toInt()
+            val remainder = (baseBudget % n).toInt()
+            assertEquals(buffer.toLong() * n, result.totalBufferMb)
+            assertEquals(baseBudget, result.baseBudgetMb)
+            assertEquals(remainder.toLong(), result.remainderMb)
+            assertTrue(result.partitions.all { it.baseMb >= 1 && it.typeMb == it.baseMb + buffer })
+            assertTrue(result.partitions.dropLast(1).all { it.baseMb == base })
+            assertEquals(base + remainder, result.partitions.last().baseMb)
+            assertEquals(base + remainder + buffer, result.partitions.last().typeMb)
+            assertEquals(budget, result.partitions.sumOf { it.baseMb.toLong() } + result.totalBufferMb)
         }
     }
 
@@ -265,7 +314,14 @@ class PartitionCalculatorTest {
         assertThrows(IllegalArgumentException::class.java) { SplitPartitionCalculator.split(9, 2, FileSystemType.NTFS) }
         assertThrows(IllegalArgumentException::class.java) { SplitPartitionCalculator.split(100, 1, FileSystemType.NTFS, true, -1) }
         assertThrows(IllegalArgumentException::class.java) { SplitPartitionCalculator.split(100001, 1, FileSystemType.NTFS, true, 100001) }
-        assertEquals(listOf(5, 5), SplitPartitionCalculator.split(10, 2, FileSystemType.NTFS).partitions.map { it.typeMb })
+        val minimum = SplitPartitionCalculator.split(10, 2, FileSystemType.NTFS)
+        assertEquals(listOf(1, 1), minimum.partitions.map { it.baseMb })
+        assertEquals(listOf(5, 5), minimum.partitions.map { it.typeMb })
+        assertEquals(8L, minimum.totalBufferMb)
+        assertEquals(10L, minimum.sumOfTypeMb)
+        val largest = SplitPartitionCalculator.split(PartitionConstants.MAX_TOTAL_MB, 8, FileSystemType.NTFS)
+        assertEquals(32L, largest.totalBufferMb)
+        assertEquals(PartitionConstants.MAX_TOTAL_MB, largest.sumOfTypeMb)
     }
 
     @Test
@@ -280,5 +336,7 @@ class PartitionCalculatorTest {
             val warnings = SplitPartitionCalculator.split(10000, n, FileSystemType.NTFS).warnings
             assertTrue(warnings.any { it.contains("MBR") && it.contains("existing", ignoreCase = true) })
         }
+        val fatSplit = SplitPartitionCalculator.split(10000, 2, FileSystemType.FAT32)
+        assertTrue(fatSplit.warnings.any { it.contains("buffer may be too small for FAT32") })
     }
 }

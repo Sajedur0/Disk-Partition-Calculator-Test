@@ -34,7 +34,7 @@ object ResultText {
 
     fun capacityCaution(result: PartitionCalculationResult): String =
         if (result.measuredGapBytes == null) {
-            "The +${PartitionConstants.DISPLAY_SAFETY_BUFFER_MB} MB buffer aims to avoid a lower display, but is an app assumption, not a Microsoft rule. Verify actual total capacity, not free space, in Explorer Properties."
+            "The automatic +${PartitionConstants.DISPLAY_SAFETY_BUFFER_MB} MB is already included. It is an app estimate, not a Microsoft rule; Explorer's displayed capacity can differ. Check Properties → Capacity, not free space."
         } else {
             "* The new-volume model uses the measured gap plus a ${PartitionConstants.DISPLAY_SAFETY_BUFFER_MB} MB app buffer. It assumes Windows accepts the input and the gap repeats; verify actual total capacity. Explorer may round differently."
         }

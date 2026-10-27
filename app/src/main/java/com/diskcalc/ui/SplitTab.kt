@@ -86,7 +86,7 @@ fun SplitTab(
             )
             Spacer(Modifier.height(tokens.spaceSm))
             InfoBanner(
-                text = "Back up your data and verify the disk and unallocated region before making changes.",
+                text = "+${PartitionConstants.DISPLAY_SAFETY_BUFFER_MB} MB per partition is included automatically within this space. Back up and verify the disk before making changes.",
                 icon = Icons.Rounded.Info
             )
 
@@ -161,8 +161,7 @@ fun SplitTab(
         // ------------------------------------------------------ inline last result
         state.result?.let { result ->
             val count = result.partitions.size
-            val baseMb = result.partitions.first().typeMb.toLong()
-            val remainderMb = result.usableMb - baseMb * count
+            val remainderMb = result.remainderMb
 
             GlassPanel(
                 title = "Partition table",
@@ -183,18 +182,22 @@ fun SplitTab(
             ) {
                 result.partitions.forEach { partition ->
                     val isLast = partition.index == count
-                    val note = if (isLast && remainderMb > 0) " · includes +$remainderMb MB remainder" else ""
-                    KeyValueRow(
-                        label = "Partition ${partition.index}",
-                        value = "${partition.typeMb} MB  ·  ${ResultText.mbToGb(partition.typeMb)} GiB input$note"
+                    val remainder = if (isLast && remainderMb > 0) " · includes $remainderMb MB remainder" else ""
+                    KeyValueRow(label = "Partition ${partition.index}", value = "${partition.typeMb} MB")
+                    Text(
+                        text = "${partition.baseMb} MB + ${PartitionConstants.DISPLAY_SAFETY_BUFFER_MB} MB buffer$remainder",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = palette.contentTertiary
                     )
                 }
                 Spacer(Modifier.height(tokens.spaceXs))
                 KeyValueRow("Selected unallocated space", "${result.totalMb} MB")
-                KeyValueRow("Planned partition budget", "${result.usableMb} MB")
+                KeyValueRow("Partition budget", "${result.usableMb} MB")
+                KeyValueRow("Base sizes total", "${result.baseBudgetMb} MB")
+                KeyValueRow("+${PartitionConstants.DISPLAY_SAFETY_BUFFER_MB} MB × $count", "${result.totalBufferMb} MB")
                 Spacer(Modifier.height(tokens.spaceXs))
                 InfoBanner(
-                    text = "Proposed sizes sum to ${result.sumOfTypeMb} MB. GiB values only convert the inputs; formatted capacity is unknown. Check remaining space in Setup each time.",
+                    text = "The ${result.sumOfTypeMb} MB total already includes the buffer. It is an estimate, not a guarantee of Explorer's display. Check remaining space in Setup each time.",
                     icon = Icons.Rounded.Info
                 )
                 Spacer(Modifier.height(tokens.spaceSm))

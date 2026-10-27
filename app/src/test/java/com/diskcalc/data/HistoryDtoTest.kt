@@ -61,6 +61,21 @@ class HistoryDtoTest {
     }
 
     @Test
+    fun `version four Split history remains readable and is marked for recalculation`() {
+        val raw = """
+            {"version":3,"entries":[{
+                "id":"v4","mode":"SPLIT","inputValue":102408.0,"fromUnit":"Total MB","toUnit":"Per Partition MB",
+                "primaryResultMb":51204,"summary":"2 partitions","filesystem":"NTFS","timestampMillis":123,
+                "splitCount":2,"copyValue":"51204\n51204","calculationVersion":4
+            }]}
+        """.trimIndent()
+        val entry = json.decodeFromString(HistoryFileDto.serializer(), raw).entries.single().toDomain()
+        assertEquals(4, entry.calculationVersion)
+        assertTrue(entry.calculationVersion != ConversionHistory.CURRENT_CALCULATION_VERSION)
+        assertEquals("51204\n51204", entry.copyValue)
+    }
+
+    @Test
     fun `new Calc and Split entries round trip with current calculation version`() {
         val calc = PartitionCalculator.calculate(50.0, FileSystemType.NTFS, true, 566, CapacitySample(53691285504L, 53691281408L, true)).toHistory()
         val uncalibrated = PartitionCalculator.calculate(100.0, FileSystemType.NTFS).toHistory()
@@ -68,7 +83,7 @@ class HistoryDtoTest {
         val split = SplitPartitionCalculator.split(476923, 4, FileSystemType.NTFS).toHistory()
         val file = HistoryFileDto(entries = listOf(calc.toDto(), uncalibrated.toDto(), zeroGap.toDto(), split.toDto()))
         val raw = json.encodeToString(HistoryFileDto.serializer(), file)
-        assertTrue(raw.contains("\"calculationVersion\":4"))
+        assertTrue(raw.contains("\"calculationVersion\":5"))
         assertTrue(raw.contains("\"measuredGapBytes\":4096"))
         assertTrue(!raw.contains("53691285504") && !raw.contains("53691281408"))
         assertTrue(!raw.contains("isTargetVolume"))

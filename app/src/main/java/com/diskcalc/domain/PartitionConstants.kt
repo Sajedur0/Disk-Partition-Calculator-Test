@@ -8,7 +8,7 @@ object PartitionConstants {
     const val BYTES_PER_MB = 1024L * 1024L
     const val BYTES_PER_GB = MB_PER_GB * BYTES_PER_MB
 
-    /** App-selected safety buffer; not a Microsoft-mandated filesystem overhead. */
+    /** Automatically included once per planned partition; not a Microsoft-mandated overhead. */
     const val DISPLAY_SAFETY_BUFFER_MB = 4
 
     /** No space reserved for future system partitions. */
@@ -52,6 +52,6 @@ object PartitionConstants {
     /** Custom Setup overhead: "Maximum is 100000 MB". */
     const val MAX_CUSTOM_OVERHEAD_MB = 100_000
 
-    /** Split: reject when `usable / n` is smaller than this. */
+    /** Split: minimum suggested input, including the 4 MB buffer (leaves at least 1 MB base). */
     const val MIN_PARTITION_MB = 5L
 }

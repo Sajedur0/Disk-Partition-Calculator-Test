@@ -86,7 +86,7 @@ object InputValidator {
         }
     }
 
-    /** The planned reserve must fit, and every calculated slice needs at least 5 MB. */
+    /** The reserve and the automatic 4 MB buffer per partition must fit in the region. */
     fun validateSplit(totalMb: Long, partitionCount: Int, overheadMb: Int): String? {
         parsePartitionCount(partitionCount).error?.let { return it }
         if (overheadMb < 0) return INVALID_OVERHEAD_MESSAGE
@@ -94,7 +94,7 @@ object InputValidator {
         return when {
             usableMb <= 0 -> "Unallocated space is smaller than the reserve ($overheadMb MB)"
             usableMb / partitionCount < PartitionConstants.MIN_PARTITION_MB ->
-                "Too small to split into $partitionCount partitions"
+                "Too small for $partitionCount partitions including +${PartitionConstants.DISPLAY_SAFETY_BUFFER_MB} MB each"
             else -> null
         }
     }

@@ -73,7 +73,7 @@ class InputValidatorTest {
         assertEquals("Partition count must be between 1 and 8", InputValidator.validateSplit(100, 0, 0))
         assertEquals(InputValidator.INVALID_OVERHEAD_MESSAGE, InputValidator.validateSplit(100, 1, -1))
         assertEquals("Unallocated space is smaller than the reserve (100 MB)", InputValidator.validateSplit(100, 1, 100))
-        assertEquals("Too small to split into 2 partitions", InputValidator.validateSplit(9, 2, 0))
+        assertEquals("Too small for 2 partitions including +4 MB each", InputValidator.validateSplit(9, 2, 0))
         assertNull(InputValidator.validateSplit(10, 2, 0))
     }
 }

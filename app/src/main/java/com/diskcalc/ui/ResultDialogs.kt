@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.diskcalc.domain.PartitionCalculationResult
+import com.diskcalc.domain.PartitionConstants
 import com.diskcalc.domain.SplitResult
 import com.diskcalc.domain.Units
 import com.diskcalc.ui.components.GlassBadge
@@ -153,9 +154,8 @@ fun SplitResultDialog(
 
     val count = result.partitions.size
     val overheadMb = result.totalMb - result.usableMb
-    // Every partition except the last gets the same base value; the last one carries the remainder.
-    val baseMb = result.partitions.first().typeMb.toLong()
-    val remainderMb = result.usableMb - baseMb * count
+    // The last base share carries the remainder; every suggested input includes the buffer.
+    val remainderMb = result.remainderMb
 
     GlassDialog(onDismiss = onDismiss, title = "Split preview", icon = Icons.Rounded.Layers) {
         GlassBadge(text = "$count ${if (count == 1) "partition" else "partitions"} · ${result.filesystem.label}")
@@ -174,16 +174,22 @@ fun SplitResultDialog(
             modifier = Modifier.fillMaxWidth()
         )
 
+        Spacer(Modifier.height(tokens.spaceMd))
+        KeyValueRow("Base sizes total", "${result.baseBudgetMb} MB")
+        KeyValueRow("+${PartitionConstants.DISPLAY_SAFETY_BUFFER_MB} MB × $count", "${result.totalBufferMb} MB")
+        Text(
+            text = "The buffer is already included in every suggested size and comes from this budget.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = LocalLiquidPalette.current.contentSecondary
+        )
+
         Spacer(Modifier.height(tokens.spaceXl))
         SplitTableHeader()
         GlassDivider()
         result.partitions.forEach { partition ->
             val isLast = partition.index == count
-            val note = if (isLast && remainderMb > 0) {
-                "includes +$remainderMb MB remainder"
-            } else {
-                null
-            }
+            val remainder = if (isLast && remainderMb > 0) " · includes $remainderMb MB remainder" else ""
+            val note = "${partition.baseMb} MB + ${PartitionConstants.DISPLAY_SAFETY_BUFFER_MB} MB buffer$remainder"
             SplitTableRow(
                 label = "Partition ${partition.index}",
                 typeText = "${partition.typeMb} MB",
@@ -200,7 +206,7 @@ fun SplitResultDialog(
 
         Spacer(Modifier.height(tokens.spaceMd))
         InfoBanner(
-            text = "Proposed sizes sum to ${result.sumOfTypeMb} MB. GiB values only convert the inputs, not formatted capacity. Setup may use space differently; verify each size and remaining space before applying.",
+            text = "The ${result.sumOfTypeMb} MB total includes every +${PartitionConstants.DISPLAY_SAFETY_BUFFER_MB} MB buffer. This is an estimate, not a guarantee of Explorer's display. Verify each size and the remaining space in Windows.",
             icon = Icons.Rounded.Info
         )
         Spacer(Modifier.height(tokens.spaceSm))

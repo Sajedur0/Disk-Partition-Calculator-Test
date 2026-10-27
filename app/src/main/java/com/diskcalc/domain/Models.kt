@@ -96,13 +96,16 @@ data class PartitionCalculationResult(
     val estimatedTotalMb: Long get() = requiredInputMb.toLong() + setupOverheadMb
 }
 
-/** One slice produced by the Split tab. Formatted volume capacity is not known. */
+/** One planned slice. The added buffer is not a prediction of formatted volume capacity. */
 data class SplitPartition(
     /** 1-based index, as shown to the user. */
     val index: Int,
-    /** Suggested whole-MB size; verify it against Windows Setup before applying. */
-    val typeMb: Int
-)
+    /** Nominal share of the region before the automatic per-partition buffer. */
+    val baseMb: Int
+) {
+    /** Suggested whole-MB input, including the buffer exactly once. */
+    val typeMb: Int get() = baseMb + PartitionConstants.DISPLAY_SAFETY_BUFFER_MB
+}
 
 /** Result of splitting one contiguous unallocated region into N proposed partitions. */
 data class SplitResult(
@@ -113,7 +116,13 @@ data class SplitResult(
     val filesystem: FileSystemType,
     val warnings: List<String> = emptyList()
 ) {
-    /** Sum of every partition size — always equals [usableMb]. */
+    /** Buffer for all planned partitions, taken from [usableMb], not added beyond the disk. */
+    val totalBufferMb: Long get() = partitions.size.toLong() * PartitionConstants.DISPLAY_SAFETY_BUFFER_MB
+    /** Portion divided between the partitions before adding the per-partition buffer. */
+    val baseBudgetMb: Long get() = usableMb - totalBufferMb
+    /** Undivided MB given to the final partition before its buffer. */
+    val remainderMb: Long get() = if (partitions.isEmpty()) 0 else baseBudgetMb % partitions.size
+    /** Sum of every suggested partition size — always equals [usableMb]. */
     val sumOfTypeMb: Long get() = partitions.sumOf { it.typeMb.toLong() }
 }
 
@@ -142,7 +151,7 @@ data class ConversionHistory(
 
     companion object {
         const val LEGACY_CALCULATION_VERSION = 1
-        const val CURRENT_CALCULATION_VERSION = 4
+        const val CURRENT_CALCULATION_VERSION = 5
     }
 }
 

@@ -2,6 +2,7 @@ package com.diskcalc.data
 
 import com.diskcalc.domain.ConversionHistory
 import com.diskcalc.domain.PartitionCalculationResult
+import com.diskcalc.domain.PartitionConstants
 import com.diskcalc.domain.SplitResult
 import com.diskcalc.domain.Units
 
@@ -36,7 +37,7 @@ fun SplitResult.toHistory(): ConversionHistory = ConversionHistory(
     toUnit = Units.PER_PARTITION_MB,
     filesystem = filesystem,
     primaryResultMb = partitions.firstOrNull()?.typeMb ?: 0,
-    summary = "${partitions.size} partitions: " +
+    summary = "${partitions.size} partitions (+${PartitionConstants.DISPLAY_SAFETY_BUFFER_MB} MB each included): " +
         partitions.joinToString(", ") { "${it.typeMb} MB" },
     timestampMillis = System.currentTimeMillis(),
     splitCount = partitions.size,

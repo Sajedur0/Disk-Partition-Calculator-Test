@@ -25,21 +25,19 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.AutoAwesome
-import androidx.compose.material.icons.rounded.Build
 import androidx.compose.material.icons.rounded.Calculate
 import androidx.compose.material.icons.rounded.ContactMail
-import androidx.compose.material.icons.rounded.Dashboard
 import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Layers
 import androidx.compose.material.icons.rounded.PrivacyTip
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.Storage
-import androidx.compose.material.icons.rounded.Warning
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -50,17 +48,14 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.diskcalc.domain.FileSystemType
-import com.diskcalc.domain.InputValidator
 import com.diskcalc.domain.PartitionCalculator
 import com.diskcalc.domain.PartitionConstants
 import com.diskcalc.domain.SplitPartitionCalculator
-import com.diskcalc.ui.components.GlassDivider
 import com.diskcalc.ui.components.GlassIconButton
 import com.diskcalc.ui.components.GlassPanel
 import com.diskcalc.ui.components.InfoBanner
@@ -198,7 +193,7 @@ fun PrivacyPolicyPage(onBack: () -> Unit, modifier: Modifier = Modifier) {
                 "Android share sheet: The 'Share App' feature sends only a static Play Store link to the app you choose. " +
                     "That app handles the link under its own privacy policy. Your calculations and history " +
                     "are not attached or shared.",
-                "Microsoft Learn links in the Guide open your browser when tapped. No calculation or sample data " +
+                "Microsoft help links in the Guide open your browser when tapped. No calculation or sample data " +
                     "is included in the link; the browser and Microsoft handle the visit under their policies.",
                 "Android backup: the app opts out of Android backup (allowBackup=false), so history and " +
                     "preferences are not backed up or transferred to another device.",
@@ -273,464 +268,108 @@ fun PrivacyPolicyPage(onBack: () -> Unit, modifier: Modifier = Modifier) {
     }
 }
 
-/** Full-screen, safety-first guide opened from Settings > Guide. */
+/** A concise, scrollable guide available directly from the bottom navigation. */
 @Composable
-fun GuidePage(onBack: () -> Unit, modifier: Modifier = Modifier) {
-    InfoPageScaffold(
-        title = "Guide",
-        subtitle = "How to use Disk Partition Calculator",
-        onBack = onBack,
-        modifier = modifier
-    ) {
-        InfoPanel(
-            title = "Start here",
-            subtitle = "Estimates for planning, not guaranteed disk sizes",
-            icon = Icons.Rounded.AutoAwesome,
-            steps = listOf(
-                "Back up important data and identify the correct disk before making any changes.",
-                "Use **Calc** to estimate one partition, or **Split** to plan sizes within one " +
-                    "contiguous **unallocated** region.",
-                "Compare each suggested MB value with Windows Setup and its remaining space before applying. " +
-                    "Recalculate if Setup creates or changes partitions."
-            )
-        )
-
-        InfoBanner(
-            text = "The app only calculates. It cannot see the disk, detect its layout, create or format " +
-                "partitions, or guarantee the size Windows will display.",
-            icon = Icons.Rounded.Info
-        )
-
-        InfoPanel(
-            title = "Top bar and navigation",
-            icon = Icons.Rounded.Dashboard,
-            bullets = listOf(
-                "**Clock** — open History. It is highlighted when at least one conversion is saved.",
-                "**Bottom bar** — switch between Calc, Split and Settings.",
-                "**Appearance** — choose System, Light or Dark in Settings."
-            )
-        )
-
-        InfoSectionHeader(text = "The two tabs")
-
-        InfoPanel(
-            title = "Calc — one partition",
-            subtitle = "Estimate a starting partition size",
-            icon = Icons.Rounded.Calculate,
-            steps = listOf(
-                "Enter the desired **total capacity** in binary GB (GiB), up to **2 decimals** and " +
-                    "a maximum of **65536 GB**. This is not the free space after installing files.",
-                "Choose **NTFS** or **FAT32**. The choice gives warnings and clears any sample if changed; " +
-                    "it does not format the disk. The Windows OS partition must use NTFS.",
-                "Optionally enable **Measure a volume / fix 49.9 GB** and enter two measured byte values " +
-                    "from the target or a comparable basic volume; see the next sections.",
-                "Optionally turn on **Plan future system space** only for system partitions still " +
-                    "to be created. The reserve is a separate budget, not part of the suggested input.",
-                "Tap **Calculate**. The suggestion adds an unverified **+4 MB** app buffer after any " +
-                    "measured gap; it is not a Microsoft rule and may be insufficient, particularly for FAT32.",
-                "**Copy new total** and, when offered, **Copy extra MB** copy different values to the " +
-                    "Android clipboard, not Windows. Check **Properties → Capacity**, including the byte value."
-            )
-        )
-
-        val calcExamples = listOf("1 GB" to 1.0, "2.5 GB" to 2.5, "50 GB" to 50.0, "100 GB" to 100.0, "1 TB" to 1024.0)
-            .map { (label, gb) ->
-                val win10 = PartitionCalculator.calculate(
-                    gb, FileSystemType.NTFS, true, PartitionConstants.WINDOWS_SETUP_OVERHEAD_MB
-                )
-                val win11 = PartitionCalculator.calculate(
-                    gb, FileSystemType.NTFS, true, PartitionConstants.WINDOWS_SETUP_OVERHEAD_WIN11_MB
-                )
-                listOf(label, win10.requiredInputMb.toString(), win10.estimatedTotalMb.toString(), win11.estimatedTotalMb.toString())
-            }
-        InfoTablePanel(
-            title = "Calc planning examples",
-            subtitle = "No sample: +4 MB app buffer and separate budgets, in MB",
-            icon = Icons.Rounded.Calculate,
-            headers = listOf(
-                "Desired", "Suggested", "+${PartitionConstants.WINDOWS_SETUP_OVERHEAD_MB} budget",
-                "+${PartitionConstants.WINDOWS_SETUP_OVERHEAD_WIN11_MB} budget"
-            ),
-            rows = calcExamples,
-            note = "For 50 binary GB, the target is **53,687,091,200 bytes**, or 51,200 binary MB. " +
-                "The unverified default suggests 51,204 MB; a sample may suggest another value. Only " +
-                "**Suggested** is the partition input, not either reserve budget. Verify the actual capacity."
-        )
-
-        InfoPanel(
-            title = "Creating a new 50 GB data volume",
-            subtitle = "Starting suggestion, not a display guarantee",
-            icon = Icons.Rounded.Storage,
-            steps = listOf(
-                "In Calc enter **50**, choose **NTFS** and tap **Calculate**. Without a sample the " +
-                    "suggested new-volume total is **51204 MB**; a measured sample can change it.",
-                "Back up first. In Windows Disk Management, identify the correct disk and an already " +
-                    "unallocated region large enough for the suggestion. Never delete another partition " +
-                    "just to obtain space.",
-                "Right-click the unallocated region → **New Simple Volume**. Enter the suggested total " +
-                    "MB, choose a drive letter and NTFS with the default allocation unit, then review " +
-                    "the choices before finishing.",
-                "Open the new drive's Explorer **Properties → Capacity** to check the total and its " +
-                    "bytes. If the label is lower than desired, use the measurement and existing-drive " +
-                    "steps below; actual formatting and display are not guaranteed."
-            )
-        )
-
-        InfoPanel(
-            title = "Optional: measure a comparable volume",
-            subtitle = "Read-only calibration — still an estimate",
-            icon = Icons.Rounded.Storage,
-            steps = listOf(
-                "Use an already existing **basic** volume with a drive letter, a size close to the target, " +
-                    "the same filesystem, Windows tool/version and similar allocation unit. Do not delete, " +
-                    "resize or format a volume just to take a sample.",
-                "Open PowerShell on Windows (as administrator if needed). Replace D with that volume's " +
-                    "drive letter in both read-only commands: (Get-Partition -DriveLetter D).Size " +
-                    "and (Get-Volume -DriveLetter D).Size.",
-                "Enter the first number as **partition bytes**. For total volume bytes, prefer the same " +
-                    "drive's Explorer **Properties → Capacity** byte value; the second PowerShell Size " +
-                    "is an alternative and may differ. Remove separators. Do not use SizeRemaining or free space. " +
-                    "Dynamic disks and complex storage layouts may not provide a comparable pair.",
-                "The app adds the measured partition-minus-volume gap and a separate **4 MB** buffer " +
-                    "to the target bytes, then rounds up to whole binary MB. The model assumes that " +
-                    "gap repeats and Windows actually creates the suggested partition size.",
-                "A different size, filesystem, cluster size, tool, layout or quota can change the result. " +
-                    "The gap does not include separate EFI, MSR or recovery partitions. Verify the " +
-                    "new drive's Properties → Capacity and actual partition size afterwards."
-            ),
-            paragraphs = listOf(
-                "For illustration only: if the observed gap is **4096 bytes**, the 50 GB target " +
-                    "produces a suggested **51205 MB**. This is not a universal NTFS rule or display guarantee. " +
-                    "The input measurements stay in memory; their difference is saved with the result in History."
-            )
-        )
-
-        InfoPanel(
-            title = "Already seeing 49.9 GB?",
-            subtitle = "Compare the existing drive before making changes",
-            icon = Icons.Rounded.Storage,
-            steps = listOf(
-                "First check **Properties → Capacity**, not free space. A drive can have 50 GB total " +
-                    "but less free space, which is normal. Back up before changing partitions.",
-                "Set the desired target to 50 GB, select the drive's actual filesystem and use that same " +
-                    "drive as the sample above. Enable **This is the drive I want to correct** and calculate.",
-                "The app shows the measured capacity and, if below target, an **Estimated extra** for NTFS. " +
-                    "This is an estimate of space to add, not the suggested total MB for a new volume. " +
-                    "If capacity is already at or above target, it does not suggest growth.",
-                "Windows Extend Volume needs suitable unallocated space immediately after the volume on the " +
-                    "same disk; it supports NTFS/ReFS, not FAT32. If it is unavailable, do not delete " +
-                    "system or recovery partitions to make room. Consult the linked Microsoft guide.",
-                "The extra-size estimate assumes capacity increases by the space added. Resizing is not " +
-                    "automatic; capacity and the displayed label can differ. Verify Properties → Capacity again."
-            )
-        )
-
-        InfoPanel(
-            title = "Split — unallocated space",
-            subtitle = "Plan within one contiguous free region",
-            icon = Icons.Rounded.Layers,
-            steps = listOf(
-                "In Windows Setup, select the target **Unallocated Space**, tap **New** and read " +
-                    "the **Size** in MB before pressing Apply. It may be only part of the disk. " +
-                    "Enter that whole number using digits only; do not enter separators or decimals.",
-                "Choose **1–8** proposed partitions and a filesystem for warnings.",
-                "Leave **Reserve future system space** off if no new system partition needs space in " +
-                    "this region. Existing EFI, MSR, recovery and other partitions are already excluded " +
-                    "from the displayed unallocated size; do not subtract them again.",
-                "Turn the reserve on only for system partitions still to be created from this region. " +
-                    "Choose a profile or enter a Custom estimate. Actual Setup layouts and sizes vary.",
-                "Tap **Split disk**. The numbers are a plan, not a promise: check what Setup actually " +
-                    "created and its remaining space after each step, then recalculate if necessary."
-            )
-        )
-
-        val splitWithoutReserve = SplitPartitionCalculator.split(476923, 4, FileSystemType.NTFS)
-        val splitWithReserve = SplitPartitionCalculator.split(
-            476923, 4, FileSystemType.NTFS, true, PartitionConstants.WINDOWS_SETUP_OVERHEAD_MB
-        )
-        val splitExamples = splitWithoutReserve.partitions.mapIndexed { index, partition ->
-            listOf(
-                if (index == splitWithoutReserve.partitions.lastIndex) "${partition.index} — last" else partition.index.toString(),
-                partition.typeMb.toString(),
-                splitWithReserve.partitions[index].typeMb.toString()
-            )
-        } + listOf(listOf("Sum", splitWithoutReserve.sumOfTypeMb.toString(), splitWithReserve.sumOfTypeMb.toString()))
-        InfoTablePanel(
-            title = "Split planning example",
-            subtitle = "476923 MB of selected unallocated space, four partitions",
-            icon = Icons.Rounded.Layers,
-            headers = listOf("Partition", "No reserve", "Reserve ${PartitionConstants.WINDOWS_SETUP_OVERHEAD_MB}"),
-            rows = splitExamples,
-            note = "Use the ${PartitionConstants.WINDOWS_SETUP_OVERHEAD_MB} MB column only if that much space is still needed for future system " +
-                "partitions. The last proposed size carries the arithmetic remainder. Setup may use " +
-                "space differently, so the sum does not guarantee that every size will fit."
-        )
-
-        InfoSectionHeader(text = "Settings and history")
-
-        InfoPanel(
-            title = "Settings",
-            icon = Icons.Rounded.Settings,
-            bullets = listOf(
-                "**Appearance** — select System, Light or Dark.",
-                "**Defaults** — changing the filesystem, reserve switch or profile here applies to " +
-                    "both tabs and is remembered. Calc and Split have separate temporary reserve " +
-                    "switches, but share the profile and Custom value; only Settings changes the " +
-                    "remembered switch default.",
-                "After upgrading from an older version, the reserve switch starts off because its " +
-                    "meaning changed. Turn it on again only if future system space is needed.",
-                "**Win 10** (${PartitionConstants.WINDOWS_SETUP_OVERHEAD_MB} MB) and **Win 11** " +
-                    "(${PartitionConstants.WINDOWS_SETUP_OVERHEAD_WIN11_MB} MB) are legacy examples, not " +
-                    "Microsoft sizing rules or guaranteed layouts. Use Custom for the actual installation.",
-                "**History**, **Privacy Policy**, **Guide**, **Rate Us**, **Share App** and **About** " +
-                    "are also available here."
-            )
-        )
-
-        InfoPanel(
-            title = "History",
-            icon = Icons.Rounded.History,
-            bullets = listOf(
-                "Keeps up to **100** Calc and Split results on your device, newest first.",
-                "Expand Split entries to see their proposed sizes. Copying a Split result copies a list " +
-                    "of MB values separated by new lines.",
-                "Entries saved by a different calculation version are marked: recalculate before use, because " +
-                    "capacity, reserve or input rules may have changed. Calibrated Calc results show their saved sample gap.",
-                "Delete a row with Undo, or use **Settings → History → Clear** to remove all history."
-            )
-        )
-
-        InfoSectionHeader(text = "In Windows Setup")
-
-        InfoPanel(
-            title = "System partitions vary",
-            icon = Icons.Rounded.Info,
-            paragraphs = listOf(
-                "Microsoft's current UEFI/GPT deployment guidance specifies an EFI partition of at least " +
-                    "200 MB for 512/512e sectors or 300 MB for 4K native sectors, and a 16 MB MSR. " +
-                    "Recovery space depends on the WinRE image and customizations, with 250 MB free for servicing. " +
-                    "This is layout guidance, not one universal reserve or a promise about interactive Setup."
-            )
-        )
-
-        InfoPanel(
-            title = "Use the plan carefully",
-            icon = Icons.Rounded.Storage,
-            steps = listOf(
-                "Back up first. Boot the Windows installer and choose a custom installation if offered; " +
-                    "screen labels vary between Windows versions.",
-                "Identify the correct disk and select its **Unallocated Space**. Do not delete or format " +
-                    "existing partitions unless you understand the consequences.",
-                "Choose **New** and review the available MB. If using a suggested size, compare it " +
-                    "with the actual free region before choosing **Apply**.",
-                "Windows may create system or recovery partitions, or resize the Windows partition. " +
-                    "Check what was actually created and recalculate from the remaining unallocated " +
-                    "space if necessary.",
-                "Select the intended Windows partition before proceeding. Do not assume the calculated " +
-                    "sizes or the last remaining space will be accepted exactly."
-            )
-        )
-
-        InfoSectionHeader(text = "Safety and help")
-
-        InfoPanel(
-            title = "Important limits",
-            icon = Icons.Rounded.Warning,
-            bullets = listOf(
-                "Deleting or formatting a partition destroys its data. Double-check the disk number " +
-                    "and keep a separate backup.",
-                "The unverified +4 MB buffer may be insufficient, especially for FAT32. Neither it " +
-                    "nor a measured sample guarantees formatted capacity or Explorer's label. " +
-                    "A partition, total volume capacity and free space differ.",
-                "The app uses binary units: **1 GB = 1024 MB = 1 GiB** (each MB here is 1 MiB). " +
-                    "Its **1 TB** chip means 1 TiB, not a manufacturer's decimal 1 TB drive capacity.",
-                "FAT32 files must be **smaller than 4 GiB**. Some Windows FAT32 formatting tools limit " +
-                    "volumes to 32 GB; newer tools may support larger volumes.",
-                "MBR supports at most **4 primary** partitions, including existing system partitions; " +
-                    "extended/logical layouts differ. Check boot mode and compatibility before using GPT."
-            )
-        )
-
-        InfoFaultPanel(
-            title = "Messages you may see",
-            subtitle = "What each message means and how to fix it",
-            icon = Icons.Rounded.Build,
-            faults = listOf(
-                InputValidator.INVALID_GB_MESSAGE to
-                    "Use a positive number with at most two decimal places; remove signs and extra characters.",
-                "Maximum is 65536 GB" to "Choose a smaller Calc size.",
-                InputValidator.INVALID_TOTAL_MB_MESSAGE to
-                    "Enter whole MB using digits only; do not paste a minus sign, decimal point, comma or embedded spaces.",
-                "Maximum is 134217728 MB" to "Choose a smaller unallocated region.",
-                InputValidator.INVALID_SAMPLE_BYTES_MESSAGE to
-                    "Enter the PowerShell Size as whole bytes using digits only, without commas or decimals.",
-                InputValidator.INVALID_SAMPLE_RELATION_MESSAGE to
-                    "Check that both commands used the same comparable basic volume; total volume bytes cannot exceed its partition bytes.",
-                InputValidator.INVALID_OVERHEAD_MESSAGE to
-                    "Enter a whole Custom reserve from 0 to ${PartitionConstants.MAX_CUSTOM_OVERHEAD_MB} MB.",
-                "Maximum is 100000 MB" to "Choose a smaller Custom reserve.",
-                "Unallocated space is smaller than the reserve" to
-                    "Check the selected region and reserve. Do not subtract existing system partitions again.",
-                "Too small to split into N partitions" to
-                    "Enter more available space, reduce the count or review the future-system reserve."
-            )
-        )
-
-        GuideReferencesPanel()
-    }
-}
-
-/** Documentation opens in the user's browser; no calculation data is included in the URLs. */
-@Composable
-private fun GuideReferencesPanel() {
-    val context = LocalContext.current
+fun GuideTab(modifier: Modifier = Modifier) {
     val palette = LocalLiquidPalette.current
-    GlassPanel(title = "Microsoft Learn references", icon = Icons.Rounded.Info) {
+    val tokens = LocalGlassTokens.current
+    val example = remember { PartitionCalculator.calculate(50.0, FileSystemType.NTFS) }
+    val splitExample = remember {
+        val budget = 2L * (50 * PartitionConstants.MB_PER_GB + PartitionConstants.DISPLAY_SAFETY_BUFFER_MB)
+        SplitPartitionCalculator.split(budget, 2, FileSystemType.NTFS)
+    }
+    val examplePart = splitExample.partitions.first()
+
+    Column(
+        modifier = modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(tokens.spaceMd)
+    ) {
         Text(
-            text = "Windows documents partition and volume sizes separately. It does not specify the app's +4 MB assumption.",
+            text = "Guide",
+            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold),
+            color = palette.contentPrimary
+        )
+        Text(
+            text = "Plan a partition in a few steps",
             style = MaterialTheme.typography.bodyMedium,
             color = palette.contentSecondary
         )
+        InfoBanner(
+            text = "Back up first. This app calculates sizes; it does not create, format or resize partitions.",
+            icon = Icons.Rounded.Info
+        )
+        InfoPanel(
+            title = "Calc — one partition",
+            icon = Icons.Rounded.Calculate,
+            steps = listOf(
+                "Enter the desired total capacity in **GB** and choose NTFS or FAT32. " +
+                    "The app uses binary units: 1 GB = 1 GiB = 1024 MB.",
+                "Tap **Calculate**. The suggested total already includes **+${PartitionConstants.DISPLAY_SAFETY_BUFFER_MB} MB**. " +
+                    "For example, 50 GB gives **${example.requiredInputMb} MB** without a measurement.",
+                "In Windows Setup choose **New**, or in Disk Management choose **New Simple Volume** " +
+                    "on the correct unallocated space. Enter the suggested total MB.",
+                "Only reserve future system space if Windows still needs to create those partitions. " +
+                    "The reserve is separate from the suggested input."
+            )
+        )
+        InfoPanel(
+            title = "Split — multiple partitions",
+            icon = Icons.Rounded.Layers,
+            steps = listOf(
+                "In Windows Setup select the unallocated space, choose **New** and read its size in MB " +
+                    "before applying. Enter that whole number in Split.",
+                "Choose the number of partitions and filesystem. Add a future-system reserve only " +
+                    "if needed, then tap **Split disk**.",
+                "Each suggested MB value already includes **+${PartitionConstants.DISPLAY_SAFETY_BUFFER_MB} MB**. " +
+                    "The buffer comes from the available space, so do not add it again.",
+                "Example: ${splitExample.totalMb} MB split in two gives **${examplePart.baseMb} + ${PartitionConstants.DISPLAY_SAFETY_BUFFER_MB} = ${examplePart.typeMb} MB** " +
+                    "each (a 50 GB base). Check Windows' remaining space after each step."
+            )
+        )
+        InfoPanel(
+            title = "Optional: measure a volume",
+            subtitle = "For a drive that already shows less than the target",
+            icon = Icons.Rounded.Storage,
+            steps = listOf(
+                "In Calc turn on **Measure a volume / fix 49.9 GB**. Run the read-only PowerShell " +
+                    "command shown there, replacing D with the drive letter; enter its partition bytes.",
+                "Enter the same drive's Explorer **Properties → Capacity** in bytes, not free space. " +
+                    "Select **This is the drive I want to correct** if it is the affected drive.",
+                "For an NTFS drive below target, **Estimated extra MB** is separate from the " +
+                    "new-volume total. Resizing is manual; check Windows' requirements first."
+            )
+        )
+        InfoPanel(
+            title = "Before applying",
+            icon = Icons.Rounded.Info,
+            bullets = listOf(
+                "The +${PartitionConstants.DISPLAY_SAFETY_BUFFER_MB} MB is an app estimate, not a Microsoft rule or a guarantee of Explorer's display. " +
+                    "After formatting, check **Properties → Capacity**, not free space.",
+                "Verify the correct disk and available space. Do not delete system or recovery partitions " +
+                    "to make room. Windows Extend Volume requires suitable space immediately after the volume.",
+                "**Copy** uses the Android clipboard, not the PC. Settings changes defaults; the clock " +
+                    "opens History. Recalculate entries marked as old."
+            )
+        )
+        GuideReferencesPanel()
+        Spacer(Modifier.height(tokens.spaceSm))
+    }
+}
+
+/** Relevant Microsoft instructions open in the browser without sending calculation data. */
+@Composable
+private fun GuideReferencesPanel() {
+    val context = LocalContext.current
+    GlassPanel(title = "Windows help", icon = Icons.Rounded.Info) {
         listOf(
-            "Get-Partition" to "https://learn.microsoft.com/en-us/powershell/module/storage/get-partition?view=windowsserver2025-ps",
-            "Get-Volume" to "https://learn.microsoft.com/en-us/powershell/module/storage/get-volume?view=windowsserver2025-ps",
-            "Volume Size and SizeRemaining" to "https://learn.microsoft.com/en-us/windows-hardware/drivers/storage/msft-volume",
-            "Create a volume in Disk Management" to "https://support.microsoft.com/en-us/windows/experience/storage-filemanagement/disk-management-in-windows",
-            "Extend a volume safely" to "https://learn.microsoft.com/en-us/windows-server/storage/disk-management/extend-a-basic-volume",
-            "Windows UEFI/GPT layouts" to "https://learn.microsoft.com/en-us/windows-hardware/manufacture/desktop/configure-uefigpt-based-hard-drive-partitions?view=windows-11"
+            "Create a volume" to "https://support.microsoft.com/en-us/windows/experience/storage-filemanagement/disk-management-in-windows",
+            "Extend an existing volume" to "https://learn.microsoft.com/en-us/windows-server/storage/disk-management/extend-a-basic-volume"
         ).forEach { (label, url) ->
             ContactInfoLine(label = label, value = "Open") {
                 runCatching {
                     context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
                 }
             }
-        }
-    }
-}
-
-// ---------------------------------------------------------------- guide pieces
-
-/** Small uppercase group label with a hairline rule, used to break the guide into sections. */
-@Composable
-private fun InfoSectionHeader(text: String) {
-    val palette = LocalLiquidPalette.current
-    val tokens = LocalGlassTokens.current
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = tokens.spaceSm, start = 4.dp, end = 4.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = text.uppercase(),
-            style = MaterialTheme.typography.labelMedium.copy(
-                fontWeight = FontWeight.SemiBold,
-                letterSpacing = 1.2.sp
-            ),
-            color = palette.accent
-        )
-        Spacer(Modifier.width(tokens.spaceSm))
-        Box(
-            Modifier
-                .weight(1f)
-                .height(1.dp)
-                .background(palette.glassBorderStart)
-        )
-    }
-}
-
-/** Panel that renders a compact number table, used for the reference and example sections. */
-@Composable
-private fun InfoTablePanel(
-    title: String,
-    icon: ImageVector,
-    headers: List<String>,
-    rows: List<List<String>>,
-    subtitle: String? = null,
-    note: String? = null
-) {
-    val palette = LocalLiquidPalette.current
-    val tokens = LocalGlassTokens.current
-
-    GlassPanel(title = title, subtitle = subtitle, icon = icon) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 2.dp)
-        ) {
-            headers.forEachIndexed { index, header ->
-                Text(
-                    text = header,
-                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
-                    color = palette.contentTertiary,
-                    textAlign = if (index == 0) TextAlign.Start else TextAlign.End,
-                    modifier = Modifier.weight(if (index == 0) 1.3f else 1f)
-                )
-            }
-        }
-        Spacer(Modifier.height(tokens.spaceXs))
-        GlassDivider()
-        rows.forEach { row ->
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 2.dp, vertical = 7.dp)
-            ) {
-                row.forEachIndexed { index, cell ->
-                    val isLastColumn = index == row.lastIndex
-                    Text(
-                        text = cell,
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            fontWeight = if (index == 0) FontWeight.Normal else FontWeight.Medium
-                        ),
-                        color = when {
-                            index == 0 -> palette.contentSecondary
-                            isLastColumn -> palette.accent
-                            else -> palette.contentPrimary
-                        },
-                        textAlign = if (index == 0) TextAlign.Start else TextAlign.End,
-                        modifier = Modifier.weight(if (index == 0) 1.3f else 1f)
-                    )
-                }
-            }
-            GlassDivider()
-        }
-        if (note != null) {
-            Text(
-                text = emphasised(note),
-                style = MaterialTheme.typography.bodyMedium,
-                color = palette.contentTertiary,
-                modifier = Modifier.padding(top = tokens.spaceXs, start = 2.dp)
-            )
-        }
-    }
-}
-
-/** Panel that pairs an error message with the fix, so troubleshooting reads as a lookup table. */
-@Composable
-private fun InfoFaultPanel(
-    title: String,
-    icon: ImageVector,
-    faults: List<Pair<String, String>>,
-    subtitle: String? = null
-) {
-    val palette = LocalLiquidPalette.current
-    val tokens = LocalGlassTokens.current
-
-    GlassPanel(title = title, subtitle = subtitle, icon = icon) {
-        faults.forEachIndexed { index, (problem, fix) ->
-            if (index > 0) Spacer(Modifier.height(tokens.spaceSm))
-            Text(
-                text = problem,
-                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-                color = palette.warningContent
-            )
-            Text(
-                text = fix,
-                style = MaterialTheme.typography.bodyMedium,
-                color = palette.contentSecondary,
-                modifier = Modifier.padding(top = 2.dp)
-            )
         }
     }
 }

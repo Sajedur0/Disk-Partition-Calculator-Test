@@ -55,8 +55,9 @@ verify Setup's actual partition sizes and remaining unallocated space before app
 - Enter a desired **total capacity** in binary GB (up to two decimals), not free space
 - See the byte target, baseline binary MB and suggested input separately. The actual partition,
   formatted volume capacity and Explorer display may differ
-- A small **+4 MB** app buffer is added after any measured gap; it is not a Microsoft rule or a
-  guaranteed error range. Without a sample it can be insufficient, particularly for FAT32
+- **+4 MB is added automatically** to the suggested partition size after any measured gap; it is
+  an app estimate, not a Microsoft rule or a guaranteed error range. It may be insufficient,
+  particularly for FAT32
 - Optionally measure a comparable volume, or the existing drive that shows 49.9 GB. For the latter,
   compare its actual capacity with the target and see an estimated extra size (not a new total)
 - NTFS/FAT32 selection provides warnings and clears a sample if the filesystem changes; it does
@@ -71,6 +72,9 @@ verify Setup's actual partition sizes and remaining unallocated space before app
 
 - Enter the size of the selected **contiguous unallocated space** in whole MB, using digits only
 - Split into 1–8 proposed partitions with integer arithmetic; the last gets the remainder
+- Automatically include **+4 MB in each partition**. The buffers are reserved from the selected
+  region before splitting, so the sum never exceeds the planned partition budget. Do not add them
+  again; formatted capacity is not guaranteed
 - Subtract a reserve **only** for system partitions still to be created in this region. Existing
   partitions are already excluded from Setup's displayed unallocated size
 - Inspect the selected reserve and edit the shared profile or Custom value directly in Split
@@ -87,7 +91,7 @@ verify Setup's actual partition sizes and remaining unallocated space before app
   capacity or reserve assumptions may differ. Calibrated results retain and show the measured gap
 - On upgrade, the old simulation switch resets to off because the new future-reserve meaning is
   different; the saved profile and Custom value are retained
-- Full-page Guide and Privacy Policy, Rate Us, Share App and About
+- A concise Guide tab, plus Privacy Policy, Rate Us, Share App and About in Settings
 - Optional Google Play flexible in-app updates; offline or sideloaded builds skip the check
 
 ---
@@ -178,20 +182,26 @@ suggested size to enter for the partition.
 ### Split tab
 
 ```text
-budget    = selectedUnallocatedMb − futureReserveMb
-base      = budget / n            # integer division
-remainder = budget − base × n     # added to the last proposed partition
+budget       = selectedUnallocatedMb − futureReserveMb
+bufferTotal  = 4 × n                  # space for the automatic per-partition additions
+baseBudget   = budget − bufferTotal   # divide only what remains
+base         = baseBudget / n         # integer division
+remainder    = baseBudget % n         # added to the last base share
+inputMb      = base + 4               # last partition also receives the remainder
 ```
 
-The displayed GiB values are nominal conversions of the proposed input MB, not predictions of
-formatted volume capacity.
+Each suggested input includes its 4 MB, so the base shares become smaller when splitting a fixed
+region; the summed inputs do **not** exceed the available budget. Adding 4 MB *after* dividing the
+whole region would exceed it by `4 × n` MB. The buffer is an estimate, not a prediction of
+formatted capacity or Explorer's label. For example, two 50 GB base shares require at least
+`2 × (51200 + 4) = 102408 MB` of unallocated space before any future system reserve.
 
 Example: `476923 MB` of unallocated space, divided into four proposed partitions:
 
 | | Partition 1 | Partition 2 | Partition 3 | Partition 4 | Sum |
 |---|---|---|---|---|---|
-| No future reserve | 119230 | 119230 | 119230 | **119233** | 476923 MB |
-| 566 MB future reserve | 119089 | 119089 | 119089 | **119090** | 476357 MB |
+| No future reserve | 119226 + 4 = 119230 | 119226 + 4 = 119230 | 119226 + 4 = 119230 | **119229 + 4 = 119233** | 476923 MB |
+| 566 MB future reserve | 119085 + 4 = 119089 | 119085 + 4 = 119089 | 119085 + 4 = 119089 | **119086 + 4 = 119090** | 476357 MB |
 
 Only reserve 566 MB when that space is still needed for system partitions in the selected region.
 The sums are arithmetic checks, not proof that the proposed partitions will fit on a real disk.
@@ -335,7 +345,7 @@ no retry in the same session.
   Updates also contributes `ACCESS_NETWORK_STATE` via manifest merging
 - **No analytics, no ads, no tracking, no accounts** — the only in-app network-aware component is
   Google Play's flexible in-app update check, which sends no calculation, history or preference data
-- The Guide can open Microsoft Learn pages in your browser when tapped, without calculation data
+- The Guide can open Microsoft help pages in your browser when tapped, without calculation data
 - Backup is disabled (`allowBackup=false`); settings and history stay on the device (DataStore)
   and history can be cleared any time. The sample inputs and target-drive flag stay in memory;
   their measured gap is saved with the result in history

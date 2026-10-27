@@ -28,7 +28,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /** Tab identifiers, shared by the tab bar and the screen host. */
-enum class AppTab(val title: String) { CALC("Calc"), SPLIT("Split"), SETTINGS("Settings") }
+enum class AppTab(val title: String) { CALC("Calc"), SPLIT("Split"), GUIDE("Guide"), SETTINGS("Settings") }
 
 data class CalcUiState(
     // Empty is intentional: docs/02_AppFlow.md §3 — the user must enter (or pick) a size.
@@ -374,7 +374,7 @@ class CalculatorViewModel(
                 _split.update {
                     it.copy(
                         result = null,
-                        error = failure.message ?: "Too small to split into ${state.partitionCount} partitions"
+                        error = failure.message ?: "Unable to calculate partition sizes"
                     )
                 }
             }

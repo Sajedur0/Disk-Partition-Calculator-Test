@@ -46,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.diskcalc.domain.ConversionHistory
+import com.diskcalc.domain.PartitionConstants
 import com.diskcalc.ui.components.GlassButton
 import com.diskcalc.ui.components.GlassDivider
 import com.diskcalc.ui.components.GlassIconButton
@@ -294,14 +295,15 @@ private fun HistoryRow(
                     val measuredGap = entry.measuredGapBytes
                     val method = when {
                         needsRecalculation -> "saved suggestion"
-                        measuredGap != null -> "sample gap ${ResultText.bytes(measuredGap)} bytes + 4 MB buffer"
-                        else -> "unverified +4 MB buffer"
+                        measuredGap != null -> "sample gap ${ResultText.bytes(measuredGap)} bytes + ${PartitionConstants.DISPLAY_SAFETY_BUFFER_MB} MB"
+                        else -> "unverified +${PartitionConstants.DISPLAY_SAFETY_BUFFER_MB} MB included"
                     }
                     val sizeKind = if (needsRecalculation) "saved size" else "new volume total"
                     "${entry.filesystem.label} · $sizeKind · $method · verify in Windows"
                 } else {
                     val inputLabel = if (needsRecalculation) "saved input" else "unallocated"
-                    "$inputLabel $savedInputMb MB · first $perPartitionMb MB · ${entry.filesystem.label}"
+                    val buffer = if (needsRecalculation) "" else " · +${PartitionConstants.DISPLAY_SAFETY_BUFFER_MB} MB each included"
+                    "$inputLabel $savedInputMb MB · first $perPartitionMb MB · ${entry.filesystem.label}$buffer"
                 },
                 style = MaterialTheme.typography.bodyMedium,
                 color = palette.contentSecondary
@@ -348,7 +350,11 @@ private fun HistoryRow(
                                     color = palette.contentSecondary
                                 )
                                 Text(
-                                    text = "$mb MB  ≈  ${ResultText.mbToGb(mb)} GiB input",
+                                    text = if (!needsRecalculation && mb >= PartitionConstants.DISPLAY_SAFETY_BUFFER_MB) {
+                                        "${mb - PartitionConstants.DISPLAY_SAFETY_BUFFER_MB} + ${PartitionConstants.DISPLAY_SAFETY_BUFFER_MB} = $mb MB"
+                                    } else {
+                                        "$mb MB  ≈  ${ResultText.mbToGb(mb)} GiB input"
+                                    },
                                     style = NumericMedium.copy(fontSize = 12.sp, lineHeight = 16.sp),
                                     color = palette.contentPrimary
                                 )
