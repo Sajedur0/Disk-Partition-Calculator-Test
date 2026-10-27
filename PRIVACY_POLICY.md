@@ -156,6 +156,14 @@ you** to access, correct, export, or delete, and there is nothing to opt out of.
 
 This policy may be updated if the app's features or data practices change. The version in the app is the current one, and the date at the top shows when it was last updated.
 
+## Contact Us
+
+If you have any questions or concerns about this Privacy Policy, please contact us. We read every message and aim to reply within 30 days:
+
+- App Name: [Disk Partition Calculator](https://play.google.com/store/apps/details?id=com.diskcalc)
+- Developer: [Sajedur0](https://play.google.com/store/apps/dev?id=5574132061091657048)
+- Email: [Sajedurzero@gmail.com](mailto:Sajedurzero@gmail.com)
+
 ---
 
 **App Package Name:** com.diskcalc

@@ -1,24 +1,33 @@
 package com.diskcalc.ui
 
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.Build
 import androidx.compose.material.icons.rounded.Calculate
+import androidx.compose.material.icons.rounded.ContactMail
 import androidx.compose.material.icons.rounded.Dashboard
 import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.Info
@@ -27,17 +36,22 @@ import androidx.compose.material.icons.rounded.PrivacyTip
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.Storage
 import androidx.compose.material.icons.rounded.Warning
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -45,6 +59,8 @@ import com.diskcalc.ui.components.GlassDivider
 import com.diskcalc.ui.components.GlassIconButton
 import com.diskcalc.ui.components.GlassPanel
 import com.diskcalc.ui.components.InfoBanner
+import com.diskcalc.ui.components.LiquidGlassSurface
+import com.diskcalc.ui.components.glassLite
 import com.diskcalc.ui.theme.LocalGlassTokens
 import com.diskcalc.ui.theme.LocalLiquidPalette
 
@@ -69,6 +85,14 @@ fun AboutPage(onBack: () -> Unit, modifier: Modifier = Modifier) {
 
 /** Shown on the Privacy Policy page. Update it whenever the data practices change. */
 private const val PRIVACY_LAST_UPDATED = "26 October 2026"
+private const val PRIVACY_APP_PACKAGE = "com.diskcalc"
+private const val PRIVACY_PLAY_STORE_MARKET_URI = "market://details?id=$PRIVACY_APP_PACKAGE"
+private const val PRIVACY_PLAY_STORE_WEB_URL =
+    "https://play.google.com/store/apps/details?id=$PRIVACY_APP_PACKAGE"
+private const val PRIVACY_DEVELOPER_PROFILE_URL =
+    "https://play.google.com/store/apps/dev?id=5574132061091657048"
+private const val PRIVACY_CONTACT_EMAIL = "Sajedurzero@gmail.com"
+private const val PRIVACY_CONTACT_EMAIL_URI = "mailto:$PRIVACY_CONTACT_EMAIL"
 
 /**
  * Full-screen Privacy Policy page opened from Settings > Privacy Policy.
@@ -236,6 +260,8 @@ fun PrivacyPolicyPage(onBack: () -> Unit, modifier: Modifier = Modifier) {
                     "The version in the app is the current one, and the date at the top shows when it was last updated."
             )
         )
+
+        ContactUsPanel()
     }
 }
 
@@ -684,4 +710,154 @@ private fun InfoLine(marker: String, text: String) {
             modifier = Modifier.weight(1f)
         )
     }
+}
+
+/**
+ * Contact Us card shown at the end of the Privacy Policy screen.
+ * Keeps the rounded-square icon badge on the left and places the bold title, description,
+ * and three tappable external links in the right column.
+ */
+@Composable
+private fun ContactUsPanel() {
+    val palette = LocalLiquidPalette.current
+    val tokens = LocalGlassTokens.current
+    val context = LocalContext.current
+
+    LiquidGlassSurface(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(tokens.cardPadding),
+            verticalAlignment = Alignment.Top
+        ) {
+            Box(
+                Modifier
+                    .size(36.dp)
+                    .glassLite(
+                        shape = RoundedCornerShape(tokens.cornerSmall),
+                        tint = palette.accentContainer,
+                        borderColor = palette.glassBorderStart
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.ContactMail,
+                    contentDescription = null,
+                    tint = palette.accent,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+            Spacer(Modifier.width(tokens.spaceSm))
+            Column(Modifier.weight(1f)) {
+                Text(
+                    text = "Contact Us",
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                    color = palette.contentPrimary
+                )
+                Spacer(Modifier.height(tokens.spaceXs))
+                Text(
+                    text = "If you have any questions or concerns about this Privacy Policy, " +
+                        "please contact us. We read every message and aim to reply within 30 days:",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = palette.contentSecondary
+                )
+                Spacer(Modifier.height(tokens.spaceSm))
+                ContactInfoLine(
+                    label = "App Name",
+                    value = "Disk Partition Calculator",
+                    onClick = { openPlayStoreAppListing(context) }
+                )
+                ContactInfoLine(
+                    label = "Developer",
+                    value = "Sajedur0",
+                    onClick = { openDeveloperProfile(context) }
+                )
+                ContactInfoLine(
+                    label = "Email",
+                    value = PRIVACY_CONTACT_EMAIL,
+                    onClick = { openMailApp(context) }
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun ContactInfoLine(
+    label: String,
+    value: String,
+    onClick: () -> Unit
+) {
+    val palette = LocalLiquidPalette.current
+    val tokens = LocalGlassTokens.current
+
+    FlowRow(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(tokens.spaceXs)
+    ) {
+        Text(
+            text = "$label:",
+            style = MaterialTheme.typography.bodyMedium,
+            color = palette.contentSecondary,
+            modifier = Modifier.padding(vertical = 3.dp)
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyMedium.copy(
+                fontWeight = FontWeight.Bold,
+                textDecoration = TextDecoration.Underline
+            ),
+            color = palette.accent,
+            modifier = Modifier
+                .clip(RoundedCornerShape(4.dp))
+                .clickable(role = Role.Button, onClick = onClick)
+                .padding(vertical = 3.dp)
+        )
+    }
+}
+
+private fun openPlayStoreAppListing(context: Context) {
+    val marketUri = Uri.parse(PRIVACY_PLAY_STORE_MARKET_URI)
+    val playStoreIntent = Intent(Intent.ACTION_VIEW, marketUri).apply {
+        setPackage("com.android.vending")
+        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    }
+    runCatching { context.startActivity(playStoreIntent) }
+        .recoverCatching {
+            val genericMarketIntent = Intent(Intent.ACTION_VIEW, marketUri)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            context.startActivity(genericMarketIntent)
+        }
+        .recoverCatching {
+            val webFallbackIntent = Intent(Intent.ACTION_VIEW, Uri.parse(PRIVACY_PLAY_STORE_WEB_URL))
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            context.startActivity(webFallbackIntent)
+        }
+}
+
+private fun openDeveloperProfile(context: Context) {
+    val profileUri = Uri.parse(PRIVACY_DEVELOPER_PROFILE_URL)
+    val playStoreIntent = Intent(Intent.ACTION_VIEW, profileUri).apply {
+        setPackage("com.android.vending")
+        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    }
+    runCatching { context.startActivity(playStoreIntent) }
+        .recoverCatching {
+            val browserIntent = Intent(Intent.ACTION_VIEW, profileUri)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            context.startActivity(browserIntent)
+        }
+}
+
+private fun openMailApp(context: Context) {
+    val mailUri = Uri.parse(PRIVACY_CONTACT_EMAIL_URI)
+    val sendToIntent = Intent(Intent.ACTION_SENDTO, mailUri)
+        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    runCatching { context.startActivity(sendToIntent) }
+        .recoverCatching {
+            val viewIntent = Intent(Intent.ACTION_VIEW, mailUri)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            context.startActivity(viewIntent)
+        }
 }
