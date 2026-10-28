@@ -1,8 +1,5 @@
 package com.diskcalc.ui
 
-import android.content.Context
-import android.content.Intent
-import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -41,7 +38,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import com.diskcalc.BuildConfig
 import com.diskcalc.data.AppSettings
 import com.diskcalc.domain.FileSystemType
 import com.diskcalc.domain.PartitionConstants
@@ -80,6 +76,7 @@ fun SettingsTab(
     val palette = LocalLiquidPalette.current
     val tokens = LocalGlassTokens.current
     val context = LocalContext.current
+    val appVersion = rememberAppVersionInfo()
     var showClearConfirm by remember { mutableStateOf(false) }
 
     Column(
@@ -203,7 +200,7 @@ fun SettingsTab(
             SettingsAction(
                 icon = Icons.Rounded.MenuBook,
                 title = "Guide",
-                subtitle = "How to use every part of the app",
+                subtitle = "Step-by-step instructions to use the app",
                 onClick = onOpenGuide
             )
             GlassDivider()
@@ -211,20 +208,20 @@ fun SettingsTab(
                 icon = Icons.Rounded.StarRate,
                 title = "Rate Us",
                 subtitle = "Open the Play Store listing",
-                onClick = { openPlayStore(context) }
+                onClick = { openPlayStoreAppListing(context) }
             )
             GlassDivider()
             SettingsAction(
                 icon = Icons.Rounded.Share,
                 title = "Share App",
                 subtitle = "Tell a friend who reinstalls Windows often",
-                onClick = { shareApp(context) }
+                onClick = { shareAppListing(context) }
             )
             GlassDivider()
             SettingsAction(
                 icon = Icons.Rounded.AutoAwesome,
                 title = "About",
-                subtitle = "Disk Partition Calculator v${BuildConfig.VERSION_NAME}",
+                subtitle = appVersion.settingsSubtitle,
                 onClick = onOpenAbout
             )
         }
@@ -326,32 +323,4 @@ private fun SettingsAction(
             modifier = Modifier.size(20.dp)
         )
     }
-}
-
-private fun openPlayStore(context: Context) {
-    val packageName = context.packageName
-    val market = Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=$packageName"))
-        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-    runCatching { context.startActivity(market) }.onFailure {
-        runCatching {
-            context.startActivity(
-                Intent(
-                    Intent.ACTION_VIEW,
-                    Uri.parse("https://play.google.com/store/apps/details?id=$packageName")
-                ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            )
-        }
-    }
-}
-
-private fun shareApp(context: Context) {
-    val share = Intent(Intent.ACTION_SEND).apply {
-        type = "text/plain"
-        putExtra(
-            Intent.EXTRA_TEXT,
-            "Disk Partition Calculator — works out the exact MB to type into Windows Setup. " +
-                "https://play.google.com/store/apps/details?id=${context.packageName}"
-        )
-    }
-    context.startActivity(Intent.createChooser(share, "Share App"))
 }

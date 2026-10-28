@@ -23,8 +23,8 @@ android {
         applicationId = "com.diskcalc"
         minSdk = 24
         targetSdk = 35
-        versionCode = 15
-        versionName = "1.1.4"
+        versionCode = providers.gradleProperty("versionCode").orNull?.toIntOrNull() ?: 15
+        versionName = providers.gradleProperty("versionName").orNull ?: "1.1.4"
 
         vectorDrawables { useSupportLibrary = true }
         resourceConfigurations += listOf("en")

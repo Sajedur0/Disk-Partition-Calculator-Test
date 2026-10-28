@@ -3,7 +3,9 @@ package com.diskcalc.ui
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -26,58 +28,616 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.Calculate
+import androidx.compose.material.icons.rounded.CheckCircle
+import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material.icons.rounded.ContactMail
+import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material.icons.rounded.Dashboard
 import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Layers
+import androidx.compose.material.icons.rounded.MenuBook
+import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.PrivacyTip
 import androidx.compose.material.icons.rounded.Settings
+import androidx.compose.material.icons.rounded.Share
+import androidx.compose.material.icons.rounded.StarRate
 import androidx.compose.material.icons.rounded.Storage
-import androidx.compose.material.icons.rounded.Warning
+import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.diskcalc.R
+import com.diskcalc.domain.PartitionConstants
+import com.diskcalc.ui.components.GlassButton
 import com.diskcalc.ui.components.GlassDivider
 import com.diskcalc.ui.components.GlassIconButton
 import com.diskcalc.ui.components.GlassPanel
-import com.diskcalc.ui.components.InfoBanner
 import com.diskcalc.ui.components.LiquidGlassSurface
+import com.diskcalc.ui.components.clickableBounce
 import com.diskcalc.ui.components.glassLite
 import com.diskcalc.ui.theme.LocalGlassTokens
 import com.diskcalc.ui.theme.LocalLiquidPalette
+import java.util.Calendar
 
+/**
+ * Full-screen About page opened from Settings > About.
+ * Displays the app launcher icon, live dynamic version/build metadata from [rememberAppVersionInfo],
+ * core capabilities, technical specifications, developer links, and open-source licensing.
+ */
 @Composable
-fun AboutPage(onBack: () -> Unit, modifier: Modifier = Modifier) {
+fun AboutPage(
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier,
+    onOpenGuide: (() -> Unit)? = null,
+    onOpenPrivacyPolicy: (() -> Unit)? = null,
+    onCopied: (() -> Unit)? = null
+) {
+    val palette = LocalLiquidPalette.current
+    val clipboard = LocalClipboardManager.current
+    val context = LocalContext.current
+    val appVersion = rememberAppVersionInfo()
+    val iconBitmap = rememberAppIconBitmap(sizeDp = 84.dp)
+
+    val copyVersionDetails: () -> Unit = {
+        clipboard.setText(AnnotatedString(appVersion.clipboardSummary))
+        onCopied?.invoke()
+    }
+
     InfoPageScaffold(
         title = "About",
-        subtitle = "Disk Partition Calculator v${com.diskcalc.BuildConfig.VERSION_NAME}",
+        subtitle = "${appVersion.appName} · ${appVersion.versionTag}",
         onBack = onBack,
         modifier = modifier
     ) {
-        InfoPanel(
-            title = "Disk Partition Calculator",
-            icon = Icons.Rounded.AutoAwesome,
-            paragraphs = listOf(
-                "Calculate partition sizes for Windows Setup and split disk space into equal parts.",
-                "Version ${com.diskcalc.BuildConfig.VERSION_NAME}"
-            )
+        // ------------------------------------------------------------- hero card
+        AboutHeroCard(
+            appVersion = appVersion,
+            iconBitmap = iconBitmap,
+            onCopyVersion = copyVersionDetails,
+            onRateApp = { openPlayStoreAppListing(context) },
+            onShareApp = { shareAppListing(context) }
         )
+
+        // -------------------------------------------------------------- features
+        InfoSectionHeader(text = "Features")
+        GlassPanel(
+            title = "What this app does",
+            subtitle = "Precision planning tools for Windows Setup",
+            icon = Icons.Rounded.AutoAwesome
+        ) {
+            AboutFeatureItem(
+                icon = Icons.Rounded.Calculate,
+                title = "Exact Partition Calculator",
+                description = "Converts desired GB into the exact MB to enter in Windows Setup " +
+                    "using binary sizing (${PartitionConstants.MB_PER_GB} MB/GB) plus " +
+                    "+${PartitionConstants.OVERHEAD_MB_PER_PARTITION} MB formatter slack."
+            )
+            AboutItemDivider()
+            AboutFeatureItem(
+                icon = Icons.Rounded.Layers,
+                title = "Equal Disk Splitter",
+                description = "Splits a whole disk into " +
+                    "${PartitionConstants.MIN_SPLIT_COUNT}–${PartitionConstants.MAX_SPLIT_COUNT} " +
+                    "integer-MB partitions and places any remainder on the final partition so zero MB is lost."
+            )
+            AboutItemDivider()
+            AboutFeatureItem(
+                icon = Icons.Rounded.Tune,
+                title = "Windows Setup Profiles",
+                description = "Accounts for system partitions with presets for Windows 10 " +
+                    "(${PartitionConstants.WINDOWS_SETUP_OVERHEAD_MB} MB), Windows 11 " +
+                    "(${PartitionConstants.WINDOWS_SETUP_OVERHEAD_WIN11_MB} MB), or your own custom MB value."
+            )
+            AboutItemDivider()
+            AboutFeatureItem(
+                icon = Icons.Rounded.History,
+                title = "On-Device History & Themes",
+                description = "Stores up to ${PartitionConstants.MAX_HISTORY} recent calculations " +
+                    "and remembers your defaults and System, Light, or Dark theme locally."
+            )
+        }
+
+        // ---------------------------------------------- dynamic version & build
+        InfoSectionHeader(text = "App information")
+        GlassPanel(
+            title = "Version & specifications",
+            subtitle = "Dynamically resolved from installed package",
+            icon = Icons.Rounded.Info,
+            trailing = {
+                GlassIconButton(
+                    icon = Icons.Rounded.ContentCopy,
+                    contentDescription = "Copy version details",
+                    onClick = copyVersionDetails,
+                    tint = palette.accent
+                )
+            }
+        ) {
+            AboutSpecRow(label = "App Name", value = appVersion.appName)
+            GlassDivider()
+            AboutSpecRow(
+                label = "App Version",
+                value = appVersion.versionTag,
+                monospace = true,
+                accentValue = true
+            )
+            GlassDivider()
+            AboutSpecRow(
+                label = "Version Code",
+                value = appVersion.versionCode.toString(),
+                monospace = true
+            )
+            GlassDivider()
+            AboutSpecRow(label = "Build Channel", value = appVersion.buildType)
+            GlassDivider()
+            AboutSpecRow(
+                label = "Package ID",
+                value = appVersion.packageName,
+                monospace = true
+            )
+            GlassDivider()
+            AboutSpecRow(
+                label = "Minimum Android",
+                value = "Android ${androidReleaseName(appVersion.minSdk)}+ (API ${appVersion.minSdk})"
+            )
+            GlassDivider()
+            AboutSpecRow(
+                label = "Target SDK",
+                value = "Android ${androidReleaseName(appVersion.targetSdk)} (API ${appVersion.targetSdk})"
+            )
+            GlassDivider()
+            AboutSpecRow(label = "Updates", value = "Google Play Flexible Updates")
+            GlassDivider()
+            AboutSpecRow(label = "Built With", value = "Kotlin · Jetpack Compose · Material 3")
+        }
+
+        // -------------------------------------------------- developer & links
+        InfoSectionHeader(text = "Developer & resources")
+        GlassPanel {
+            AboutLinkRow(
+                icon = Icons.Rounded.Person,
+                title = "Developer",
+                subtitle = "Sajedur0 · Google Play developer profile",
+                onClick = { openDeveloperProfile(context) }
+            )
+            GlassDivider()
+            AboutLinkRow(
+                icon = Icons.Rounded.Storage,
+                title = "Google Play Store",
+                subtitle = "View app listing, reviews & updates",
+                onClick = { openPlayStoreAppListing(context) }
+            )
+            GlassDivider()
+            AboutLinkRow(
+                icon = Icons.Rounded.ContactMail,
+                title = "Contact & Support",
+                subtitle = PRIVACY_CONTACT_EMAIL,
+                onClick = { openMailApp(context) }
+            )
+            if (onOpenGuide != null) {
+                GlassDivider()
+                AboutLinkRow(
+                    icon = Icons.Rounded.MenuBook,
+                    title = "User Guide",
+                    subtitle = "Step-by-step instructions to use the app",
+                    onClick = onOpenGuide
+                )
+            }
+            if (onOpenPrivacyPolicy != null) {
+                GlassDivider()
+                AboutLinkRow(
+                    icon = Icons.Rounded.PrivacyTip,
+                    title = "Privacy Policy",
+                    subtitle = "How the app handles and stores information",
+                    onClick = onOpenPrivacyPolicy
+                )
+            }
+        }
+
+        // -------------------------------------------------------------- footer
+        AboutFooterCard(appName = appVersion.appName)
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun AboutHeroCard(
+    appVersion: AppVersionInfo,
+    iconBitmap: ImageBitmap?,
+    onCopyVersion: () -> Unit,
+    onRateApp: () -> Unit,
+    onShareApp: () -> Unit
+) {
+    val palette = LocalLiquidPalette.current
+    val tokens = LocalGlassTokens.current
+    val pillShape = RoundedCornerShape(percent = 50)
+
+    LiquidGlassSurface(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(tokens.spaceXl),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            AppIconBadge(
+                appName = appVersion.appName,
+                iconBitmap = iconBitmap
+            )
+
+            Spacer(Modifier.height(tokens.spaceLg))
+
+            Text(
+                text = appVersion.appName,
+                style = MaterialTheme.typography.headlineSmall,
+                color = palette.contentPrimary,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(Modifier.height(tokens.spaceSm))
+
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(tokens.spaceSm, Alignment.CenterHorizontally),
+                verticalArrangement = Arrangement.spacedBy(tokens.spaceXs)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .glassLite(
+                            shape = pillShape,
+                            tint = palette.accentContainer,
+                            borderColor = palette.accent
+                        )
+                        .clickableBounce(onClick = onCopyVersion)
+                        .padding(horizontal = tokens.spaceMd, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.CheckCircle,
+                        contentDescription = null,
+                        tint = palette.accent,
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        text = "Version ${appVersion.versionName}",
+                        style = MaterialTheme.typography.labelLarge.copy(
+                            fontFamily = FontFamily.Monospace,
+                            fontWeight = FontWeight.SemiBold
+                        ),
+                        color = palette.accent
+                    )
+                }
+
+                Box(
+                    modifier = Modifier
+                        .glassLite(
+                            shape = pillShape,
+                            tint = palette.controlSurface,
+                            borderColor = palette.glassBorderStart
+                        )
+                        .clickableBounce(onClick = onCopyVersion)
+                        .padding(horizontal = tokens.spaceMd, vertical = 6.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Build ${appVersion.versionCode} · ${appVersion.buildType}",
+                        style = MaterialTheme.typography.labelLarge.copy(
+                            fontFamily = FontFamily.Monospace
+                        ),
+                        color = palette.contentSecondary
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(tokens.spaceMd))
+
+            Text(
+                text = "Type the exact MB value Windows Setup expects — and split a whole disk " +
+                    "into equal partitions without losing a single megabyte.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = palette.contentSecondary,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(Modifier.height(tokens.spaceMd))
+
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(tokens.spaceSm, Alignment.CenterHorizontally),
+                verticalArrangement = Arrangement.spacedBy(tokens.spaceXs)
+            ) {
+                AboutHighlightTag(text = "1 GB = 1024 MB")
+                AboutHighlightTag(text = "Offline & Private")
+                AboutHighlightTag(text = "No Ads")
+            }
+
+            Spacer(Modifier.height(tokens.spaceLg))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(tokens.spaceSm)
+            ) {
+                GlassButton(
+                    text = "Rate App",
+                    icon = Icons.Rounded.StarRate,
+                    primary = true,
+                    onClick = onRateApp,
+                    modifier = Modifier.weight(1f)
+                )
+                GlassButton(
+                    text = "Share",
+                    icon = Icons.Rounded.Share,
+                    primary = false,
+                    onClick = onShareApp,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun AppIconBadge(
+    appName: String,
+    iconBitmap: ImageBitmap?
+) {
+    val palette = LocalLiquidPalette.current
+    val outerShape = RoundedCornerShape(26.dp)
+    val innerShape = RoundedCornerShape(21.dp)
+
+    Box(
+        modifier = Modifier
+            .size(98.dp)
+            .glassLite(
+                shape = outerShape,
+                tint = palette.accentContainer,
+                borderColor = palette.glassBorderStart
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        if (iconBitmap != null) {
+            Image(
+                bitmap = iconBitmap,
+                contentDescription = "$appName app icon",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .size(84.dp)
+                    .clip(innerShape)
+                    .border(1.dp, palette.glassBorderStart, innerShape)
+            )
+        } else {
+            Box(
+                modifier = Modifier
+                    .size(84.dp)
+                    .clip(innerShape)
+                    .background(palette.glassTint)
+                    .border(1.dp, palette.glassBorderStart, innerShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Image(
+                    painter = painterResource(R.mipmap.ic_launcher_foreground),
+                    contentDescription = "$appName app icon",
+                    modifier = Modifier.size(84.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun AboutHighlightTag(text: String) {
+    val palette = LocalLiquidPalette.current
+    val tokens = LocalGlassTokens.current
+    Box(
+        modifier = Modifier
+            .glassLite(
+                shape = RoundedCornerShape(tokens.cornerSmall),
+                tint = palette.controlSurface,
+                borderColor = palette.glassBorderStart
+            )
+            .padding(horizontal = tokens.spaceSm, vertical = tokens.spaceXs)
+    ) {
+        Text(
+            text = text,
+            style = MaterialTheme.typography.labelSmall,
+            color = palette.contentSecondary
+        )
+    }
+}
+
+@Composable
+private fun AboutFeatureItem(
+    icon: ImageVector,
+    title: String,
+    description: String
+) {
+    val palette = LocalLiquidPalette.current
+    val tokens = LocalGlassTokens.current
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.Top
+    ) {
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .glassLite(
+                    shape = RoundedCornerShape(tokens.cornerSmall),
+                    tint = palette.accentContainer,
+                    borderColor = palette.glassBorderStart
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = palette.accent,
+                modifier = Modifier.size(18.dp)
+            )
+        }
+        Spacer(Modifier.width(tokens.spaceSm))
+        Column(Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                color = palette.contentPrimary
+            )
+            Spacer(Modifier.height(2.dp))
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodyMedium,
+                color = palette.contentSecondary
+            )
+        }
+    }
+}
+
+@Composable
+private fun AboutItemDivider() {
+    val tokens = LocalGlassTokens.current
+    Spacer(Modifier.height(tokens.spaceMd))
+    GlassDivider()
+    Spacer(Modifier.height(tokens.spaceMd))
+}
+
+@Composable
+private fun AboutSpecRow(
+    label: String,
+    value: String,
+    monospace: Boolean = false,
+    accentValue: Boolean = false
+) {
+    val palette = LocalLiquidPalette.current
+    val tokens = LocalGlassTokens.current
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = tokens.spaceSm),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+            color = palette.contentSecondary,
+            modifier = Modifier.weight(0.42f)
+        )
+        Spacer(Modifier.width(tokens.spaceSm))
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyMedium.copy(
+                fontFamily = if (monospace) FontFamily.Monospace else FontFamily.Default,
+                fontWeight = if (accentValue) FontWeight.SemiBold else FontWeight.Medium
+            ),
+            color = if (accentValue) palette.accent else palette.contentPrimary,
+            textAlign = TextAlign.End,
+            modifier = Modifier.weight(0.58f)
+        )
+    }
+}
+
+@Composable
+private fun AboutLinkRow(
+    icon: ImageVector,
+    title: String,
+    subtitle: String,
+    onClick: () -> Unit
+) {
+    val palette = LocalLiquidPalette.current
+    val tokens = LocalGlassTokens.current
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickableBounce(onClick = onClick)
+            .padding(vertical = tokens.spaceSm),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            Modifier
+                .glassLite(
+                    shape = RoundedCornerShape(tokens.cornerSmall),
+                    tint = palette.accentContainer,
+                    borderColor = palette.glassBorderStart
+                )
+                .padding(tokens.spaceSm)
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = palette.accent,
+                modifier = Modifier.size(18.dp)
+            )
+        }
+        Spacer(Modifier.width(tokens.spaceSm))
+        Column(Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                color = palette.contentPrimary
+            )
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodyMedium,
+                color = palette.contentSecondary
+            )
+        }
+        Icon(
+            imageVector = Icons.Rounded.ChevronRight,
+            contentDescription = null,
+            tint = palette.contentTertiary,
+            modifier = Modifier.size(20.dp)
+        )
+    }
+}
+
+@Composable
+private fun AboutFooterCard(appName: String) {
+    val palette = LocalLiquidPalette.current
+    val tokens = LocalGlassTokens.current
+    val copyrightYear = remember {
+        Calendar.getInstance().get(Calendar.YEAR).coerceAtLeast(2026)
+    }
+
+    LiquidGlassSurface(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(tokens.cardPadding),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "MIT License · © $copyrightYear $appName",
+                style = MaterialTheme.typography.labelLarge,
+                color = palette.contentPrimary,
+                textAlign = TextAlign.Center
+            )
+            Spacer(Modifier.height(tokens.spaceXs))
+            Text(
+                text = "Developed by Sajedur0 · Read-only planning calculator — never modifies disks or user files.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = palette.contentTertiary,
+                textAlign = TextAlign.Center
+            )
+        }
     }
 }
 
@@ -265,9 +825,8 @@ fun PrivacyPolicyPage(onBack: () -> Unit, modifier: Modifier = Modifier) {
 
 /**
  * Full-screen Guide page opened from Settings > Guide.
- * One section per place a user can act — Calc tab, Split tab, History and Settings —
- * with only the operating steps. No reference tables, benchmarks or troubleshooting text;
- * a single data-loss warning closes the page.
+ * Contains strictly step-by-step operating instructions for using the app — Navigation,
+ * Calc tab, Split tab, History and Settings — with no extra disclaimers or non-usage content.
  */
 @Composable
 fun GuidePage(onBack: () -> Unit, modifier: Modifier = Modifier) {
@@ -277,99 +836,87 @@ fun GuidePage(onBack: () -> Unit, modifier: Modifier = Modifier) {
         onBack = onBack,
         modifier = modifier
     ) {
-        // ------------------------------------------------------------- orientation
+        // ------------------------------------------------------------- navigation
         InfoPanel(
-            title = "Where everything is",
-            subtitle = "A calculator with a memory — nothing more",
+            title = "Getting around",
             icon = Icons.Rounded.Dashboard,
             bullets = listOf(
-                "**Bottom bar** — the three tabs: **Calc**, **Split** and **Settings**.",
-                "**Clock** — the top-bar button that opens History."
+                "Use the **bottom bar** to switch between **Calc**, **Split** and **Settings**.",
+                "Tap the **History** (clock) icon in the top-right corner at any time to view saved results."
             )
         )
 
         // ------------------------------------------------------------ Calc tab
         InfoSectionHeader(text = "Calc tab")
         InfoPanel(
-            title = "One partition — \"I want it 100 GB\"",
+            title = "Calculate a single partition",
+            subtitle = "Convert desired GB into the exact MB to enter",
             icon = Icons.Rounded.Calculate,
             steps = listOf(
-                "Enter the partition size in **GB** — tap a preset chip (**20**, **50**, **100**, **250**, " +
-                    "**500 GB**, **1 TB**) or type your own; decimals such as **2.5** are allowed.",
-                "Pick the filesystem: **NTFS** or **FAT32**.",
-                "If Windows itself will live on the disk, turn on **Simulate Windows Setup** and choose " +
-                    "**Win 10** (**566 MB**), **Win 11** (**826 MB**) or **Custom** (type your own " +
-                    "overhead in **MB**). Leave it **Off** for a blank or secondary disk.",
-                "Tap **Calculate**. The result shows the **MB** to type, the resulting size in **GB**, " +
-                    "and what **Windows Explorer** will display.",
-                "Tap **Copy** and type that number into Windows Setup → **New** → **Size**."
+                "Open the **Calc** tab from the bottom bar.",
+                "Tap a preset chip (**20 GB**, **50 GB**, **100 GB**, **250 GB**, **500 GB**, **1 TB**) " +
+                    "or type your desired size in **GB** inside the **Visible size** box (decimals like " +
+                    "**2.5** are supported).",
+                "Select **NTFS** or **FAT32** under **Filesystem**.",
+                "Turn on **Simulate Windows Setup** if Windows will be installed on this disk, then pick " +
+                    "**Win 10**, **Win 11** or **Custom** (and enter your overhead in **MB**). Leave it " +
+                    "off for a blank or secondary disk.",
+                "Tap **Calculate**, then tap **Copy** to copy the exact **MB** value (or tap **Close** " +
+                    "to keep it visible under **Last calculation**)."
             )
         )
 
         // ------------------------------------------------------------ Split tab
         InfoSectionHeader(text = "Split tab")
         InfoPanel(
-            title = "A whole disk — \"divvy it into equal parts\"",
+            title = "Split a disk into equal parts",
+            subtitle = "Divide full disk capacity in MB across partitions",
             icon = Icons.Rounded.Layers,
             steps = listOf(
-                "Type the **whole disk's** capacity in **MB** — never a single partition's size. " +
-                    "In Windows Setup, select the disk, tap **New** and copy the value the **Size** box " +
-                    "shows.",
-                "Set the number of partitions with the **−** and **+** buttons (**1–8**).",
-                "Pick the filesystem. Turn on **Simulate Windows Setup** only when the disk also holds " +
-                    "Windows system partitions — their size is deducted before splitting.",
-                "Tap **Split disk**. Every row shows the **MB** to type for that partition and the " +
-                    "approximate **GB** Explorer will show.",
-                "Any leftover MB goes to the **last** partition automatically, and the **Σ** line " +
-                    "confirms all parts add up exactly. Tap **Copy** and create the partitions in Setup " +
-                    "in the order shown."
+                "Open the **Split** tab from the bottom bar.",
+                "Enter the disk's full capacity in **MB** inside **Total disk size** (in Windows Setup, " +
+                    "select the disk, tap **New**, and read the number shown in the **Size** box).",
+                "Tap **−** or **+** beside **Partitions** to choose how many parts you want (**1** to **8**).",
+                "Select **NTFS** or **FAT32**, and turn on **Simulate Windows Setup** if Windows system " +
+                    "partitions are on the same disk.",
+                "Tap **Split disk** to view the **MB** size for each partition. Tap the copy icon beside " +
+                    "any row to copy one partition, or tap **Copy** to copy all sizes at once."
             )
         )
 
         // --------------------------------------------------------------- History
         InfoSectionHeader(text = "History")
         InfoPanel(
-            title = "Everything you calculated",
+            title = "Use saved calculations",
             icon = Icons.Rounded.History,
-            bullets = listOf(
-                "Open it with the **clock** icon in the top bar, or from **Settings → View history**.",
-                "Stores the last **100** results, newest first, each tagged **CALC** or **SPLIT** with " +
-                    "the time it was made.",
-                "**Split** rows expand into a per-partition list. The copy icon copies the digits-only " +
-                    "**MB** value; the bin icon deletes it — **Undo** brings it back.",
-                "Clear everything with the bin icon at the top of the sheet or **Settings → History → " +
-                    "Clear**. History stays on your device only."
+            steps = listOf(
+                "Tap the **History** icon in the top-right bar (or go to **Settings → View history**).",
+                "Tap any **SPLIT** entry to expand or hide its individual partition sizes.",
+                "Tap the **Copy** icon on a row to copy its **MB** value, or tap the **Delete** icon to " +
+                    "remove it (tap **Undo** on the bottom bar to restore it).",
+                "Tap the **Trash** icon at the top of the sheet (or **Settings → Clear**) and confirm to " +
+                    "delete all saved history."
             )
         )
 
         // -------------------------------------------------------------- Settings
         InfoSectionHeader(text = "Settings")
         InfoPanel(
-            title = "Make it yours",
+            title = "Change theme and defaults",
             icon = Icons.Rounded.Settings,
-            bullets = listOf(
-                "**Appearance** — switch between **System**, **Light** and **Dark**; the change applies " +
-                    "instantly and is remembered.",
-                "**Defaults** — the filesystem and Windows Setup simulation/profile every new " +
-                    "calculation starts from.",
-                "**History** — see how many conversions are stored, then **View history** or **Clear**.",
-                "**Privacy Policy**, **Guide** and **About** — these pages plus the app version.",
-                "**Rate Us** and **Share App** — open the Play Store listing or send its link to a friend."
+            steps = listOf(
+                "Open the **Settings** tab from the bottom bar.",
+                "Under **Appearance**, tap **System**, **Light** or **Dark** to switch the theme immediately.",
+                "Under **Defaults**, choose your starting **Filesystem**, **Windows Setup simulation** " +
+                    "switch and **Setup profile** for new calculations."
             )
-        )
-
-        InfoBanner(
-            text = "Copy the numbers here and type them into **Windows Setup → New → Size**. Creating or " +
-                "deleting partitions **erases data** — back up first, and check the disk number and " +
-                "size before pressing **Apply**.",
-            icon = Icons.Rounded.Warning
         )
     }
 }
 
 // ---------------------------------------------------------------- guide pieces
 
-/** Small uppercase group label with a hairline rule, used to break the guide into sections. */
+/** Small uppercase group label with a hairline rule, used to break pages into sections. */
 @Composable
 private fun InfoSectionHeader(text: String) {
     val palette = LocalLiquidPalette.current
@@ -621,7 +1168,7 @@ private fun ContactInfoLine(
     }
 }
 
-private fun openPlayStoreAppListing(context: Context) {
+internal fun openPlayStoreAppListing(context: Context) {
     val marketUri = Uri.parse(PRIVACY_PLAY_STORE_MARKET_URI)
     val playStoreIntent = Intent(Intent.ACTION_VIEW, marketUri).apply {
         setPackage("com.android.vending")
@@ -638,6 +1185,21 @@ private fun openPlayStoreAppListing(context: Context) {
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             context.startActivity(webFallbackIntent)
         }
+}
+
+internal fun shareAppListing(context: Context) {
+    val storePackage = context.packageName.removeSuffix(".debug").ifBlank { PRIVACY_APP_PACKAGE }
+    val share = Intent(Intent.ACTION_SEND).apply {
+        type = "text/plain"
+        putExtra(
+            Intent.EXTRA_TEXT,
+            "Disk Partition Calculator — works out the exact MB to type into Windows Setup. " +
+                "https://play.google.com/store/apps/details?id=$storePackage"
+        )
+    }
+    runCatching {
+        context.startActivity(Intent.createChooser(share, "Share App"))
+    }
 }
 
 private fun openDeveloperProfile(context: Context) {
