@@ -67,7 +67,16 @@ fun CalculatorScreen(
     val history by viewModel.history.collectAsStateWithLifecycle()
 
     var selectedTabIndex by remember { mutableIntStateOf(0) }
-    var infoPage by remember { mutableStateOf<String?>(null) }
+    var infoPageStack by remember { mutableStateOf<List<String>>(emptyList()) }
+    val currentInfoPage = infoPageStack.lastOrNull()
+    val openInfoPage: (String) -> Unit = { page ->
+        infoPageStack = if (infoPageStack.lastOrNull() == page) infoPageStack else infoPageStack + page
+    }
+    val closeInfoPage: () -> Unit = {
+        if (infoPageStack.isNotEmpty()) {
+            infoPageStack = infoPageStack.dropLast(1)
+        }
+    }
     var showHistory by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -80,9 +89,9 @@ fun CalculatorScreen(
         )
     }
 
-    // Back on any non-start tab returns to Calc; back inside an info page closes the page.
+    // Back on any non-start tab returns to Calc; back inside an info page steps back cleanly.
     BackHandler(enabled = selectedTabIndex != 0) { selectedTabIndex = 0 }
-    BackHandler(enabled = infoPage != null) { infoPage = null }
+    BackHandler(enabled = currentInfoPage != null) { closeInfoPage() }
 
     DiskCalcTheme(themeMode = settings.themeMode) {
         LiquidBackdropHost(modifier = modifier) {
@@ -102,7 +111,7 @@ fun CalculatorScreen(
                             .windowInsetsPadding(WindowInsets.safeDrawing)
                             .padding(horizontal = tokens.screenPadding)
                     ) {
-                        if (infoPage == null) {
+                        if (currentInfoPage == null) {
                             AppHeader(
                                 onHistoryClick = { showHistory = true },
                                 historyCount = history.size
@@ -115,10 +124,17 @@ fun CalculatorScreen(
                                 .weight(1f)
                                 .fillMaxWidth()
                         ) {
-                            when (infoPage) {
-                                "privacy" -> PrivacyPolicyPage(onBack = { infoPage = null })
-                                "guide" -> GuidePage(onBack = { infoPage = null })
-                                "about" -> AboutPage(onBack = { infoPage = null })
+                            when (currentInfoPage) {
+                                "privacy" -> PrivacyPolicyPage(onBack = closeInfoPage)
+                                "guide" -> GuidePage(onBack = closeInfoPage)
+                                "about" -> AboutPage(
+                                    onBack = closeInfoPage,
+                                    onOpenGuide = { openInfoPage("guide") },
+                                    onOpenPrivacyPolicy = { openInfoPage("privacy") },
+                                    onCopied = {
+                                        scope.launch { snackbarHostState.showSnackbar("Copied") }
+                                    }
+                                )
                                 null -> when (selectedTabIndex) {
                                     0 -> CalcTab(
                                         state = calc,
@@ -155,15 +171,15 @@ fun CalculatorScreen(
                                         onDefaultProfileChange = viewModel::onDefaultProfileChange,
                                         onClearHistory = viewModel::onClearHistory,
                                         onShowHistory = { showHistory = true },
-                                        onOpenPrivacyPolicy = { infoPage = "privacy" },
-                                        onOpenGuide = { infoPage = "guide" },
-                                        onOpenAbout = { infoPage = "about" }
+                                        onOpenPrivacyPolicy = { openInfoPage("privacy") },
+                                        onOpenGuide = { openInfoPage("guide") },
+                                        onOpenAbout = { openInfoPage("about") }
                                     )
                                 }
                             }
                         }
 
-                        if (infoPage == null) {
+                        if (currentInfoPage == null) {
                             Spacer(Modifier.height(tokens.spaceSm))
                             GlassTabBar(
                                 items = tabs,
@@ -183,7 +199,11 @@ fun CalculatorScreen(
                         .widthIn(max = tokens.maxContentWidth)
                         .windowInsetsPadding(WindowInsets.safeDrawing)
                         .padding(
-                            bottom = tokens.spaceXxl + tokens.touchTarget + tokens.spaceMd,
+                            bottom = if (currentInfoPage == null) {
+                                tokens.spaceXxl + tokens.touchTarget + tokens.spaceMd
+                            } else {
+                                tokens.spaceXl
+                            },
                             start = tokens.spaceXl,
                             end = tokens.spaceXl
                         )
