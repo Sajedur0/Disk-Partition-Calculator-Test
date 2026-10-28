@@ -29,15 +29,11 @@ import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.Calculate
 import androidx.compose.material.icons.rounded.CheckCircle
-import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material.icons.rounded.ContactMail
-import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material.icons.rounded.Dashboard
 import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Layers
-import androidx.compose.material.icons.rounded.MenuBook
-import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.PrivacyTip
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.Share
@@ -48,7 +44,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -80,22 +75,18 @@ import com.diskcalc.ui.components.clickableBounce
 import com.diskcalc.ui.components.glassLite
 import com.diskcalc.ui.theme.LocalGlassTokens
 import com.diskcalc.ui.theme.LocalLiquidPalette
-import java.util.Calendar
 
 /**
  * Full-screen About page opened from Settings > About.
- * Displays the app launcher icon, live dynamic version/build metadata from [rememberAppVersionInfo],
- * core capabilities, technical specifications, developer links, and open-source licensing.
+ * Displays the app launcher icon, live version/build metadata from [rememberAppVersionInfo]
+ * in the hero card, and the core capability list.
  */
 @Composable
 fun AboutPage(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
-    onOpenGuide: (() -> Unit)? = null,
-    onOpenPrivacyPolicy: (() -> Unit)? = null,
     onCopied: (() -> Unit)? = null
 ) {
-    val palette = LocalLiquidPalette.current
     val clipboard = LocalClipboardManager.current
     val context = LocalContext.current
     val appVersion = rememberAppVersionInfo()
@@ -108,7 +99,6 @@ fun AboutPage(
 
     InfoPageScaffold(
         title = "About",
-        subtitle = "${appVersion.appName} · ${appVersion.versionTag}",
         onBack = onBack,
         modifier = modifier
     ) {
@@ -159,105 +149,6 @@ fun AboutPage(
                     "and remembers your defaults and System, Light, or Dark theme locally."
             )
         }
-
-        // ---------------------------------------------- dynamic version & build
-        InfoSectionHeader(text = "App information")
-        GlassPanel(
-            title = "Version & specifications",
-            subtitle = "Dynamically resolved from installed package",
-            icon = Icons.Rounded.Info,
-            trailing = {
-                GlassIconButton(
-                    icon = Icons.Rounded.ContentCopy,
-                    contentDescription = "Copy version details",
-                    onClick = copyVersionDetails,
-                    tint = palette.accent
-                )
-            }
-        ) {
-            AboutSpecRow(label = "App Name", value = appVersion.appName)
-            GlassDivider()
-            AboutSpecRow(
-                label = "App Version",
-                value = appVersion.versionTag,
-                monospace = true,
-                accentValue = true
-            )
-            GlassDivider()
-            AboutSpecRow(
-                label = "Version Code",
-                value = appVersion.versionCode.toString(),
-                monospace = true
-            )
-            GlassDivider()
-            AboutSpecRow(label = "Build Channel", value = appVersion.buildType)
-            GlassDivider()
-            AboutSpecRow(
-                label = "Package ID",
-                value = appVersion.packageName,
-                monospace = true
-            )
-            GlassDivider()
-            AboutSpecRow(
-                label = "Minimum Android",
-                value = "Android ${androidReleaseName(appVersion.minSdk)}+ (API ${appVersion.minSdk})"
-            )
-            GlassDivider()
-            AboutSpecRow(
-                label = "Target SDK",
-                value = "Android ${androidReleaseName(appVersion.targetSdk)} (API ${appVersion.targetSdk})"
-            )
-            GlassDivider()
-            AboutSpecRow(label = "Updates", value = "Google Play Flexible Updates")
-            GlassDivider()
-            AboutSpecRow(label = "Built With", value = "Kotlin · Jetpack Compose · Material 3")
-        }
-
-        // -------------------------------------------------- developer & links
-        InfoSectionHeader(text = "Developer & resources")
-        GlassPanel {
-            AboutLinkRow(
-                icon = Icons.Rounded.Person,
-                title = "Developer",
-                subtitle = "Sajedur0 · Google Play developer profile",
-                onClick = { openDeveloperProfile(context) }
-            )
-            GlassDivider()
-            AboutLinkRow(
-                icon = Icons.Rounded.Storage,
-                title = "Google Play Store",
-                subtitle = "View app listing, reviews & updates",
-                onClick = { openPlayStoreAppListing(context) }
-            )
-            GlassDivider()
-            AboutLinkRow(
-                icon = Icons.Rounded.ContactMail,
-                title = "Contact & Support",
-                subtitle = PRIVACY_CONTACT_EMAIL,
-                onClick = { openMailApp(context) }
-            )
-            if (onOpenGuide != null) {
-                GlassDivider()
-                AboutLinkRow(
-                    icon = Icons.Rounded.MenuBook,
-                    title = "User Guide",
-                    subtitle = "Step-by-step instructions to use the app",
-                    onClick = onOpenGuide
-                )
-            }
-            if (onOpenPrivacyPolicy != null) {
-                GlassDivider()
-                AboutLinkRow(
-                    icon = Icons.Rounded.PrivacyTip,
-                    title = "Privacy Policy",
-                    subtitle = "How the app handles and stores information",
-                    onClick = onOpenPrivacyPolicy
-                )
-            }
-        }
-
-        // -------------------------------------------------------------- footer
-        AboutFooterCard(appName = appVersion.appName)
     }
 }
 
@@ -341,7 +232,7 @@ private fun AboutHeroCard(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "Build ${appVersion.versionCode} · ${appVersion.buildType}",
+                        text = "Build ${appVersion.versionCode}",
                         style = MaterialTheme.typography.labelLarge.copy(
                             fontFamily = FontFamily.Monospace
                         ),
@@ -517,128 +408,6 @@ private fun AboutItemDivider() {
     Spacer(Modifier.height(tokens.spaceMd))
     GlassDivider()
     Spacer(Modifier.height(tokens.spaceMd))
-}
-
-@Composable
-private fun AboutSpecRow(
-    label: String,
-    value: String,
-    monospace: Boolean = false,
-    accentValue: Boolean = false
-) {
-    val palette = LocalLiquidPalette.current
-    val tokens = LocalGlassTokens.current
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = tokens.spaceSm),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodyMedium,
-            color = palette.contentSecondary,
-            modifier = Modifier.weight(0.42f)
-        )
-        Spacer(Modifier.width(tokens.spaceSm))
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodyMedium.copy(
-                fontFamily = if (monospace) FontFamily.Monospace else FontFamily.Default,
-                fontWeight = if (accentValue) FontWeight.SemiBold else FontWeight.Medium
-            ),
-            color = if (accentValue) palette.accent else palette.contentPrimary,
-            textAlign = TextAlign.End,
-            modifier = Modifier.weight(0.58f)
-        )
-    }
-}
-
-@Composable
-private fun AboutLinkRow(
-    icon: ImageVector,
-    title: String,
-    subtitle: String,
-    onClick: () -> Unit
-) {
-    val palette = LocalLiquidPalette.current
-    val tokens = LocalGlassTokens.current
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickableBounce(onClick = onClick)
-            .padding(vertical = tokens.spaceSm),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(
-            Modifier
-                .glassLite(
-                    shape = RoundedCornerShape(tokens.cornerSmall),
-                    tint = palette.accentContainer,
-                    borderColor = palette.glassBorderStart
-                )
-                .padding(tokens.spaceSm)
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = palette.accent,
-                modifier = Modifier.size(18.dp)
-            )
-        }
-        Spacer(Modifier.width(tokens.spaceSm))
-        Column(Modifier.weight(1f)) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium,
-                color = palette.contentPrimary
-            )
-            Text(
-                text = subtitle,
-                style = MaterialTheme.typography.bodyMedium,
-                color = palette.contentSecondary
-            )
-        }
-        Icon(
-            imageVector = Icons.Rounded.ChevronRight,
-            contentDescription = null,
-            tint = palette.contentTertiary,
-            modifier = Modifier.size(20.dp)
-        )
-    }
-}
-
-@Composable
-private fun AboutFooterCard(appName: String) {
-    val palette = LocalLiquidPalette.current
-    val tokens = LocalGlassTokens.current
-    val copyrightYear = remember {
-        Calendar.getInstance().get(Calendar.YEAR).coerceAtLeast(2026)
-    }
-
-    LiquidGlassSurface(modifier = Modifier.fillMaxWidth()) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(tokens.cardPadding),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = "MIT License · © $copyrightYear $appName",
-                style = MaterialTheme.typography.labelLarge,
-                color = palette.contentPrimary,
-                textAlign = TextAlign.Center
-            )
-            Spacer(Modifier.height(tokens.spaceXs))
-            Text(
-                text = "Developed by Sajedur0 · Read-only planning calculator — never modifies disks or user files.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = palette.contentTertiary,
-                textAlign = TextAlign.Center
-            )
-        }
-    }
 }
 
 /** Shown on the Privacy Policy page. Update it whenever the data practices change. */
@@ -972,7 +741,7 @@ private fun emphasised(text: String): AnnotatedString {
 @Composable
 private fun InfoPageScaffold(
     title: String,
-    subtitle: String,
+    subtitle: String? = null,
     onBack: () -> Unit,
     modifier: Modifier,
     content: @Composable ColumnScope.() -> Unit
@@ -995,11 +764,13 @@ private fun InfoPageScaffold(
                     style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold),
                     color = palette.contentPrimary
                 )
-                Text(
-                    text = subtitle,
-                    style = MaterialTheme.typography.labelMedium,
-                    color = palette.contentTertiary
-                )
+                if (subtitle != null) {
+                    Text(
+                        text = subtitle,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = palette.contentTertiary
+                    )
+                }
             }
         }
         Spacer(Modifier.height(tokens.spaceMd))

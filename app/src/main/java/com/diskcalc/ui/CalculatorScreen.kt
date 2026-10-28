@@ -129,8 +129,6 @@ fun CalculatorScreen(
                                 "guide" -> GuidePage(onBack = closeInfoPage)
                                 "about" -> AboutPage(
                                     onBack = closeInfoPage,
-                                    onOpenGuide = { openInfoPage("guide") },
-                                    onOpenPrivacyPolicy = { openInfoPage("privacy") },
                                     onCopied = {
                                         scope.launch { snackbarHostState.showSnackbar("Copied") }
                                     }

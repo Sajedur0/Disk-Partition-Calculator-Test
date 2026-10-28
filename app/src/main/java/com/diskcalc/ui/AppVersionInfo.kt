@@ -57,7 +57,7 @@ data class AppVersionInfo(
     /** Multi-line summary copied when the user taps the version badge or Copy button. */
     val clipboardSummary: String
         get() = buildString {
-            appendLine("$appName $versionTag (Build $versionCode · $buildType)")
+            appendLine("$appName $versionTag (Build $versionCode)")
             appendLine("Package: $packageName")
             append("Android SDK: API $minSdk+ (Target API $targetSdk)")
         }
