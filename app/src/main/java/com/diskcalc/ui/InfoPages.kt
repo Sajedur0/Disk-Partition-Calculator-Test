@@ -233,7 +233,7 @@ private fun AboutHeroCard(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "Build ${appVersion.versionCode} · ${appVersion.buildType}",
+                        text = "Build ${appVersion.versionCode}",
                         style = MaterialTheme.typography.labelLarge.copy(
                             fontFamily = FontFamily.Monospace
                         ),
