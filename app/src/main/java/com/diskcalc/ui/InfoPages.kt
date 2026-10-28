@@ -78,8 +78,8 @@ import com.diskcalc.ui.theme.LocalLiquidPalette
 
 /**
  * Full-screen About page opened from Settings > About.
- * Displays the app launcher icon, live version/build metadata from [rememberAppVersionInfo]
- * in the hero card, and the core capability list.
+ * Displays the app launcher icon and live app name/version from [rememberAppVersionInfo]
+ * in the hero card, followed by the core capability list.
  */
 @Composable
 fun AboutPage(
@@ -217,26 +217,6 @@ private fun AboutHeroCard(
                             fontWeight = FontWeight.SemiBold
                         ),
                         color = palette.accent
-                    )
-                }
-
-                Box(
-                    modifier = Modifier
-                        .glassLite(
-                            shape = pillShape,
-                            tint = palette.controlSurface,
-                            borderColor = palette.glassBorderStart
-                        )
-                        .clickableBounce(onClick = onCopyVersion)
-                        .padding(horizontal = tokens.spaceMd, vertical = 6.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "Build ${appVersion.versionCode}",
-                        style = MaterialTheme.typography.labelLarge.copy(
-                            fontFamily = FontFamily.Monospace
-                        ),
-                        color = palette.contentSecondary
                     )
                 }
             }
