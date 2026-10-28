@@ -1,0 +1,468 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacy Policy · Disk Partition Calculator</title>
+<meta name="description" content="Privacy Policy for Disk Partition Calculator — all calculations, history and preferences stay on the device. No account, no permissions, no ads or analytics.">
+<meta name="theme-color" content="#F6F7FB" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0F1115" media="(prefers-color-scheme: dark)">
+<!--
+  Mirror of the in-app screen `PrivacyPolicyPage` (app/src/main/java/com/diskcalc/ui/InfoPages.kt).
+  Tokens are copied 1:1 from the Compose theme (1 dp = 1 px), so this page looks like the app:
+    · colours            ui/theme/GlassTokens.kt   (LightLiquidPalette / DarkLiquidPalette)
+    · spacing + radius     ui/theme/GlassTokens.kt   (GlassTokens: 4/8/12/16 dp, card 16 dp, border 1 dp)
+    · typography          ui/theme/Theme.kt        (titleMedium 16/24, bodyMedium 14/20, labelMedium 12/16)
+    · card + badge look    ui/components/LiquidGlass.kt (GlassPanel / LiquidGlassSurface)
+  Theme follows the OS setting (the app default is ThemeMode.SYSTEM), and the app's content column is
+  centred at max 600 dp with 16 dp side padding.
+  Update both copies together when the data practices change: PRIVACY_LAST_UPDATED in InfoPages.kt
+  and the "Last updated" line below.
+-->
+<style>
+  :root {
+    /* LightLiquidPalette */
+    --bg: #F6F7FB;              /* backdropBase  */
+    --surface: #FFFFFF;         /* glassTint     */
+    --border: #C5CBD8;          /* glassBorderStart */
+    --accent: #1F6FEB;          /* accent (primary) */
+    --accent-container: #DCE9FF;/* accentContainer */
+    --text: #14171F;            /* contentPrimary */
+    --text-muted: #4A5363;      /* contentSecondary / contentTertiary */
+
+    --radius-card: 16px;
+    --radius-badge: 8px;
+    --pad-card: 16px;
+    --gap-stack: 12px;
+    --gap-sm: 8px;
+    --gap-xs: 4px;
+    --max-width: 600px;
+
+    --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial,
+                 "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+    --font-mono: ui-monospace, "Roboto Mono", "SF Mono", Menlo, Consolas, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      /* DarkLiquidPalette */
+      --bg: #0F1115;
+      --surface: #171A21;
+      --border: #3A4150;
+      --accent: #5B9DFF;
+      --accent-container: #1B3A66;
+      --text: #E6E8EE;
+      --text-muted: #9AA3B2;
+    }
+  }
+
+  * { box-sizing: border-box; }
+
+  html { -webkit-text-size-adjust: 100%; }
+
+  body {
+    margin: 0;
+    padding: 16px 16px 8px;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 400;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    max-width: var(--max-width);
+    margin: 0 auto;
+  }
+
+  /* ── screen header ─────────────────────────────────────────────────────── */
+  .screen-header { margin-bottom: 0; padding: 0 2px; }
+
+  .screen-header h1 {
+    margin: 0;
+    font-size: 22px;
+    line-height: 28px;
+    font-weight: 600;
+    letter-spacing: 0;
+  }
+
+  .screen-header .subtitle {
+    margin: 0;
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 500;
+    color: var(--text-muted);
+  }
+
+  /* ── card stack ────────────────────────────────────────────────────────── */
+  .stack {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-stack);
+    margin-top: var(--gap-stack);
+  }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    padding: var(--pad-card);
+  }
+
+  .panel-head {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-sm);
+    margin-bottom: var(--gap-stack);
+  }
+
+  .badge {
+    flex: none;
+    width: 36px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-badge);
+    background: var(--accent-container);
+    border: 1px solid var(--border);
+    color: var(--accent);
+  }
+
+  .badge svg { width: 18px; height: 18px; display: block; }
+
+  .panel-head h2 {
+    margin: 0;
+    font-size: 16px;
+    line-height: 24px;
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  /* ── body copy ─────────────────────────────────────────────────────────── */
+  .para {
+    margin: 0 0 var(--gap-xs);
+    color: var(--text-muted);
+  }
+  .para:last-child { margin-bottom: 0; }
+
+  .lines { list-style: none; margin: 0; padding: 0; }
+
+  .lines li {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--gap-sm);
+    padding: var(--gap-xs) 0;
+    color: var(--text-muted);
+  }
+
+  .marker {
+    flex: none;
+    width: 16px;
+    text-align: center;
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .lines li strong { font-weight: 600; color: var(--text); }
+
+  /* ── contact card ──────────────────────────────────────────────────────── */
+  .contact .panel-head { align-items: flex-start; }
+
+  .contact h2 { font-weight: 700; }
+
+  .contact .intro { margin: var(--gap-xs) 0 var(--gap-sm); color: var(--text-muted); }
+
+  .contact-rows { margin: 0; }
+
+  .contact-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    column-gap: var(--gap-xs);
+  }
+
+  .contact-row .label { padding: 3px 0; color: var(--text-muted); }
+
+  .contact-row a {
+    padding: 3px 0;
+    color: var(--accent);
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  .contact-row a:hover { text-decoration: none; }
+
+  .contact-row a:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  @media (max-width: 360px) {
+    body { padding-left: 12px; padding-right: 12px; }
+  }
+
+  @media print {
+    :root {
+      --bg: #FFFFFF; --surface: #FFFFFF; --border: #C5CBD8;
+      --accent: #1F6FEB; --accent-container: #DCE9FF;
+      --text: #14171F; --text-muted: #4A5363;
+    }
+    body { padding: 0; }
+    .panel { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<main class="page">
+
+  <header class="screen-header">
+    <h1>Privacy Policy</h1>
+    <p class="subtitle">Last updated: 26 October 2026</p>
+  </header>
+
+  <div class="stack">
+
+    <!-- Summary -->
+    <section class="panel" id="summary">
+      <div class="panel-head">
+        <span class="badge" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2.8 4.9 5.6v6.1c0 4.3 3 8.2 7.1 9.5 4.1-1.3 7.1-5.2 7.1-9.5V5.6L12 2.8Z"/>
+            <path d="M8.9 12.1l2.2 2.2 4-4.4"/>
+          </svg>
+        </span>
+        <h2>Summary</h2>
+      </div>
+      <ul class="lines">
+        <li><span class="marker" aria-hidden="true">•</span><span>Your calculations, history and preferences stay only on your device.</span></li>
+        <li><span class="marker" aria-hidden="true">•</span><span>The app has no account, no sign-in, and no developer-operated server.</span></li>
+        <li><span class="marker" aria-hidden="true">•</span><span>The app requests no runtime permissions. The only network permission is INTERNET, used solely by Google Play's flexible in-app update check; your files, location and hardware are never accessed.</span></li>
+        <li><span class="marker" aria-hidden="true">•</span><span>The app does not ask for access to your contacts, location, camera, microphone, photos, or files.</span></li>
+        <li><span class="marker" aria-hidden="true">•</span><span>The app contains no advertising, analytics, crash-reporting, or tracking SDKs — the only Google library is Play In-App Updates.</span></li>
+        <li><span class="marker" aria-hidden="true">•</span><span>The developer does not sell, rent, or share your data with anyone.</span></li>
+      </ul>
+    </section>
+
+    <!-- Developer and contact -->
+    <section class="panel" id="developer-and-contact">
+      <div class="panel-head">
+        <span class="badge" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="9.2"/>
+            <path d="M12 10.6v6"/>
+            <path d="M12 7.3h.01"/>
+          </svg>
+        </span>
+        <h2>Developer and contact</h2>
+      </div>
+      <p class="para">This policy covers the Disk Partition Calculator Android app (package: com.diskcalc). The developer is the publisher named on the app's Google Play Store listing.</p>
+      <p class="para">For privacy questions, data requests, or concerns, please contact the developer at the support email address shown on the app's Google Play Store listing.</p>
+    </section>
+
+    <!-- Information the app handles -->
+    <section class="panel" id="information-the-app-handles">
+      <div class="panel-head">
+        <span class="badge" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3.2" y="4.2" width="17.6" height="6.1" rx="2"/>
+            <rect x="3.2" y="13.7" width="17.6" height="6.1" rx="2"/>
+            <path d="M6.6 7.2h.01M6.6 16.8h.01"/>
+            <path d="M13.4 7.2h4.2M13.4 16.8h4.2"/>
+          </svg>
+        </span>
+        <h2>Information the app handles</h2>
+      </div>
+      <p class="para">The following information is processed and stored only on your device:</p>
+      <ul class="lines">
+        <li><span class="marker" aria-hidden="true">•</span><span>Calculation inputs: visible partition size in GB, total disk size in MB, partition count, filesystem type, Windows Setup simulation status, and custom Windows Setup overhead value.</span></li>
+        <li><span class="marker" aria-hidden="true">•</span><span>Calculation results and history: up to 100 most recent conversions, including the mode (Calc or Split), entered values, filesystem type, result values, text summary, timestamp, and the partition count for Split results.</span></li>
+        <li><span class="marker" aria-hidden="true">•</span><span>Each history entry also stores a randomly generated identifier (UUID). It is created on your device, is not a device or advertising identifier, and has no meaning outside the app.</span></li>
+        <li><span class="marker" aria-hidden="true">•</span><span>App preferences: theme selection (System, Light or Dark), default filesystem, default Windows Setup simulation status, selected Windows Setup profile, and custom overhead value.</span></li>
+      </ul>
+    </section>
+
+    <!-- Personal information -->
+    <section class="panel" id="personal-information">
+      <div class="panel-head">
+        <span class="badge" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="9.2"/>
+            <path d="M12 10.6v6"/>
+            <path d="M12 7.3h.01"/>
+          </svg>
+        </span>
+        <h2>Personal information</h2>
+      </div>
+      <p class="para">The app does not collect or ask for your name, email address, phone number, location, contacts, photos, device identifiers, or advertising ID. It does not require an account or any form of registration.</p>
+    </section>
+
+    <!-- How the data is used -->
+    <section class="panel" id="how-the-data-is-used">
+      <div class="panel-head">
+        <span class="badge" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="4.6" y="2.9" width="14.8" height="18.2" rx="2.4"/>
+            <rect x="7.4" y="5.7" width="9.2" height="3.6" rx="1.2"/>
+            <path d="M8.1 12.9h.01M12 12.9h.01M15.9 12.9h.01M8.1 16.6h.01M12 16.6h.01M15.9 16.6h.01"/>
+          </svg>
+        </span>
+        <h2>How the data is used</h2>
+      </div>
+      <ul class="lines">
+        <li><span class="marker" aria-hidden="true">•</span><span>To run partition-size calculations on your device.</span></li>
+        <li><span class="marker" aria-hidden="true">•</span><span>To show your saved history in the History sheet and let you copy or delete entries.</span></li>
+        <li><span class="marker" aria-hidden="true">•</span><span>To remember your preferences between app sessions.</span></li>
+        <li><span class="marker" aria-hidden="true">•</span><span>The data is not used for advertising, profiling, or analytics.</span></li>
+      </ul>
+    </section>
+
+    <!-- Data sharing and third parties -->
+    <section class="panel" id="data-sharing-and-third-parties">
+      <div class="panel-head">
+        <span class="badge" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3.2"/>
+            <path d="M19.4 14.6a1.7 1.7 0 0 0 .34 1.87l.06.06a1.6 1.6 0 1 1-2.27 2.27l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1.03 1.56v.17a1.6 1.6 0 1 1-3.2 0v-.09a1.7 1.7 0 0 0-1.11-1.56 1.7 1.7 0 0 0-1.87.34l-.06.06a1.6 1.6 0 1 1-2.27-2.27l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.56-1.03H3.9a1.6 1.6 0 1 1 0-3.2h.09A1.7 1.7 0 0 0 5.55 8.3a1.7 1.7 0 0 0-.34-1.87l-.06-.06A1.6 1.6 0 1 1 7.42 4.1l.06.06a1.7 1.7 0 0 0 1.87.34H9.4a1.7 1.7 0 0 0 1.03-1.56V2.7a1.6 1.6 0 1 1 3.2 0v.09a1.7 1.7 0 0 0 1.03 1.56 1.7 1.7 0 0 0 1.87-.34l.06-.06a1.6 1.6 0 1 1 2.27 2.27l-.06.06a1.7 1.7 0 0 0-.34 1.87v.08a1.7 1.7 0 0 0 1.56 1.03h.17a1.6 1.6 0 1 1 0 3.2h-.09a1.7 1.7 0 0 0-1.56 1.03Z"/>
+          </svg>
+        </span>
+        <h2>Data sharing and third parties</h2>
+      </div>
+      <p class="para">The developer does not share your data with third parties. The following features involve other services only when you explicitly use them:</p>
+      <ul class="lines">
+        <li><span class="marker" aria-hidden="true">•</span><span>Google Play Services: the app uses Play In-App Updates (flexible flow with Play's native UI) to check for a newer version and, if you accept, download and install it automatically. That check sends no calculation, history or preference data. The 'Rate Us' button opens the Play Store listing; Google processes those interactions under its own privacy policy. Apart from AndroidX/Jetpack and Play In-App Updates, the app bundles no other third-party SDKs — no advertising, analytics, attribution, crash-reporting or social-media SDK.</span></li>
+        <li><span class="marker" aria-hidden="true">•</span><span>Android share sheet: The 'Share App' feature sends only a static Play Store link to the app you choose. That app handles the link under its own privacy policy. Your calculations and history are not attached or shared.</span></li>
+        <li><span class="marker" aria-hidden="true">•</span><span>Android backup: the app opts out of Android backup (allowBackup=false), so history and preferences are not backed up or transferred to another device.</span></li>
+        <li><span class="marker" aria-hidden="true">•</span><span>Clipboard: The Copy buttons place calculation results on your clipboard only when you tap them. The app does not read from the clipboard or access any other clipboard content.</span></li>
+      </ul>
+    </section>
+
+    <!-- Security -->
+    <section class="panel" id="security">
+      <div class="panel-head">
+        <span class="badge" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2.8 4.9 5.6v6.1c0 4.3 3 8.2 7.1 9.5 4.1-1.3 7.1-5.2 7.1-9.5V5.6L12 2.8Z"/>
+            <path d="M8.9 12.1l2.2 2.2 4-4.4"/>
+          </svg>
+        </span>
+        <h2>Security</h2>
+      </div>
+      <ul class="lines">
+        <li><span class="marker" aria-hidden="true">•</span><span>History and preferences are kept in app-private storage, which Android's app sandbox keeps away from other apps.</span></li>
+        <li><span class="marker" aria-hidden="true">•</span><span>The app does not send your calculations, history or preferences over the network.</span></li>
+        <li><span class="marker" aria-hidden="true">•</span><span>The app contains no cloud-sync code; the only network code is the Google Play in-app update check.</span></li>
+        <li><span class="marker" aria-hidden="true">•</span><span>No method of storage or transmission can be guaranteed to be completely secure.</span></li>
+      </ul>
+    </section>
+
+    <!-- Retention and deletion -->
+    <section class="panel" id="retention-and-deletion">
+      <div class="panel-head">
+        <span class="badge" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3.6 12a8.4 8.4 0 1 0 2.6-6.1L3.4 8.4"/>
+            <path d="M3.2 4.4v4h4"/>
+            <path d="M12 7.6V12l3 1.9"/>
+          </svg>
+        </span>
+        <h2>Retention and deletion</h2>
+      </div>
+      <ul class="lines">
+        <li><span class="marker" aria-hidden="true">•</span><span>History: up to 100 entries are kept. When you save more, the oldest entry is removed automatically. History stays until you delete it.</span></li>
+        <li><span class="marker" aria-hidden="true">•</span><span>Preferences: kept until you change them or clear the app's data.</span></li>
+        <li><span class="marker" aria-hidden="true">•</span><span>Delete one history entry: open History and tap the delete icon on that entry.</span></li>
+        <li><span class="marker" aria-hidden="true">•</span><span>Delete all history: open Settings, then History, then Clear, and confirm.</span></li>
+        <li><span class="marker" aria-hidden="true">•</span><span>Delete all app data: open Android Settings, then Apps, then Disk Partition Calculator, then Storage, then Clear storage. Uninstalling the app also removes its private data from the device.</span></li>
+        <li><span class="marker" aria-hidden="true">•</span><span>Android backup: the app opts out of backup, so no copy is created in device or Google backups.</span></li>
+        <li><span class="marker" aria-hidden="true">•</span><span>The developer does not hold copies of your data, so there is nothing on the developer's side to request or delete. The app has no account, so there is no account to delete.</span></li>
+      </ul>
+    </section>
+
+    <!-- Children -->
+    <section class="panel" id="children">
+      <div class="panel-head">
+        <span class="badge" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="9.2"/>
+            <path d="M12 10.6v6"/>
+            <path d="M12 7.3h.01"/>
+          </svg>
+        </span>
+        <h2>Children</h2>
+      </div>
+      <p class="para">This is a general-purpose utility for Windows users and is not directed to children. The app does not knowingly collect personal information from children.</p>
+    </section>
+
+    <!-- Your choices -->
+    <section class="panel" id="your-choices">
+      <div class="panel-head">
+        <span class="badge" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3.2"/>
+            <path d="M19.4 14.6a1.7 1.7 0 0 0 .34 1.87l.06.06a1.6 1.6 0 1 1-2.27 2.27l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1.03 1.56v.17a1.6 1.6 0 1 1-3.2 0v-.09a1.7 1.7 0 0 0-1.11-1.56 1.7 1.7 0 0 0-1.87.34l-.06.06a1.6 1.6 0 1 1-2.27-2.27l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.56-1.03H3.9a1.6 1.6 0 1 1 0-3.2h.09A1.7 1.7 0 0 0 5.55 8.3a1.7 1.7 0 0 0-.34-1.87l-.06-.06A1.6 1.6 0 1 1 7.42 4.1l.06.06a1.7 1.7 0 0 0 1.87.34H9.4a1.7 1.7 0 0 0 1.03-1.56V2.7a1.6 1.6 0 1 1 3.2 0v.09a1.7 1.7 0 0 0 1.03 1.56 1.7 1.7 0 0 0 1.87-.34l.06-.06a1.6 1.6 0 1 1 2.27 2.27l-.06.06a1.7 1.7 0 0 0-.34 1.87v.08a1.7 1.7 0 0 0 1.56 1.03h.17a1.6 1.6 0 1 1 0 3.2h-.09a1.7 1.7 0 0 0-1.56 1.03Z"/>
+          </svg>
+        </span>
+        <h2>Your choices</h2>
+      </div>
+      <ul class="lines">
+        <li><span class="marker" aria-hidden="true">•</span><span>You can view, delete or change your history and preferences at any time inside the app.</span></li>
+        <li><span class="marker" aria-hidden="true">•</span><span>Android backup is disabled for this app, so nothing leaves the device.</span></li>
+        <li><span class="marker" aria-hidden="true">•</span><span>You can stop using the app and uninstall it at any time.</span></li>
+        <li><span class="marker" aria-hidden="true">•</span><span>For questions about rights that apply to you under local privacy laws, contact the developer using the details in the Developer and contact section.</span></li>
+        <li><span class="marker" aria-hidden="true">•</span><span>Because the app does not collect personal information, the developer holds no personal data about you to access, correct, export or delete, and there is nothing to opt out of.</span></li>
+      </ul>
+    </section>
+
+    <!-- Changes to this policy -->
+    <section class="panel" id="changes-to-this-policy">
+      <div class="panel-head">
+        <span class="badge" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="9.2"/>
+            <path d="M12 10.6v6"/>
+            <path d="M12 7.3h.01"/>
+          </svg>
+        </span>
+        <h2>Changes to this policy</h2>
+      </div>
+      <p class="para">This policy may be updated if the app's features or data practices change. The version in the app is the current one, and the date at the top shows when it was last updated.</p>
+    </section>
+
+    <!-- Contact Us -->
+    <section class="panel contact" id="contact-us">
+      <div class="panel-head">
+        <span class="badge" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2.9" y="5.4" width="18.2" height="13.2" rx="2.2"/>
+            <path d="M3.6 6.9 12 13l8.4-6.1"/>
+          </svg>
+        </span>
+        <h2>Contact Us</h2>
+      </div>
+      <p class="intro">If you have any questions or concerns about this Privacy Policy, please contact us. We read every message and aim to reply within 30 days:</p>
+      <div class="contact-rows">
+        <p class="contact-row">
+          <span class="label">App Name:</span>
+          <a href="https://play.google.com/store/apps/details?id=com.diskcalc">Disk Partition Calculator</a>
+        </p>
+        <p class="contact-row">
+          <span class="label">Developer:</span>
+          <a href="https://play.google.com/store/apps/dev?id=5574132061091657048">Sajedur0</a>
+        </p>
+        <p class="contact-row">
+          <span class="label">Email:</span>
+          <a href="mailto:Sajedurzero@gmail.com">Sajedurzero@gmail.com</a>
+        </p>
+      </div>
+    </section>
+
+  </div>
+
+</main>
+</body>
+</html>
