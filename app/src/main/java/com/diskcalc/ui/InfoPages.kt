@@ -99,7 +99,6 @@ fun AboutPage(
 
     InfoPageScaffold(
         title = "About",
-        subtitle = "${appVersion.appName} · ${appVersion.versionTag}",
         onBack = onBack,
         modifier = modifier
     ) {
@@ -742,7 +741,7 @@ private fun emphasised(text: String): AnnotatedString {
 @Composable
 private fun InfoPageScaffold(
     title: String,
-    subtitle: String,
+    subtitle: String? = null,
     onBack: () -> Unit,
     modifier: Modifier,
     content: @Composable ColumnScope.() -> Unit
@@ -765,11 +764,13 @@ private fun InfoPageScaffold(
                     style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold),
                     color = palette.contentPrimary
                 )
-                Text(
-                    text = subtitle,
-                    style = MaterialTheme.typography.labelMedium,
-                    color = palette.contentTertiary
-                )
+                if (subtitle != null) {
+                    Text(
+                        text = subtitle,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = palette.contentTertiary
+                    )
+                }
             }
         }
         Spacer(Modifier.height(tokens.spaceMd))
