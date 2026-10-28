@@ -25,7 +25,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.AutoAwesome
-import androidx.compose.material.icons.rounded.Build
 import androidx.compose.material.icons.rounded.Calculate
 import androidx.compose.material.icons.rounded.ContactMail
 import androidx.compose.material.icons.rounded.Dashboard
@@ -50,7 +49,6 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
@@ -267,8 +265,9 @@ fun PrivacyPolicyPage(onBack: () -> Unit, modifier: Modifier = Modifier) {
 
 /**
  * Full-screen Guide page opened from Settings > Guide.
- * Organised as a short tutorial: a three-step quick start, then one section per area of the app,
- * then the Windows Setup walkthrough and the safety/troubleshooting reference.
+ * One section per place a user can act — Calc tab, Split tab, History and Settings —
+ * with only the operating steps. No reference tables, benchmarks or troubleshooting text;
+ * a single data-loss warning closes the page.
  */
 @Composable
 fun GuidePage(onBack: () -> Unit, modifier: Modifier = Modifier) {
@@ -278,191 +277,92 @@ fun GuidePage(onBack: () -> Unit, modifier: Modifier = Modifier) {
         onBack = onBack,
         modifier = modifier
     ) {
-        // ------------------------------------------------------------ quick start
+        // ------------------------------------------------------------- orientation
         InfoPanel(
-            title = "Start here",
-            subtitle = "Three steps to the number Windows Setup asks for",
-            icon = Icons.Rounded.AutoAwesome,
-            steps = listOf(
-                "Pick a tab: **Calc** when you know how big one partition should be, **Split** when you want " +
-                    "to divide a whole disk into equal parts.",
-                "Enter the size. Calc takes **GB**; Split takes the disk's **total MB**.",
-                "Tap **Calculate** or **Split disk**, then **Copy** the MB values and type exactly those " +
-                    "numbers into Windows Setup."
-            )
-        )
-
-        InfoBanner(
-            text = "This app only does the maths. It never reads, creates, resizes or formats a disk — " +
-                "you make every change in Windows Setup.",
-            icon = Icons.Rounded.Info
-        )
-
-        InfoPanel(
-            title = "Top bar and navigation",
+            title = "Where everything is",
+            subtitle = "A calculator with a memory — nothing more",
             icon = Icons.Rounded.Dashboard,
             bullets = listOf(
-                "**Clock** — open History. It is highlighted when at least one conversion is saved.",
-                "**Bottom bar** — switch between the Calc, Split and Settings tabs.",
-                "**Theme** — System, Light or Dark is chosen in **Settings → Appearance**."
+                "**Bottom bar** — the three tabs: **Calc**, **Split** and **Settings**.",
+                "**Clock** — the top-bar button that opens History."
             )
         )
 
-        // ------------------------------------------------------------ the two tabs
-        InfoSectionHeader(text = "The two tabs")
-
+        // ------------------------------------------------------------ Calc tab
+        InfoSectionHeader(text = "Calc tab")
         InfoPanel(
-            title = "Calc — one partition",
-            subtitle = "\"I want a 100 GB partition. What do I type?\"",
+            title = "One partition — \"I want it 100 GB\"",
             icon = Icons.Rounded.Calculate,
             steps = listOf(
-                "Tap a chip — **20**, **50**, **100**, **250**, **500 GB** or **1 TB** — or type any size. " +
-                    "Decimals such as **2.5** are allowed.",
-                "Pick **NTFS** or **FAT32**. The choice is also saved as your default in Settings.",
-                "Turn on **Simulate Windows Setup** if the disk will also hold Windows, then choose " +
-                    "**Off** (**0 MB**), **Win 10** (**566 MB**), **Win 11** (**826 MB**) or **Custom** " +
-                    "and type your own overhead.",
-                "Tap **Calculate**. The dialog shows the MB to type, the partition size in **GB**, the size " +
-                    "Explorer is expected to show, and any warnings.",
-                "Tap **Copy** to put the digits-only MB value on your clipboard."
+                "Enter the partition size in **GB** — tap a preset chip (**20**, **50**, **100**, **250**, " +
+                    "**500 GB**, **1 TB**) or type your own; decimals such as **2.5** are allowed.",
+                "Pick the filesystem: **NTFS** or **FAT32**.",
+                "If Windows itself will live on the disk, turn on **Simulate Windows Setup** and choose " +
+                    "**Win 10** (**566 MB**), **Win 11** (**826 MB**) or **Custom** (type your own " +
+                    "overhead in **MB**). Leave it **Off** for a blank or secondary disk.",
+                "Tap **Calculate**. The result shows the **MB** to type, the resulting size in **GB**, " +
+                    "and what **Windows Explorer** will display.",
+                "Tap **Copy** and type that number into Windows Setup → **New** → **Size**."
             )
         )
 
-        InfoTablePanel(
-            title = "Calc quick reference",
-            subtitle = "Values are the MB you type in Windows Setup",
-            icon = Icons.Rounded.Calculate,
-            headers = listOf("Desired", "No setup", "Win 10", "Win 11"),
-            rows = listOf(
-                listOf("1 GB", "1028", "1594", "1854"),
-                listOf("2.5 GB", "2564", "3130", "3390"),
-                listOf("100 GB", "102404", "102970", "103230"),
-                listOf("1 TB", "1048580", "1049146", "1049406")
-            ),
-            note = "Every number already includes the **4 MB** formatter slack, so Explorer shows the size " +
-                "you asked for."
-        )
-
+        // ------------------------------------------------------------ Split tab
+        InfoSectionHeader(text = "Split tab")
         InfoPanel(
-            title = "Split — a whole disk",
-            subtitle = "\"Divide this disk into four equal partitions.\"",
+            title = "A whole disk — \"divvy it into equal parts\"",
             icon = Icons.Rounded.Layers,
             steps = listOf(
-                "Type the **whole disk's** size in MB — not one partition's. Read it in Windows Setup: " +
-                    "select the disk, tap **New**, then copy the MB value from the **Size** box.",
-                "Set the number of partitions (**1–8**) with **−** and **+**.",
-                "Pick the filesystem, and turn on Setup simulation if Windows system partitions already " +
-                    "exist on the disk.",
-                "Tap **Split disk**. Each row shows the MB to type and the approximate **GB** size " +
-                    "Explorer will show, so you can see how big every partition really is.",
-                "Check the **sum** line — it must equal the usable space. Any leftover MB always goes to " +
-                    "the **last** partition."
+                "Type the **whole disk's** capacity in **MB** — never a single partition's size. " +
+                    "In Windows Setup, select the disk, tap **New** and copy the value the **Size** box " +
+                    "shows.",
+                "Set the number of partitions with the **−** and **+** buttons (**1–8**).",
+                "Pick the filesystem. Turn on **Simulate Windows Setup** only when the disk also holds " +
+                    "Windows system partitions — their size is deducted before splitting.",
+                "Tap **Split disk**. Every row shows the **MB** to type for that partition and the " +
+                    "approximate **GB** Explorer will show.",
+                "Any leftover MB goes to the **last** partition automatically, and the **Σ** line " +
+                    "confirms all parts add up exactly. Tap **Copy** and create the partitions in Setup " +
+                    "in the order shown."
             )
         )
 
-        InfoTablePanel(
-            title = "Split example",
-            subtitle = "A 476923 MB disk divided into 4 partitions",
-            icon = Icons.Rounded.Layers,
-            headers = listOf("Partition", "No setup", "Win 10"),
-            rows = listOf(
-                listOf("1", "119230", "119089"),
-                listOf("2", "119230", "119089"),
-                listOf("3", "119230", "119089"),
-                listOf("4 — last", "119233", "119090"),
-                listOf("Sum", "476923", "476357")
-            ),
-            note = "The last partition takes the remainder, so nothing is lost and the disk is never " +
-                "over-filled. Values are MB."
-        )
-
-        // ------------------------------------------------------- settings & history
-        InfoSectionHeader(text = "Settings and history")
-
+        // --------------------------------------------------------------- History
+        InfoSectionHeader(text = "History")
         InfoPanel(
-            title = "Settings",
-            icon = Icons.Rounded.Settings,
-            bullets = listOf(
-                "**Appearance** — System, Light or Dark; the change animates smoothly and is remembered.",
-                "**Defaults** — filesystem, Setup simulation and Setup profile used as the starting values " +
-                    "for new calculations.",
-                "**History** — how many conversions are saved, with **View history** and **Clear**.",
-                "**Privacy Policy** and **Guide** — these two pages.",
-                "**Rate Us**, **Share App** and **About** — Play Store listing, Android share sheet and version."
-            )
-        )
-
-        InfoPanel(
-            title = "History",
+            title = "Everything you calculated",
             icon = Icons.Rounded.History,
             bullets = listOf(
-                "Keeps the **last 100** conversions, newest first — both Calc and Split results.",
-                "Each row shows its mode (**CALC** or **SPLIT**), the time, the size in **GB** and the exact **MB** " +
-                    "to type. Split rows expand to list every partition.",
-                "Copy a row (digits only) or delete it with Undo; to remove everything use " +
-                    "**Settings → History → Clear**.",
-                "History stays on your device and is never uploaded."
+                "Open it with the **clock** icon in the top bar, or from **Settings → View history**.",
+                "Stores the last **100** results, newest first, each tagged **CALC** or **SPLIT** with " +
+                    "the time it was made.",
+                "**Split** rows expand into a per-partition list. The copy icon copies the digits-only " +
+                    "**MB** value; the bin icon deletes it — **Undo** brings it back.",
+                "Clear everything with the bin icon at the top of the sheet or **Settings → History → " +
+                    "Clear**. History stays on your device only."
             )
         )
 
-        // -------------------------------------------------------- windows setup use
-        InfoSectionHeader(text = "In Windows Setup")
-
+        // -------------------------------------------------------------- Settings
+        InfoSectionHeader(text = "Settings")
         InfoPanel(
-            title = "Typing the values",
-            icon = Icons.Rounded.Storage,
-            steps = listOf(
-                "Work out the numbers in **Calc** or **Split** and keep them visible, or tap **Copy**.",
-                "Boot the Windows installer and choose **Custom: Install Windows only (advanced)**.",
-                "Open **Drive options (advanced)** and select the target disk. Deleting a partition erases it, " +
-                    "so back up first.",
-                "Tap **New**, type the MB value into the **Size** box and press **Apply**. For Split, create " +
-                    "the partitions in the order shown in the app.",
-                "Check every size in the list before you continue with the installation."
-            )
-        )
-
-        // ------------------------------------------------------------ safety & help
-        InfoSectionHeader(text = "Safety and help")
-
-        InfoPanel(
-            title = "Before you press Apply",
-            icon = Icons.Rounded.Warning,
+            title = "Make it yours",
+            icon = Icons.Rounded.Settings,
             bullets = listOf(
-                "Deleting or creating a partition **erases data**. Back up before you start.",
-                "Double-check the **disk number** and the **size** before you confirm.",
-                "Results can differ by **1–2 MB** between Windows versions, which is why the app shows **≈**.",
-                "Everywhere in the app **1 GB = 1024 MB**, the same convention Windows Explorer uses.",
-                "**FAT32**: the Windows format tool stops at **32 GB**, and single files over **4 GB** will " +
-                    "not fit.",
-                "**MBR** allows only **4** primary partitions, system partitions included. Use **GPT** for more."
+                "**Appearance** — switch between **System**, **Light** and **Dark**; the change applies " +
+                    "instantly and is remembered.",
+                "**Defaults** — the filesystem and Windows Setup simulation/profile every new " +
+                    "calculation starts from.",
+                "**History** — see how many conversions are stored, then **View history** or **Clear**.",
+                "**Privacy Policy**, **Guide** and **About** — these pages plus the app version.",
+                "**Rate Us** and **Share App** — open the Play Store listing or send its link to a friend."
             )
         )
 
         InfoBanner(
-            text = "Not sure about a value? Keep the app open next to the Windows Setup screen and copy the " +
-                "numbers across.",
-            icon = Icons.Rounded.Info
-        )
-
-        InfoFaultPanel(
-            title = "Messages you may see",
-            subtitle = "What each message means and how to fix it",
-            icon = Icons.Rounded.Build,
-            faults = listOf(
-                "Enter a valid positive GB value" to
-                    "Use digits only, for example 100 or 2.5. Zero and negative sizes are rejected.",
-                "Enter the disk's total size in MB" to
-                    "The Split field is empty — type the whole disk's capacity in MB.",
-                "Enter a valid positive MB value" to
-                    "The Split total must be a whole number of MB. Remove any decimals.",
-                "Partition count must be between 1 and 8" to
-                    "Set the count with the − and + buttons.",
-                "Total size too small for N partitions" to
-                    "Enter a larger total, or turn off Setup simulation.",
-                "Overhead cannot be negative / Overhead looks too large" to
-                    "A Custom overhead must be between 0 and 16384 MB."
-            )
+            text = "Copy the numbers here and type them into **Windows Setup → New → Size**. Creating or " +
+                "deleting partitions **erases data** — back up first, and check the disk number and " +
+                "size before pressing **Apply**.",
+            icon = Icons.Rounded.Warning
         )
     }
 }
@@ -495,102 +395,6 @@ private fun InfoSectionHeader(text: String) {
                 .height(1.dp)
                 .background(palette.glassBorderStart)
         )
-    }
-}
-
-/** Panel that renders a compact number table, used for the reference and example sections. */
-@Composable
-private fun InfoTablePanel(
-    title: String,
-    icon: ImageVector,
-    headers: List<String>,
-    rows: List<List<String>>,
-    subtitle: String? = null,
-    note: String? = null
-) {
-    val palette = LocalLiquidPalette.current
-    val tokens = LocalGlassTokens.current
-
-    GlassPanel(title = title, subtitle = subtitle, icon = icon) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 2.dp)
-        ) {
-            headers.forEachIndexed { index, header ->
-                Text(
-                    text = header,
-                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
-                    color = palette.contentTertiary,
-                    textAlign = if (index == 0) TextAlign.Start else TextAlign.End,
-                    modifier = Modifier.weight(if (index == 0) 1.3f else 1f)
-                )
-            }
-        }
-        Spacer(Modifier.height(tokens.spaceXs))
-        GlassDivider()
-        rows.forEach { row ->
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 2.dp, vertical = 7.dp)
-            ) {
-                row.forEachIndexed { index, cell ->
-                    val isLastColumn = index == row.lastIndex
-                    Text(
-                        text = cell,
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            fontWeight = if (index == 0) FontWeight.Normal else FontWeight.Medium
-                        ),
-                        color = when {
-                            index == 0 -> palette.contentSecondary
-                            isLastColumn -> palette.accent
-                            else -> palette.contentPrimary
-                        },
-                        textAlign = if (index == 0) TextAlign.Start else TextAlign.End,
-                        modifier = Modifier.weight(if (index == 0) 1.3f else 1f)
-                    )
-                }
-            }
-            GlassDivider()
-        }
-        if (note != null) {
-            Text(
-                text = emphasised(note),
-                style = MaterialTheme.typography.bodyMedium,
-                color = palette.contentTertiary,
-                modifier = Modifier.padding(top = tokens.spaceXs, start = 2.dp)
-            )
-        }
-    }
-}
-
-/** Panel that pairs an error message with the fix, so troubleshooting reads as a lookup table. */
-@Composable
-private fun InfoFaultPanel(
-    title: String,
-    icon: ImageVector,
-    faults: List<Pair<String, String>>,
-    subtitle: String? = null
-) {
-    val palette = LocalLiquidPalette.current
-    val tokens = LocalGlassTokens.current
-
-    GlassPanel(title = title, subtitle = subtitle, icon = icon) {
-        faults.forEachIndexed { index, (problem, fix) ->
-            if (index > 0) Spacer(Modifier.height(tokens.spaceSm))
-            Text(
-                text = problem,
-                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-                color = palette.warningContent
-            )
-            Text(
-                text = fix,
-                style = MaterialTheme.typography.bodyMedium,
-                color = palette.contentSecondary,
-                modifier = Modifier.padding(top = 2.dp)
-            )
-        }
     }
 }
 
