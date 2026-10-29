@@ -55,7 +55,6 @@ Setup profiles (overhead in MB):
 
 | Profile | System partitions | Overhead |
 |---|---|---|
-| Off (blank disk) | — | 0 |
 | Windows 10 (UEFI/GPT) | 100 EFI + 16 MSR + 450 Recovery | **566** |
 | Windows 11 (UEFI/GPT) | larger recovery | **826** |
 | Custom | user value | n |
@@ -68,7 +67,7 @@ Priority: **P0** = ship-blocking, **P1** = MVP-included, polish.
 - **US-01 (P0)** As a user, I enter the size I want to *see* in GB and get the MB to type. *AC:* result dialog shows `inputMb`, `visibleMb`, formula-consistent values.
 - **US-02 (P0)** I can tap preset chips **20 / 50 / 100 / 250 / 500 GB / 1 TB** to fill the input (1 TB = 1024 GB).
 - **US-03 (P0)** I choose **NTFS or FAT32**. *AC:* FAT32 shows the 4 GB single-file limit notice; FAT32 with partition > 32 GB shows the format-tool limit warning.
-- **US-04 (P0)** I choose what Setup already created (Off / Win10 / Win11 / Custom) so the overhead is added correctly. *AC:* Custom exposes a numeric MB field.
+- **US-04 (P0)** I choose what Setup already created (Win10 / Win11 / Custom) so the overhead is added correctly — the switch itself is the off state. *AC:* Custom exposes a numeric MB field.
 - **US-05 (P0)** I tap **Copy** to copy `inputMb` (digits only) to the clipboard. *AC:* confirmation feedback shown.
 - **US-06 (P1)** Result shows *why* (typed MB, expected visible size) so I can verify, not just believe.
 
@@ -77,7 +76,7 @@ Priority: **P0** = ship-blocking, **P1** = MVP-included, polish.
 - **US-08 (P0)** I see a list; each row reads `type X MB · visible ≈ Y GB` (2 decimals).
 - **US-09 (P0)** A **sum check** line proves `sum(sizes) == usable`.
 - **US-10 (P0)** Warnings appear: FAT32 > 32 GB format-tool limit, FAT32 4 GB file limit, MBR four-primary-partition ceiling (when n > 4).
-- **US-11 (P1)** Setup simulation (profile/overhead) can be applied to Split so overhead is deducted from the disk first.
+- ~~**US-11 (P1)** Setup simulation (profile/overhead) can be applied to Split~~ — **dropped in v1.2**: the Split tab always divides the whole disk; Setup simulation stays Calc-only.
 - **US-12 (P1)** Per-row copy of the MB value.
 
 ### Quiet parts

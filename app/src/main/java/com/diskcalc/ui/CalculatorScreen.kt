@@ -153,7 +153,6 @@ fun CalculatorScreen(
                                         onTotalMbChange = viewModel::onTotalMbChange,
                                         onPartitionCountChange = viewModel::onPartitionCountChange,
                                         onFilesystemChange = viewModel::onSplitFilesystemChange,
-                                        onSetupToggle = viewModel::onSplitSetupToggle,
                                         onSplit = { viewModel.split() },
                                         onCopied = {
                                             scope.launch { snackbarHostState.showSnackbar("Copied") }

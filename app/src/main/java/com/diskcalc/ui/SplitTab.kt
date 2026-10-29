@@ -28,7 +28,6 @@ import com.diskcalc.ui.components.GlassPanel
 import com.diskcalc.ui.components.GlassSegmentedControl
 import com.diskcalc.ui.components.GlassStepper
 import com.diskcalc.ui.components.GlassTextField
-import com.diskcalc.ui.components.GlassToggleRow
 import com.diskcalc.ui.components.InfoBanner
 import com.diskcalc.ui.components.KeyValueRow
 import com.diskcalc.ui.components.WarningList
@@ -45,7 +44,6 @@ fun SplitTab(
     onTotalMbChange: (String) -> Unit,
     onPartitionCountChange: (Int) -> Unit,
     onFilesystemChange: (FileSystemType) -> Unit,
-    onSetupToggle: (Boolean) -> Unit,
     onSplit: () -> Unit,
     onCopied: () -> Unit,
     modifier: Modifier = Modifier
@@ -114,14 +112,6 @@ fun SplitTab(
                 onSelect = onFilesystemChange,
                 label = { it.label },
                 modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(Modifier.height(tokens.spaceLg))
-            GlassToggleRow(
-                title = "Simulate Windows Setup",
-                description = "Subtract the system partitions from the total before splitting",
-                checked = state.simulateWindowsSetup,
-                onCheckedChange = onSetupToggle
             )
 
             Spacer(Modifier.height(tokens.spaceXl))

@@ -124,7 +124,7 @@ Package name: keep the project's existing `applicationId`; `<package>` above is 
 
 ## 9. Assumptions to Verify Against Existing Code
 These were inferred from `APP_IDEA.md` (the original README was not available). Before implementing, compare with the existing code and **update the docs if the code differs**:
-1. In Split, each row's "type X MB" equals `size_i` and `visible = size_i − 4`; Setup overhead is deducted **once** from the disk total, not per row.
+1. In Split, each row's "type X MB" equals `size_i` and `visible = size_i − 4`; no Setup overhead is applied (v1.2 — the whole typed disk is divided).
 2. Filesystem choice affects **warnings only**, not the `+4 MB` constant.
 3. Input limits (65536 GB, 134217728 MB, 100000 MB custom overhead, 5 MB min per partition) are proposed here, not taken from the idea doc.
 4. History keeps 100 entries (from idea doc); Split entries saved only on explicit "Save".

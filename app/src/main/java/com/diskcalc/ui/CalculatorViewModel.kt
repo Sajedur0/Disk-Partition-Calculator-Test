@@ -54,12 +54,16 @@ data class CalcUiState(
                 InputValidator.parseOverheadMb(customOverheadText).isValid)
 }
 
+/**
+ * Split tab state. There is deliberately **no** Windows Setup simulation here: the Split tab
+ * always divides the whole disk the user typed in (`docs/02_AppFlow.md §4`). The simulation
+ * lives only in the Calc tab, where a single partition's typed value matters.
+ */
 data class SplitUiState(
     // Starts empty on purpose: seeding a sample number made users split the sample disk.
     val totalMbText: String = "",
     val partitionCount: Int = 2,
     val filesystem: FileSystemType = FileSystemType.NTFS,
-    val simulateWindowsSetup: Boolean = false,
     val result: SplitResult? = null,
     val error: String? = null
 )
@@ -105,12 +109,7 @@ class CalculatorViewModel(
                 }
                 if (!splitSeeded) {
                     splitSeeded = true
-                    _split.update {
-                        it.copy(
-                            filesystem = stored.defaultFilesystem,
-                            simulateWindowsSetup = stored.setupSimulationEnabled
-                        )
-                    }
+                    _split.update { it.copy(filesystem = stored.defaultFilesystem) }
                 }
             }
         }
@@ -216,8 +215,8 @@ class CalculatorViewModel(
     private fun splitError(state: SplitUiState): String? {
         val parsed = InputValidator.parseTotalMb(state.totalMbText)
         if (!parsed.isValid) return if (state.totalMbText.isBlank()) null else parsed.error
-        val overhead = if (state.simulateWindowsSetup) _calc.value.effectiveOverheadMb else 0
-        return InputValidator.validateSplit(parsed.value ?: return null, state.partitionCount, overhead)
+        // No Setup overhead in the Split tab: the whole disk is divided evenly.
+        return InputValidator.validateSplit(parsed.value ?: return null, state.partitionCount, 0)
     }
 
     fun onTotalMbChange(text: String) {
@@ -249,13 +248,6 @@ class CalculatorViewModel(
         }
     }
 
-    fun onSplitSetupToggle(enabled: Boolean) {
-        _split.update {
-            val next = it.copy(simulateWindowsSetup = enabled, result = null)
-            next.copy(error = splitError(next))
-        }
-    }
-
     fun split() {
         val state = _split.value
         val error = splitError(state)
@@ -269,9 +261,7 @@ class CalculatorViewModel(
             SplitPartitionCalculator.split(
                 totalMb = totalMb,
                 partitionCount = state.partitionCount,
-                filesystem = state.filesystem,
-                simulateWindowsSetup = state.simulateWindowsSetup,
-                setupOverheadMb = _calc.value.effectiveOverheadMb
+                filesystem = state.filesystem
             )
         }
         outcome.fold(
