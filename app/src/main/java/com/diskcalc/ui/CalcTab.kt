@@ -125,12 +125,11 @@ fun CalcTab(
             ) {
                 Column {
                     GlassSegmentedControl(
-                        options = WindowsSetupProfile.options,
+                        options = WindowsSetupProfile.entries,
                         selected = state.setupProfile,
                         onSelect = onProfileChange,
                         label = { profile ->
                             when (profile) {
-                                WindowsSetupProfile.OFF -> "Off"
                                 WindowsSetupProfile.WIN10 -> "Win 10"
                                 WindowsSetupProfile.WIN11 -> "Win 11"
                                 WindowsSetupProfile.CUSTOM -> "Custom"
@@ -141,8 +140,6 @@ fun CalcTab(
                     Spacer(Modifier.height(tokens.spaceSm))
                     Text(
                         text = when (state.setupProfile) {
-                            // Unreachable: OFF is no longer offered, the switch turns it off.
-                            WindowsSetupProfile.OFF -> ""
                             WindowsSetupProfile.WIN10 ->
                                 "100 MB EFI + 16 MB MSR + 450 MB Recovery = " +
                                     "${PartitionConstants.WINDOWS_SETUP_OVERHEAD_MB} MB"

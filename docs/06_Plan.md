@@ -26,7 +26,7 @@ Auth note: this app has no accounts. Phase 1 "DB & Auth" is realized as **DB & S
 - [ ] **P1-7** — Migration policy test scaffold (`MigrationTestHelper`) · depends on: P1-4 · verify: androidTest compiles
 
 ## Phase 2 — Core API: Domain Engine (pure Kotlin)
-- [ ] **P2-1** — `SetupProfile` overhead constants (OFF 0, WIN10 566, WIN11 826, CUSTOM n) · depends on: P1-1 · verify: unit test
+- [ ] **P2-1** — `SetupProfile` overhead constants (WIN10 566, WIN11 826, CUSTOM n; no Off profile — the switch is the off state) · depends on: P1-1 · verify: unit test
 - [ ] **P2-2** — `PartitionCalculator.calc(wantedGb, fs, setup)` implementing `01_PRD §4` · depends on: P2-1 · verify: table tests (100 GB → partition 102404, visible 102400; 1 GB → 1028/1024)
 - [ ] **P2-3** — `DiskSplitter.split(totalMb, n, setup)` integer-only, remainder to last · depends on: P2-1 · verify: unit tests + sum invariant
 - [ ] **P2-4** — `WarningRules` (FAT32 >32768 MB, FAT32 4 GB file note, n>4 MBR note) · depends on: P2-2, P2-3 · verify: unit tests

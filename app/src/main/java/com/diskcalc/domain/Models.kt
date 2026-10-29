@@ -15,30 +15,25 @@ enum class FileSystemType(val label: String) {
  * Preset for the partitions Windows Setup creates on its own.
  * Overheads come from `docs/01_PRD.md §4`; stored names match `docs/05_Schema.md §5`.
  * [CUSTOM] means the user types their own value in the settings/calculator field.
+ *
+ * There is no "Off" entry: the **Simulate Windows Setup** switch is the only off state, so the
+ * profile list stays Win 10 / Win 11 / Custom (docs/02_AppFlow.md §3).
  */
 enum class WindowsSetupProfile(val overheadMb: Int, val label: String) {
-    OFF(PartitionConstants.SETUP_OVERHEAD_OFF_MB, "Off (blank disk)"),
     WIN10(PartitionConstants.WINDOWS_SETUP_OVERHEAD_MB, "Windows 10 (UEFI/GPT)"),
     WIN11(PartitionConstants.WINDOWS_SETUP_OVERHEAD_WIN11_MB, "Windows 11 (UEFI/GPT)"),
     CUSTOM(0, "Custom");
 
     companion object {
         /**
-         * Profiles the user can pick. `OFF` is intentionally excluded: the
-         * "Simulate Windows Setup" switch is the only way to turn the overhead off, so a
-         * separate "Off" segment would just duplicate it (and confuse the toggle state).
-         */
-        val options: List<WindowsSetupProfile> = entries.filter { it != OFF }
-
-        /**
          * Corrupt/unknown values fall back to WIN11, the default in `docs/05_Schema.md §5`.
-         * A stored `OFF` (written by older builds that still showed the segment) is read as
-         * WIN11 — the switch state decides whether any overhead is applied anyway.
+         * A stored `OFF` (written by builds that still offered that segment) is read as WIN11 —
+         * the switch state decides whether any overhead is applied at all.
          */
         fun fromName(value: String?): WindowsSetupProfile = when (value?.uppercase()) {
-            "OFF" -> WIN11 // legacy key written before the Off segment was removed
-            "WIN10", "WIN10" -> WIN10 // legacy key written by v1.1.4
-            "WIN11", "WIN11" -> WIN11 // legacy key written by v1.1.4
+            "OFF" -> WIN11 // legacy value from before the Off segment was removed
+            "WIN10" -> WIN10
+            "WIN11" -> WIN11 // legacy key written by v1.1.4
             "CUSTOM" -> CUSTOM
             else -> WIN11
         }

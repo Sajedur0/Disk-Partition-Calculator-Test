@@ -20,7 +20,10 @@ object PartitionConstants {
      */
     const val OVERHEAD_MB_PER_PARTITION = 4
 
-    /** "Off (blank disk)" setup profile — no system partitions created. */
+    /**
+     * Zero-overhead value used when setup simulation is switched off (there is no "Off"
+     * profile any more — the switch decides). Kept for history rows that stored 0 MB.
+     */
     const val SETUP_OVERHEAD_OFF_MB = 0
 
     /**

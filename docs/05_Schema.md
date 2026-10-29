@@ -28,7 +28,7 @@ One row per saved conversion (Calc or Split).
 | `created_at` | INTEGER | NO | Epoch millis (UTC) |
 | `filesystem` | TEXT | NO | `'NTFS'` or `'FAT32'` |
 | `setup_enabled` | INTEGER | NO | 0/1 |
-| `setup_profile` | TEXT | NO | `'OFF'`, `'WIN10'`, `'WIN11'`, `'CUSTOM'` |
+| `setup_profile` | TEXT | NO | `'WIN10'`, `'WIN11'`, `'CUSTOM'` (rows written before v1.2 may still hold legacy `'OFF'`; read it as `'WIN11'`) |
 | `overhead_mb` | INTEGER | NO | Applied Setup overhead in MB (0 when disabled) |
 | `wanted_gb` | REAL | YES | CALC only |
 | `partition_mb` | INTEGER | YES | CALC only: `round(wanted_gb×1024)+4` |
@@ -90,7 +90,7 @@ File: `settings.preferences_pb`
 | `theme_mode` | String | `SYSTEM` | `SYSTEM`, `LIGHT`, `DARK` |
 | `default_filesystem` | String | `NTFS` | `NTFS`, `FAT32` |
 | `default_setup_enabled` | Boolean | `false` | |
-| `default_setup_profile` | String | `WIN11` | `OFF`, `WIN10`, `WIN11`, `CUSTOM` |
+| `default_setup_profile` | String | `WIN11` | `WIN10`, `WIN11`, `CUSTOM` (legacy `OFF` reads as `WIN11`) |
 | `default_custom_overhead_mb` | Int | `0` | 0–100000 |
 
 Unknown/corrupt values fall back to the default silently.

@@ -128,12 +128,11 @@ fun SettingsTab(
 
             Spacer(Modifier.height(tokens.spaceSm))
             GlassSegmentedControl(
-                options = WindowsSetupProfile.options,
+                options = WindowsSetupProfile.entries,
                 selected = settings.setupProfile,
                 onSelect = onDefaultProfileChange,
                 label = { profile ->
                     when (profile) {
-                        WindowsSetupProfile.OFF -> "Off"
                         WindowsSetupProfile.WIN10 -> "Win 10"
                         WindowsSetupProfile.WIN11 -> "Win 11"
                         WindowsSetupProfile.CUSTOM -> "Custom"
@@ -144,8 +143,6 @@ fun SettingsTab(
             Spacer(Modifier.height(tokens.spaceXs))
             Text(
                 text = when (settings.setupProfile) {
-                    // Unreachable: OFF is no longer offered, the switch turns it off.
-                    WindowsSetupProfile.OFF -> ""
                     WindowsSetupProfile.WIN10 ->
                         "Windows 10 UEFI/GPT overhead: ${PartitionConstants.WINDOWS_SETUP_OVERHEAD_MB} MB"
                     WindowsSetupProfile.WIN11 ->
