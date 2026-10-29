@@ -60,9 +60,27 @@ data class SplitUiState(
     val partitionCount: Int = 2,
     val filesystem: FileSystemType = FileSystemType.NTFS,
     val simulateWindowsSetup: Boolean = false,
+    // The Split tab owns its own profile, so the applied overhead is always visible here
+    // instead of being borrowed silently from the Calc tab (`docs/02_AppFlow.md §3`).
+    val setupProfile: WindowsSetupProfile = WindowsSetupProfile.WIN11,
+    val customOverheadText: String = "0",
     val result: SplitResult? = null,
-    val error: String? = null
-)
+    val error: String? = null,
+    val overheadError: String? = null
+) {
+    /** Overhead actually subtracted from the disk, honouring the Custom profile. */
+    val effectiveOverheadMb: Int
+        get() = if (setupProfile == WindowsSetupProfile.CUSTOM) {
+            customOverheadText.trim().toIntOrNull() ?: 0
+        } else {
+            setupProfile.overheadMb
+        }
+
+    /** Split is allowed only when the total is valid and the profile's custom value is too. */
+    val hasValidOverhead: Boolean
+        get() = !simulateWindowsSetup || setupProfile != WindowsSetupProfile.CUSTOM ||
+            InputValidator.parseOverheadMb(customOverheadText).isValid
+}
 
 class CalculatorViewModel(
     private val historyManager: HistoryManager,
@@ -88,6 +106,9 @@ class CalculatorViewModel(
     private var calcSeeded = false
     private var splitSeeded = false
 
+    /** True once the user picks a Split profile, so later Settings changes stop overriding it. */
+    private var splitProfileTouched = false
+
     init {
         viewModelScope.launch {
             settingsRepository.settings.collect { stored ->
@@ -108,7 +129,19 @@ class CalculatorViewModel(
                     _split.update {
                         it.copy(
                             filesystem = stored.defaultFilesystem,
-                            simulateWindowsSetup = stored.setupSimulationEnabled
+                            simulateWindowsSetup = stored.setupSimulationEnabled,
+                            setupProfile = stored.setupProfile,
+                            customOverheadText = stored.customOverheadMb.toString()
+                        )
+                    }
+                } else if (!splitProfileTouched) {
+                    // Still following the Settings default — keep the Split profile in sync
+                    // instead of leaving a stale overhead behind.
+                    _split.update {
+                        it.copy(
+                            setupProfile = stored.setupProfile,
+                            customOverheadText = stored.customOverheadMb.toString(),
+                            result = null
                         )
                     }
                 }
@@ -216,7 +249,10 @@ class CalculatorViewModel(
     private fun splitError(state: SplitUiState): String? {
         val parsed = InputValidator.parseTotalMb(state.totalMbText)
         if (!parsed.isValid) return if (state.totalMbText.isBlank()) null else parsed.error
-        val overhead = if (state.simulateWindowsSetup) _calc.value.effectiveOverheadMb else 0
+        if (!state.hasValidOverhead) {
+            return InputValidator.parseOverheadMb(state.customOverheadText).error
+        }
+        val overhead = if (state.simulateWindowsSetup) state.effectiveOverheadMb else 0
         return InputValidator.validateSplit(parsed.value ?: return null, state.partitionCount, overhead)
     }
 
@@ -251,7 +287,30 @@ class CalculatorViewModel(
 
     fun onSplitSetupToggle(enabled: Boolean) {
         _split.update {
-            val next = it.copy(simulateWindowsSetup = enabled, result = null)
+            val next = it.copy(simulateWindowsSetup = enabled, result = null, overheadError = null)
+            next.copy(error = splitError(next))
+        }
+    }
+
+    /** Profile chosen inside the Split tab (does not change the app-wide default). */
+    fun onSplitProfileChange(profile: WindowsSetupProfile) {
+        splitProfileTouched = true
+        _split.update {
+            val next = it.copy(setupProfile = profile, result = null, overheadError = null)
+            next.copy(error = splitError(next))
+        }
+    }
+
+    fun onSplitCustomOverheadChange(text: String) {
+        splitProfileTouched = true
+        val filtered = text.filter { it.isDigit() }
+        val parsed = InputValidator.parseOverheadMb(filtered)
+        _split.update {
+            val next = it.copy(
+                customOverheadText = filtered,
+                overheadError = if (parsed.isValid) null else parsed.error,
+                result = null
+            )
             next.copy(error = splitError(next))
         }
     }
@@ -259,7 +318,9 @@ class CalculatorViewModel(
     fun split() {
         val state = _split.value
         val error = splitError(state)
-        if (error != null || !InputValidator.parseTotalMb(state.totalMbText).isValid) {
+        if (error != null || !InputValidator.parseTotalMb(state.totalMbText).isValid ||
+            !state.hasValidOverhead
+        ) {
             _split.update { it.copy(error = error, result = null) }
             return
         }
@@ -271,7 +332,7 @@ class CalculatorViewModel(
                 partitionCount = state.partitionCount,
                 filesystem = state.filesystem,
                 simulateWindowsSetup = state.simulateWindowsSetup,
-                setupOverheadMb = _calc.value.effectiveOverheadMb
+                setupOverheadMb = state.effectiveOverheadMb
             )
         }
         outcome.fold(
