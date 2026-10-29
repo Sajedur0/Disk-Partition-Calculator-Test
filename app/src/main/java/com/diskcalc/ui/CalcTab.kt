@@ -125,7 +125,7 @@ fun CalcTab(
             ) {
                 Column {
                     GlassSegmentedControl(
-                        options = WindowsSetupProfile.entries.toList(),
+                        options = WindowsSetupProfile.options,
                         selected = state.setupProfile,
                         onSelect = onProfileChange,
                         label = { profile ->
@@ -141,7 +141,8 @@ fun CalcTab(
                     Spacer(Modifier.height(tokens.spaceSm))
                     Text(
                         text = when (state.setupProfile) {
-                            WindowsSetupProfile.OFF -> "No system partitions — overhead = 0 MB"
+                            // Unreachable: OFF is no longer offered, the switch turns it off.
+                            WindowsSetupProfile.OFF -> ""
                             WindowsSetupProfile.WIN10 ->
                                 "100 MB EFI + 16 MB MSR + 450 MB Recovery = " +
                                     "${PartitionConstants.WINDOWS_SETUP_OVERHEAD_MB} MB"

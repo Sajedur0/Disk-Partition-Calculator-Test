@@ -128,7 +128,7 @@ fun SettingsTab(
 
             Spacer(Modifier.height(tokens.spaceSm))
             GlassSegmentedControl(
-                options = WindowsSetupProfile.entries.toList(),
+                options = WindowsSetupProfile.options,
                 selected = settings.setupProfile,
                 onSelect = onDefaultProfileChange,
                 label = { profile ->
@@ -144,7 +144,8 @@ fun SettingsTab(
             Spacer(Modifier.height(tokens.spaceXs))
             Text(
                 text = when (settings.setupProfile) {
-                    WindowsSetupProfile.OFF -> "No system partitions — overhead: 0 MB"
+                    // Unreachable: OFF is no longer offered, the switch turns it off.
+                    WindowsSetupProfile.OFF -> ""
                     WindowsSetupProfile.WIN10 ->
                         "Windows 10 UEFI/GPT overhead: ${PartitionConstants.WINDOWS_SETUP_OVERHEAD_MB} MB"
                     WindowsSetupProfile.WIN11 ->

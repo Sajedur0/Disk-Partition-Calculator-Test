@@ -23,9 +23,20 @@ enum class WindowsSetupProfile(val overheadMb: Int, val label: String) {
     CUSTOM(0, "Custom");
 
     companion object {
-        /** Corrupt/unknown values fall back to WIN11, the default in `docs/05_Schema.md §5`. */
+        /**
+         * Profiles the user can pick. `OFF` is intentionally excluded: the
+         * "Simulate Windows Setup" switch is the only way to turn the overhead off, so a
+         * separate "Off" segment would just duplicate it (and confuse the toggle state).
+         */
+        val options: List<WindowsSetupProfile> = entries.filter { it != OFF }
+
+        /**
+         * Corrupt/unknown values fall back to WIN11, the default in `docs/05_Schema.md §5`.
+         * A stored `OFF` (written by older builds that still showed the segment) is read as
+         * WIN11 — the switch state decides whether any overhead is applied anyway.
+         */
         fun fromName(value: String?): WindowsSetupProfile = when (value?.uppercase()) {
-            "OFF" -> OFF
+            "OFF" -> WIN11 // legacy key written before the Off segment was removed
             "WIN10", "WIN10" -> WIN10 // legacy key written by v1.1.4
             "WIN11", "WIN11" -> WIN11 // legacy key written by v1.1.4
             "CUSTOM" -> CUSTOM

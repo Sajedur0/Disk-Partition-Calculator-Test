@@ -47,7 +47,7 @@ Rules:
 | Preset chips | 20 / 50 / 100 / 250 / 500 GB / 1 TB | none selected | tap fills field; 1 TB = 1024 |
 | Filesystem | segmented NTFS / FAT32 | from Defaults | |
 | Simulate Setup | switch | from Defaults | |
-| Setup profile | dropdown Off / Win10 / Win11 / Custom | from Defaults | enabled only when switch ON |
+| Setup profile | segmented Win10 / Win11 / Custom | from Defaults | enabled only when switch ON |
 | Custom overhead (MB) | numeric field | — | visible only when profile = Custom |
 | Calculate | button | | |
 
