@@ -87,7 +87,10 @@ ShowingResult ──Calculate success──► history row inserted (side effect
 | Disk size (MB) | integer text field | empty |
 | Partition count | stepper / chips 1–8 | 2 |
 | Filesystem | segmented NTFS / FAT32 | from Defaults |
-| Simulate Setup + profile (+ custom MB) | same as Calc | from Defaults |
+| ~~Simulate Setup + profile~~ | removed — Split always divides the whole typed disk | — |
+
+> The Split tab has no Windows Setup simulation (v1.2): the number typed there is the disk's
+> total capacity, so no system-partition overhead is subtracted.
 
 ### State machine
 ```text

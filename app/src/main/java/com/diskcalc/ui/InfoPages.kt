@@ -625,8 +625,8 @@ fun GuidePage(onBack: () -> Unit, modifier: Modifier = Modifier) {
                 "Enter the disk's full capacity in **MB** inside **Total disk size** (in Windows Setup, " +
                     "select the disk, tap **New**, and read the number shown in the **Size** box).",
                 "Tap **−** or **+** beside **Partitions** to choose how many parts you want (**1** to **8**).",
-                "Select **NTFS** or **FAT32**, and turn on **Simulate Windows Setup** if Windows system " +
-                    "partitions are on the same disk.",
+                "Select **NTFS** or **FAT32**. The whole **MB** total you typed is divided evenly — " +
+                    "no system partitions are reserved on this tab.",
                 "Tap **Split disk** to view the **MB** size for each partition. Tap the copy icon beside " +
                     "any row to copy one partition, or tap **Copy** to copy all sizes at once."
             )

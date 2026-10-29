@@ -76,7 +76,7 @@ Priority: **P0** = ship-blocking, **P1** = MVP-included, polish.
 - **US-08 (P0)** I see a list; each row reads `type X MB · visible ≈ Y GB` (2 decimals).
 - **US-09 (P0)** A **sum check** line proves `sum(sizes) == usable`.
 - **US-10 (P0)** Warnings appear: FAT32 > 32 GB format-tool limit, FAT32 4 GB file limit, MBR four-primary-partition ceiling (when n > 4).
-- **US-11 (P1)** Setup simulation (profile/overhead) can be applied to Split so overhead is deducted from the disk first.
+- ~~**US-11 (P1)** Setup simulation (profile/overhead) can be applied to Split~~ — **dropped in v1.2**: the Split tab always divides the whole disk; Setup simulation stays Calc-only.
 - **US-12 (P1)** Per-row copy of the MB value.
 
 ### Quiet parts

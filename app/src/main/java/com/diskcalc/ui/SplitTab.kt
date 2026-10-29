@@ -23,13 +23,11 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import com.diskcalc.domain.FileSystemType
 import com.diskcalc.domain.PartitionConstants
-import com.diskcalc.domain.WindowsSetupProfile
 import com.diskcalc.ui.components.GlassButton
 import com.diskcalc.ui.components.GlassPanel
 import com.diskcalc.ui.components.GlassSegmentedControl
 import com.diskcalc.ui.components.GlassStepper
 import com.diskcalc.ui.components.GlassTextField
-import com.diskcalc.ui.components.GlassToggleRow
 import com.diskcalc.ui.components.InfoBanner
 import com.diskcalc.ui.components.KeyValueRow
 import com.diskcalc.ui.components.WarningList
@@ -46,9 +44,6 @@ fun SplitTab(
     onTotalMbChange: (String) -> Unit,
     onPartitionCountChange: (Int) -> Unit,
     onFilesystemChange: (FileSystemType) -> Unit,
-    onSetupToggle: (Boolean) -> Unit,
-    onProfileChange: (WindowsSetupProfile) -> Unit,
-    onCustomOverheadChange: (String) -> Unit,
     onSplit: () -> Unit,
     onCopied: () -> Unit,
     modifier: Modifier = Modifier
@@ -119,63 +114,11 @@ fun SplitTab(
                 modifier = Modifier.fillMaxWidth()
             )
 
-            Spacer(Modifier.height(tokens.spaceLg))
-            GlassToggleRow(
-                title = "Simulate Windows Setup",
-                description = "Subtract the system partitions from the total before splitting",
-                checked = state.simulateWindowsSetup,
-                onCheckedChange = onSetupToggle
-            ) {
-                Column {
-                    GlassSegmentedControl(
-                        options = WindowsSetupProfile.entries,
-                        selected = state.setupProfile,
-                        onSelect = onProfileChange,
-                        label = { profile ->
-                            when (profile) {
-                                WindowsSetupProfile.WIN10 -> "Win 10"
-                                WindowsSetupProfile.WIN11 -> "Win 11"
-                                WindowsSetupProfile.CUSTOM -> "Custom"
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    Spacer(Modifier.height(tokens.spaceSm))
-                    Text(
-                        text = when (state.setupProfile) {
-                            WindowsSetupProfile.WIN10 ->
-                                "EFI + MSR + Recovery = ${PartitionConstants.WINDOWS_SETUP_OVERHEAD_MB} MB " +
-                                    "removed from the total"
-                            WindowsSetupProfile.WIN11 ->
-                                "Windows 11 recovery is bigger ≈ " +
-                                    "${PartitionConstants.WINDOWS_SETUP_OVERHEAD_WIN11_MB} MB removed from the total"
-                            WindowsSetupProfile.CUSTOM -> "Type the overhead of your own Setup layout"
-                        },
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = palette.contentTertiary
-                    )
-                    if (state.setupProfile == WindowsSetupProfile.CUSTOM) {
-                        Spacer(Modifier.height(tokens.spaceSm))
-                        GlassTextField(
-                            value = state.customOverheadText,
-                            onValueChange = onCustomOverheadChange,
-                            label = "Custom overhead",
-                            placeholder = "566",
-                            suffix = "MB",
-                            keyboardType = com.diskcalc.ui.components.NumericKeyboard,
-                            isError = state.overheadError != null,
-                            supportingText = state.overheadError
-                        )
-                    }
-                }
-            }
-
             Spacer(Modifier.height(tokens.spaceXl))
             GlassButton(
                 text = "Split disk",
                 icon = Icons.Rounded.Layers,
-                enabled = state.totalMbText.isNotBlank() && state.error == null &&
-                    state.hasValidOverhead,
+                enabled = state.totalMbText.isNotBlank() && state.error == null,
                 onClick = onSplit
             )
         }
@@ -214,14 +157,6 @@ fun SplitTab(
                 }
                 Spacer(Modifier.height(tokens.spaceXs))
                 KeyValueRow("Total", "${result.totalMb} MB")
-                KeyValueRow(
-                    label = "Windows Setup overhead",
-                    value = if (state.simulateWindowsSetup) {
-                        "${result.totalMb - result.usableMb} MB"
-                    } else {
-                        "None (switch off)"
-                    }
-                )
                 KeyValueRow("Usable after Setup", "${result.usableMb} MB")
                 Spacer(Modifier.height(tokens.spaceXs))
                 InfoBanner(
