@@ -237,7 +237,6 @@ private fun AboutHeroCard(
                 horizontalArrangement = Arrangement.spacedBy(tokens.spaceSm, Alignment.CenterHorizontally),
                 verticalArrangement = Arrangement.spacedBy(tokens.spaceXs)
             ) {
-                AboutHighlightTag(text = "1 GB = 1024 MB")
                 AboutHighlightTag(text = "Offline & Private")
                 AboutHighlightTag(text = "No Ads")
             }
