@@ -65,7 +65,8 @@ fun CalcTab(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .verticalScroll(rememberScrollState()),
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 6.dp, vertical = 4.dp),
         verticalArrangement = Arrangement.spacedBy(tokens.cardGap)
     ) {
         // ------------------------------------------------------------ input panel
@@ -177,50 +178,6 @@ fun CalcTab(
             )
         }
 
-        // ------------------------------------------------------ inline last result
-        state.result?.let { result ->
-            GlassPanel(
-                title = "Last calculation",
-                subtitle = "Copy it straight into Setup",
-                icon = Icons.Rounded.Storage,
-                trailing = {
-                    GlassButton(
-                        text = "Copy",
-                        icon = Icons.Rounded.ContentCopy,
-                        primary = false,
-                        fillWidth = false,
-                        onClick = {
-                            clipboard.setText(AnnotatedString(ResultText.calc(result)))
-                            onCopied()
-                        }
-                    )
-                }
-            ) {
-                CalcResultSummary(result)
-            }
-        }
-
         Spacer(Modifier.height(96.dp))
-    }
-}
-
-/** Compact key/value table reused inside the Calc tab. */
-@Composable
-private fun CalcResultSummary(result: PartitionCalculationResult) {
-    val tokens = LocalGlassTokens.current
-    Column {
-        KeyValueRow("Visible size", "${ResultText.trim(result.visibleGb)} GB")
-        KeyValueRow("Filesystem", result.filesystem.label)
-        KeyValueRow("Partition size", "${ResultText.mbToGb(result.partitionSizeMb)} GB")
-        KeyValueRow("Type in Setup", "${result.requiredInputMb} MB", emphasise = true)
-        KeyValueRow("Explorer will show", "≈ ${result.expectedVisibleMb} MB")
-        KeyValueRow(
-            label = "Windows Setup",
-            value = if (result.usesWindowsSetupOverhead) "Yes (+${result.setupOverheadMb} MB)" else "No"
-        )
-        Spacer(Modifier.height(tokens.spaceXs))
-        GlassDivider()
-        Spacer(Modifier.height(tokens.spaceSm))
-        WarningList(result.warnings)
     }
 }

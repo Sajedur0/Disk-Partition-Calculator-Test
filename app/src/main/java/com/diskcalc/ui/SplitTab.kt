@@ -56,7 +56,8 @@ fun SplitTab(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .verticalScroll(rememberScrollState()),
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 6.dp, vertical = 4.dp),
         verticalArrangement = Arrangement.spacedBy(tokens.cardGap)
     ) {
         // ----------------------------------------------------------- input panel
@@ -122,51 +123,6 @@ fun SplitTab(
                 enabled = state.totalMbText.isNotBlank() && state.error == null,
                 onClick = onSplit
             )
-        }
-
-        // ------------------------------------------------------ inline last result
-        state.result?.let { result ->
-            val count = result.partitions.size
-            val baseMb = result.partitions.first().typeMb.toLong()
-            val remainderMb = result.usableMb - baseMb * count
-
-            GlassPanel(
-                title = "Partition table",
-                subtitle = "Newest calculation",
-                icon = Icons.Rounded.Layers,
-                trailing = {
-                    GlassButton(
-                        text = "Copy",
-                        icon = Icons.Rounded.ContentCopy,
-                        primary = false,
-                        fillWidth = false,
-                        onClick = {
-                            clipboard.setText(AnnotatedString(ResultText.split(result)))
-                            onCopied()
-                        }
-                    )
-                }
-            ) {
-                result.partitions.forEach { partition ->
-                    val isLast = partition.index == count
-                    val note = if (isLast && remainderMb > 0) " · includes +$remainderMb MB remainder" else ""
-                    KeyValueRow(
-                        label = "Partition ${partition.index}",
-                        value = "${partition.typeMb} MB  ·  visible ≈ " +
-                            "${ResultText.mbToGb(partition.expectedVisibleMb)} GB$note"
-                    )
-                }
-                Spacer(Modifier.height(tokens.spaceXs))
-                KeyValueRow("Total", "${result.totalMb} MB")
-                KeyValueRow("Space for partitions", "${result.usableMb} MB")
-                Spacer(Modifier.height(tokens.spaceXs))
-                InfoBanner(
-                    text = "Σ partitions = ${result.sumOfTypeMb} MB ✓ equals usable (${result.usableMb} MB)",
-                    icon = Icons.Rounded.CheckCircle
-                )
-                Spacer(Modifier.height(tokens.spaceSm))
-                WarningList(result.warnings)
-            }
         }
 
         Spacer(Modifier.height(96.dp))

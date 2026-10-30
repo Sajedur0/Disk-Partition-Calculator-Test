@@ -19,7 +19,7 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.aistudio.diskcalc.vmtx"
+        applicationId = "com.diskcalc"
         minSdk = 24
         targetSdk = 36
         versionCode = providers.gradleProperty("versionCode").orNull?.toIntOrNull() ?: 15
@@ -47,7 +47,6 @@ android {
     buildTypes {
         debug {
             signingConfig = signingConfigs.getByName("debugConfig")
-            applicationIdSuffix = ".debug"
             isMinifyEnabled = false
         }
         release {

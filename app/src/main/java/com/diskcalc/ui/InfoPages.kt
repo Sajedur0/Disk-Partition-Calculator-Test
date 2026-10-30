@@ -752,6 +752,8 @@ private fun InfoPageScaffold(
                 }
             }
         }
+        Spacer(Modifier.height(tokens.spaceSm))
+        GlassDivider(faded = true)
         Spacer(Modifier.height(tokens.spaceMd))
         Column(
             modifier = Modifier

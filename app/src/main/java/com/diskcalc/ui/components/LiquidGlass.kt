@@ -53,73 +53,79 @@ fun Modifier.neumorphicSurface(
     bevelLight: Color,
     bevelDark: Color,
     shadowOffset: Dp = 4.dp,
+    shadowOffsetY: Dp = shadowOffset,
     blurRadius: Dp = 8.dp,
     borderWidth: Dp = 1.dp
 ): Modifier = this
     .drawBehind {
         if (size.width <= 0f || size.height <= 0f) return@drawBehind
-        val shadowOffsetPx = shadowOffset.toPx()
+        val shadowOffsetX = shadowOffset.toPx()
+        val shadowOffsetYPx = shadowOffsetY.toPx()
         val blurPx = blurRadius.toPx().coerceAtLeast(0.1f)
 
         drawIntoCanvas { canvas ->
             val nativeCanvas = canvas.nativeCanvas
 
-            // 1. Top-Left Light Reflection Shadow
-            val lightPaint = Paint().apply {
-                isAntiAlias = true
-                color = lightShadowColor.toArgb()
-                maskFilter = BlurMaskFilter(blurPx, BlurMaskFilter.Blur.NORMAL)
-            }
-            if (shape == CircleShape) {
-                nativeCanvas.drawCircle(
-                    size.width / 2f - shadowOffsetPx,
-                    size.height / 2f - shadowOffsetPx,
-                    size.minDimension / 2f,
-                    lightPaint
-                )
-            } else {
-                val cornerRadiusPx = when (shape) {
-                    is RoundedCornerShape -> shape.topStart.toPx(size, this)
-                    else -> 20.dp.toPx()
+            // 1. Top-Left Light Reflection Shadow (skipped if transparent / dialog)
+            if (lightShadowColor.alpha > 0.02f && (shadowOffsetX > 0f || shadowOffsetYPx > 0f)) {
+                val lightPaint = Paint().apply {
+                    isAntiAlias = true
+                    color = lightShadowColor.toArgb()
+                    maskFilter = BlurMaskFilter(blurPx, BlurMaskFilter.Blur.NORMAL)
                 }
-                nativeCanvas.drawRoundRect(
-                    -shadowOffsetPx,
-                    -shadowOffsetPx,
-                    size.width - shadowOffsetPx,
-                    size.height - shadowOffsetPx,
-                    cornerRadiusPx,
-                    cornerRadiusPx,
-                    lightPaint
-                )
+                if (shape == CircleShape) {
+                    nativeCanvas.drawCircle(
+                        size.width / 2f - shadowOffsetX,
+                        size.height / 2f - shadowOffsetYPx,
+                        size.minDimension / 2f,
+                        lightPaint
+                    )
+                } else {
+                    val cornerRadiusPx = when (shape) {
+                        is RoundedCornerShape -> shape.topStart.toPx(size, this)
+                        else -> 20.dp.toPx()
+                    }
+                    nativeCanvas.drawRoundRect(
+                        -shadowOffsetX,
+                        -shadowOffsetYPx,
+                        size.width - shadowOffsetX,
+                        size.height - shadowOffsetYPx,
+                        cornerRadiusPx,
+                        cornerRadiusPx,
+                        lightPaint
+                    )
+                }
             }
 
             // 2. Bottom-Right Dark Drop Shadow
-            val darkPaint = Paint().apply {
-                isAntiAlias = true
-                color = darkShadowColor.toArgb()
-                maskFilter = BlurMaskFilter(blurPx, BlurMaskFilter.Blur.NORMAL)
-            }
-            if (shape == CircleShape) {
-                nativeCanvas.drawCircle(
-                    size.width / 2f + shadowOffsetPx,
-                    size.height / 2f + shadowOffsetPx,
-                    size.minDimension / 2f,
-                    darkPaint
-                )
-            } else {
-                val cornerRadiusPx = when (shape) {
-                    is RoundedCornerShape -> shape.topStart.toPx(size, this)
-                    else -> 20.dp.toPx()
+            if (darkShadowColor.alpha > 0.02f) {
+                val darkPaint = Paint().apply {
+                    isAntiAlias = true
+                    color = darkShadowColor.toArgb()
+                    maskFilter = BlurMaskFilter(blurPx, BlurMaskFilter.Blur.NORMAL)
                 }
-                nativeCanvas.drawRoundRect(
-                    shadowOffsetPx,
-                    shadowOffsetPx,
-                    size.width + shadowOffsetPx,
-                    size.height + shadowOffsetPx,
-                    cornerRadiusPx,
-                    cornerRadiusPx,
-                    darkPaint
-                )
+                if (shape == CircleShape) {
+                    nativeCanvas.drawCircle(
+                        size.width / 2f + shadowOffsetX,
+                        size.height / 2f + shadowOffsetYPx,
+                        size.minDimension / 2f,
+                        darkPaint
+                    )
+                } else {
+                    val cornerRadiusPx = when (shape) {
+                        is RoundedCornerShape -> shape.topStart.toPx(size, this)
+                        else -> 20.dp.toPx()
+                    }
+                    nativeCanvas.drawRoundRect(
+                        shadowOffsetX,
+                        shadowOffsetYPx,
+                        size.width + shadowOffsetX,
+                        size.height + shadowOffsetYPx,
+                        cornerRadiusPx,
+                        cornerRadiusPx,
+                        darkPaint
+                    )
+                }
             }
         }
     }
@@ -211,14 +217,15 @@ fun LiquidGlassSurface(
     val surfaceMod = if (isDialog) {
         modifier.neumorphicSurface(
             shape = shape,
-            lightShadowColor = palette.lightShadow,
-            darkShadowColor = palette.darkShadow,
+            lightShadowColor = Color.Transparent, // No side light reflection / glow on modal dialog
+            darkShadowColor = Color.Black.copy(alpha = 0.65f), // Pure deep elevation drop shadow
             surfaceGradientTop = tint ?: palette.surfaceGradientTop,
             surfaceGradientBottom = tint ?: palette.surfaceGradientBottom,
-            bevelLight = palette.bevelLight,
-            bevelDark = palette.bevelDark,
-            shadowOffset = 6.dp,
-            blurRadius = 14.dp,
+            bevelLight = palette.glassBorderStart.copy(alpha = 0.35f), // Soft neutral border, no glowing edge
+            bevelDark = palette.bevelDark.copy(alpha = 0.35f),
+            shadowOffset = 0.dp,
+            shadowOffsetY = 10.dp,
+            blurRadius = 18.dp,
             borderWidth = borderWidth
         )
     } else {

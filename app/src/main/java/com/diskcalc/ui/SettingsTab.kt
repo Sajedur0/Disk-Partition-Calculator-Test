@@ -82,7 +82,8 @@ fun SettingsTab(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .verticalScroll(rememberScrollState()),
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 6.dp, vertical = 4.dp),
         verticalArrangement = Arrangement.spacedBy(tokens.cardGap)
     ) {
         GlassPanel(
@@ -124,35 +125,36 @@ fun SettingsTab(
                 description = "On by default in the Calc tab",
                 checked = settings.setupSimulationEnabled,
                 onCheckedChange = onDefaultSetupChange
-            )
-
-            Spacer(Modifier.height(tokens.spaceSm))
-            GlassSegmentedControl(
-                options = WindowsSetupProfile.entries,
-                selected = settings.setupProfile,
-                onSelect = onDefaultProfileChange,
-                label = { profile ->
-                    when (profile) {
-                        WindowsSetupProfile.WIN10 -> "Win 10"
-                        WindowsSetupProfile.WIN11 -> "Win 11"
-                        WindowsSetupProfile.CUSTOM -> "Custom"
-                    }
-                },
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(Modifier.height(tokens.spaceXs))
-            Text(
-                text = when (settings.setupProfile) {
-                    WindowsSetupProfile.WIN10 ->
-                        "Windows 10 UEFI/GPT overhead: ${PartitionConstants.WINDOWS_SETUP_OVERHEAD_MB} MB"
-                    WindowsSetupProfile.WIN11 ->
-                        "Windows 11 UEFI/GPT overhead: ${PartitionConstants.WINDOWS_SETUP_OVERHEAD_WIN11_MB} MB"
-                    WindowsSetupProfile.CUSTOM -> "Custom overhead: ${settings.customOverheadMb} MB"
-                },
-                style = MaterialTheme.typography.bodyMedium,
-                color = palette.contentTertiary,
-                modifier = Modifier.padding(start = tokens.spaceXs)
-            )
+            ) {
+                Column {
+                    GlassSegmentedControl(
+                        options = WindowsSetupProfile.entries,
+                        selected = settings.setupProfile,
+                        onSelect = onDefaultProfileChange,
+                        label = { profile ->
+                            when (profile) {
+                                WindowsSetupProfile.WIN10 -> "Win 10"
+                                WindowsSetupProfile.WIN11 -> "Win 11"
+                                WindowsSetupProfile.CUSTOM -> "Custom"
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(Modifier.height(tokens.spaceSm))
+                    Text(
+                        text = when (settings.setupProfile) {
+                            WindowsSetupProfile.WIN10 ->
+                                "Windows 10 UEFI/GPT overhead: ${PartitionConstants.WINDOWS_SETUP_OVERHEAD_MB} MB"
+                            WindowsSetupProfile.WIN11 ->
+                                "Windows 11 UEFI/GPT overhead: ${PartitionConstants.WINDOWS_SETUP_OVERHEAD_WIN11_MB} MB"
+                            WindowsSetupProfile.CUSTOM -> "Custom overhead: ${settings.customOverheadMb} MB"
+                        },
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = palette.contentTertiary,
+                        modifier = Modifier.padding(start = tokens.spaceXs)
+                    )
+                }
+            }
         }
 
         GlassPanel(

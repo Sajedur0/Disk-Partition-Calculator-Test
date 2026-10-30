@@ -1,9 +1,15 @@
 package com.diskcalc.ui.components
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -106,14 +112,14 @@ fun GlassButton(
     val container = if (primary) {
         base.neumorphicSurface(
             shape = shape,
-            lightShadowColor = palette.lightShadow.copy(alpha = 0.6f),
-            darkShadowColor = palette.accent.copy(alpha = 0.45f),
+            lightShadowColor = palette.lightShadow.copy(alpha = 0.5f),
+            darkShadowColor = palette.darkShadow,
             surfaceGradientTop = palette.accent.copy(alpha = 0.95f),
             surfaceGradientBottom = palette.accent,
             bevelLight = Color.White.copy(alpha = 0.35f),
-            bevelDark = Color.Black.copy(alpha = 0.2f),
+            bevelDark = Color.Black.copy(alpha = 0.25f),
             shadowOffset = 3.dp,
-            blurRadius = 6.dp
+            blurRadius = 7.dp
         )
     } else {
         base.neumorphicSurface(
@@ -301,7 +307,11 @@ fun <T> GlassSegmentedControl(
     }
 }
 
-/** Solid Neumorphic switch with a recessed track and sliding convex thumb. */
+/**
+ * Authentic Neumorphic tactile switch:
+ * - Recessed/inset well track that smoothly transitions between neutral deboss (OFF) and vibrant accent fill (ON).
+ * - Convex 3D tactile circular thumb with soft directional shadows, spring physics, and center pip indicator.
+ */
 @Composable
 fun GlassSwitch(
     checked: Boolean,
@@ -319,8 +329,45 @@ fun GlassSwitch(
     val travelPx = with(density) { (trackWidth - thumbSize - 8.dp).toPx() }
     val thumbOffset by animateFloatAsState(
         targetValue = if (checked) travelPx else 0f,
-        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMediumLow
+        ),
         label = "thumbOffset"
+    )
+
+    // Dynamic, high-contrast track background for clear ON vs OFF states
+    val animatedTrackBg by animateColorAsState(
+        targetValue = if (checked) palette.accent else palette.insetSurface,
+        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+        label = "trackBg"
+    )
+    val animatedBevelLight by animateColorAsState(
+        targetValue = if (checked) Color.White.copy(alpha = 0.45f) else palette.bevelLight,
+        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+        label = "trackBevelLight"
+    )
+    val animatedBevelDark by animateColorAsState(
+        targetValue = if (checked) Color.Black.copy(alpha = 0.25f) else palette.bevelDark,
+        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+        label = "trackBevelDark"
+    )
+
+    // Dynamic thumb colors for clear physical contrast
+    val thumbTopColor by animateColorAsState(
+        targetValue = if (checked) Color.White else palette.surfaceGradientTop,
+        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+        label = "thumbTop"
+    )
+    val thumbBottomColor by animateColorAsState(
+        targetValue = if (checked) Color(0xFFF1F5F9) else palette.surfaceGradientBottom,
+        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+        label = "thumbBottom"
+    )
+    val indicatorColor by animateColorAsState(
+        targetValue = if (checked) palette.accent else palette.contentTertiary.copy(alpha = 0.45f),
+        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+        label = "switchDot"
     )
 
     Box(
@@ -328,30 +375,37 @@ fun GlassSwitch(
             .size(width = trackWidth, height = trackHeight)
             .neumorphicInset(
                 shape = shape,
-                backgroundColor = if (checked) palette.accent.copy(alpha = 0.22f) else palette.insetSurface,
-                bevelLight = if (checked) palette.accent.copy(alpha = 0.6f) else palette.bevelLight,
-                bevelDark = if (checked) palette.accent.copy(alpha = 0.6f) else palette.bevelDark
+                backgroundColor = animatedTrackBg,
+                bevelLight = animatedBevelLight,
+                bevelDark = animatedBevelDark
             )
             .clickableBounce(enabled = enabled) { onCheckedChange(!checked) }
             .padding(4.dp),
         contentAlignment = Alignment.CenterStart
     ) {
         Box(
-            Modifier
+            modifier = Modifier
                 .offset { IntOffset(thumbOffset.roundToInt(), 0) }
                 .size(thumbSize)
                 .neumorphicSurface(
                     shape = CircleShape,
-                    lightShadowColor = palette.lightShadow,
-                    darkShadowColor = palette.darkShadow,
-                    surfaceGradientTop = if (checked) palette.accent else Color.White,
-                    surfaceGradientBottom = if (checked) palette.accent else Color(0xFFF1F5F9),
-                    bevelLight = if (checked) Color.White.copy(alpha = 0.4f) else Color.White,
-                    bevelDark = if (checked) Color.Black.copy(alpha = 0.2f) else palette.bevelDark,
+                    lightShadowColor = if (checked) Color.White.copy(alpha = 0.5f) else palette.lightShadow,
+                    darkShadowColor = if (checked) Color.Black.copy(alpha = 0.35f) else palette.darkShadow,
+                    surfaceGradientTop = thumbTopColor,
+                    surfaceGradientBottom = thumbBottomColor,
+                    bevelLight = Color.White.copy(alpha = 0.65f),
+                    bevelDark = if (checked) Color.Black.copy(alpha = 0.15f) else palette.bevelDark,
                     shadowOffset = 2.dp,
-                    blurRadius = 3.dp
-                )
-        )
+                    blurRadius = 3.5.dp
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Box(
+                Modifier
+                    .size(6.dp)
+                    .background(indicatorColor, CircleShape)
+            )
+        }
     }
 }
 
@@ -555,12 +609,19 @@ fun GlassToggleRow(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
+    enabled: Boolean = true,
     content: @Composable (() -> Unit)? = null
 ) {
     val palette = LocalLiquidPalette.current
     val tokens = LocalGlassTokens.current
-    Column(modifier.fillMaxWidth()) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+    Column(modifier = modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickableBounce(enabled = enabled) { onCheckedChange(!checked) }
+                .padding(vertical = tokens.spaceXs),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Column(Modifier.weight(1f)) {
                 Text(
                     text = title,
@@ -576,11 +637,33 @@ fun GlassToggleRow(
                 }
             }
             Spacer(Modifier.width(tokens.spaceSm))
-            GlassSwitch(checked = checked, onCheckedChange = onCheckedChange)
+            GlassSwitch(
+                checked = checked,
+                onCheckedChange = onCheckedChange,
+                enabled = enabled
+            )
         }
-        if (checked && content != null) {
-            Spacer(Modifier.height(tokens.spaceMd))
-            content()
+        AnimatedVisibility(
+            visible = checked && content != null,
+            enter = fadeIn() + expandVertically(),
+            exit = fadeOut() + shrinkVertically()
+        ) {
+            if (content != null) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = tokens.spaceSm)
+                        .neumorphicInset(
+                            shape = RoundedCornerShape(tokens.cornerMedium),
+                            backgroundColor = palette.insetSurface.copy(alpha = 0.55f),
+                            bevelLight = palette.bevelLight,
+                            bevelDark = palette.bevelDark
+                        )
+                        .padding(tokens.spaceMd)
+                ) {
+                    content()
+                }
+            }
         }
     }
 }

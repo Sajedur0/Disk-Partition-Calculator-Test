@@ -111,11 +111,11 @@ fun GlassTabBar(
                         .neumorphicSurface(
                             shape = capsuleShape,
                             lightShadowColor = palette.lightShadow.copy(alpha = 0.55f),
-                            darkShadowColor = palette.accent.copy(alpha = 0.45f),
+                            darkShadowColor = palette.darkShadow.copy(alpha = 0.55f),
                             surfaceGradientTop = palette.accent.copy(alpha = 0.95f),
                             surfaceGradientBottom = palette.accent,
                             bevelLight = Color.White.copy(alpha = 0.4f),
-                            bevelDark = Color.Black.copy(alpha = 0.2f),
+                            bevelDark = Color.Black.copy(alpha = 0.25f),
                             shadowOffset = 2.dp,
                             blurRadius = 5.dp
                         )

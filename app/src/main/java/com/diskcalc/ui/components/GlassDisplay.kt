@@ -22,7 +22,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -35,22 +37,50 @@ import com.diskcalc.ui.theme.NumericMedium
 /**
  * Classic Neumorphic etched divider: a dark upper shadow line paired
  * with a light lower highlight line, creating an authentic physical groove.
+ * Fades softly to transparent at both left and right edges.
  */
 @Composable
-fun GlassDivider(modifier: Modifier = Modifier) {
+fun GlassDivider(
+    modifier: Modifier = Modifier,
+    faded: Boolean = true
+) {
     val palette = LocalLiquidPalette.current
+    val darkBrush = if (faded) {
+        Brush.horizontalGradient(
+            0.0f to Color.Transparent,
+            0.15f to palette.darkShadow.copy(alpha = 0.35f),
+            0.5f to palette.darkShadow.copy(alpha = 0.45f),
+            0.85f to palette.darkShadow.copy(alpha = 0.35f),
+            1.0f to Color.Transparent
+        )
+    } else {
+        SolidColor(palette.darkShadow.copy(alpha = 0.35f))
+    }
+
+    val lightBrush = if (faded) {
+        Brush.horizontalGradient(
+            0.0f to Color.Transparent,
+            0.15f to palette.lightShadow.copy(alpha = 0.65f),
+            0.5f to palette.lightShadow.copy(alpha = 0.85f),
+            0.85f to palette.lightShadow.copy(alpha = 0.65f),
+            1.0f to Color.Transparent
+        )
+    } else {
+        SolidColor(palette.lightShadow.copy(alpha = 0.75f))
+    }
+
     Column(modifier.fillMaxWidth()) {
         Box(
             Modifier
                 .fillMaxWidth()
                 .height(1.dp)
-                .background(palette.darkShadow.copy(alpha = 0.35f))
+                .background(darkBrush)
         )
         Box(
             Modifier
                 .fillMaxWidth()
                 .height(1.dp)
-                .background(palette.lightShadow.copy(alpha = 0.75f))
+                .background(lightBrush)
         )
     }
 }
@@ -108,9 +138,9 @@ fun StatTile(
         modifier
             .neumorphicInset(
                 shape = shape,
-                backgroundColor = palette.accentContainer.copy(alpha = 0.55f),
-                bevelLight = palette.accent.copy(alpha = 0.6f),
-                bevelDark = palette.darkShadow.copy(alpha = 0.4f)
+                backgroundColor = palette.accentContainer.copy(alpha = 0.45f),
+                bevelLight = palette.glassBorderStart.copy(alpha = 0.35f),
+                bevelDark = palette.darkShadow.copy(alpha = 0.35f)
             )
             .padding(horizontal = tokens.spaceLg, vertical = tokens.spaceMd)
     } else {

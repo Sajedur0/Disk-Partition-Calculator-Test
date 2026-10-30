@@ -51,6 +51,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.platform.LocalDensity
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.diskcalc.ui.components.GlassDivider
 import com.diskcalc.ui.components.GlassIconButton
 import com.diskcalc.ui.components.GlassTabBar
 import com.diskcalc.ui.components.GlassTabItem
@@ -119,13 +120,16 @@ fun CalculatorScreen(
                             .widthIn(max = tokens.maxContentWidth)
                             .fillMaxHeight()
                             .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal))
-                            .padding(horizontal = tokens.screenPadding)
+                            .padding(horizontal = (tokens.screenPadding - 6.dp).coerceAtLeast(0.dp))
                     ) {
                         if (currentInfoPage == null) {
                             AppHeader(
                                 onHistoryClick = { showHistory = true },
-                                historyCount = history.size
+                                historyCount = history.size,
+                                modifier = Modifier.padding(horizontal = 6.dp)
                             )
+                            Spacer(Modifier.height(tokens.spaceSm))
+                            GlassDivider(faded = true, modifier = Modifier.padding(horizontal = 6.dp))
                             Spacer(Modifier.height(tokens.spaceMd))
                         }
 
@@ -309,13 +313,14 @@ fun CalculatorScreen(
 @Composable
 private fun AppHeader(
     onHistoryClick: () -> Unit,
-    historyCount: Int
+    historyCount: Int,
+    modifier: Modifier = Modifier
 ) {
     val palette = LocalLiquidPalette.current
     val tokens = LocalGlassTokens.current
 
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(top = tokens.spaceSm),
         verticalAlignment = Alignment.CenterVertically
