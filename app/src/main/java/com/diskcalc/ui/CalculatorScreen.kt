@@ -4,6 +4,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -40,6 +41,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalDensity
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.diskcalc.ui.components.GlassIconButton
 import com.diskcalc.ui.components.GlassTabBar
@@ -303,11 +309,29 @@ private fun AppHeader(
             .padding(top = tokens.spaceSm),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Column(Modifier.weight(1f)) {
+        BoxWithConstraints(Modifier.weight(1f).padding(end = tokens.spaceSm)) {
+            val title = "Disk Partition Calculator"
+            val style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.SemiBold)
+            val measurer = rememberTextMeasurer()
+            val widthPx = with(LocalDensity.current) { maxWidth.roundToPx() }
+            // Use the largest size that fits beside the history button, including at larger
+            // system font scales. Ellipsis remains a fallback for exceptionally narrow screens.
+            val fontSize = (28 downTo 12).firstOrNull { size ->
+                !measurer.measure(
+                    text = title,
+                    style = style.copy(fontSize = size.sp),
+                    maxLines = 1,
+                    softWrap = false,
+                    constraints = Constraints(maxWidth = widthPx)
+                ).hasVisualOverflow
+            } ?: 12
             Text(
-                text = "Disk Partition\nCalculator",
-                style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.SemiBold),
-                color = palette.contentPrimary
+                text = title,
+                style = style.copy(fontSize = fontSize.sp),
+                color = palette.contentPrimary,
+                maxLines = 1,
+                softWrap = false,
+                overflow = TextOverflow.Ellipsis
             )
         }
         GlassIconButton(
