@@ -9,11 +9,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.width
@@ -44,6 +47,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.platform.LocalDensity
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -114,7 +118,7 @@ fun CalculatorScreen(
                         Modifier
                             .widthIn(max = tokens.maxContentWidth)
                             .fillMaxHeight()
-                            .windowInsetsPadding(WindowInsets.safeDrawing)
+                            .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal))
                             .padding(horizontal = tokens.screenPadding)
                     ) {
                         if (currentInfoPage == null) {
@@ -181,17 +185,28 @@ fun CalculatorScreen(
                                 }
                             }
                         }
+                    }
+                }
 
-                        if (currentInfoPage == null) {
-                            Spacer(Modifier.height(tokens.spaceSm))
-                            GlassTabBar(
-                                items = tabs,
-                                selectedIndex = selectedTabIndex,
-                                onSelect = { selectedTabIndex = it },
-                                modifier = Modifier.fillMaxWidth()
+                // Floating Type Navigation Bar
+                if (currentInfoPage == null) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .widthIn(max = tokens.maxContentWidth)
+                            .windowInsetsPadding(WindowInsets.navigationBars)
+                            .padding(
+                                start = tokens.screenPadding + 4.dp,
+                                end = tokens.screenPadding + 4.dp,
+                                bottom = 12.dp
                             )
-                            Spacer(Modifier.height(tokens.spaceSm))
-                        }
+                    ) {
+                        GlassTabBar(
+                            items = tabs,
+                            selectedIndex = selectedTabIndex,
+                            onSelect = { selectedTabIndex = it },
+                            modifier = Modifier.fillMaxWidth()
+                        )
                     }
                 }
 
@@ -200,13 +215,9 @@ fun CalculatorScreen(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .widthIn(max = tokens.maxContentWidth)
-                        .windowInsetsPadding(WindowInsets.safeDrawing)
+                        .windowInsetsPadding(WindowInsets.navigationBars)
                         .padding(
-                            bottom = if (currentInfoPage == null) {
-                                tokens.spaceXxl + tokens.touchTarget + tokens.spaceMd
-                            } else {
-                                tokens.spaceXl
-                            },
+                            bottom = if (currentInfoPage == null) 92.dp else 24.dp,
                             start = tokens.spaceXl,
                             end = tokens.spaceXl
                         )

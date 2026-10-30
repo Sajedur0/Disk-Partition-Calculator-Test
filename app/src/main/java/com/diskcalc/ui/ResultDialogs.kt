@@ -283,17 +283,14 @@ private fun SplitTableRow(
                 textAlign = TextAlign.End,
                 modifier = Modifier.weight(1f)
             )
-            IconButton(
+            Spacer(Modifier.width(tokens.spaceSm))
+            GlassIconButton(
+                icon = Icons.Rounded.ContentCopy,
+                contentDescription = "Copy $label MB value",
                 onClick = onCopy,
-                modifier = Modifier.size(tokens.touchTarget)
-            ) {
-                Icon(
-                    imageVector = Icons.Rounded.ContentCopy,
-                    contentDescription = "Copy $label MB value",
-                    tint = palette.contentSecondary,
-                    modifier = Modifier.size(16.dp)
-                )
-            }
+                size = 36.dp,
+                tint = palette.accent
+            )
         }
         if (note != null) {
             Text(

@@ -224,7 +224,7 @@ fun SettingsTab(
             )
         }
 
-        Spacer(Modifier.height(tokens.spaceSm))
+        Spacer(Modifier.height(96.dp))
     }
 
     if (showClearConfirm) {

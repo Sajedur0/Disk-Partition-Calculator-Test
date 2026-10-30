@@ -26,21 +26,33 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.diskcalc.ui.theme.LocalGlassTokens
 import com.diskcalc.ui.theme.LocalLiquidPalette
 import com.diskcalc.ui.theme.NumericMedium
 
-/** Solid hairline separator. */
+/**
+ * Classic Neumorphic etched divider: a dark upper shadow line paired
+ * with a light lower highlight line, creating an authentic physical groove.
+ */
 @Composable
 fun GlassDivider(modifier: Modifier = Modifier) {
     val palette = LocalLiquidPalette.current
-    Box(
-        modifier
-            .fillMaxWidth()
-            .height(1.dp)
-            .background(color = palette.glassBorderStart)
-    )
+    Column(modifier.fillMaxWidth()) {
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .height(1.dp)
+                .background(palette.darkShadow.copy(alpha = 0.35f))
+        )
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .height(1.dp)
+                .background(palette.lightShadow.copy(alpha = 0.75f))
+        )
+    }
 }
 
 /** `Label ............ Value` row used by the result dialog and the split table. */
@@ -70,7 +82,7 @@ fun KeyValueRow(
         Spacer(Modifier.width(tokens.spaceSm))
         Text(
             text = value,
-            style = if (emphasise) NumericMedium else MaterialTheme.typography.titleMedium,
+            style = if (emphasise) NumericMedium.copy(fontWeight = FontWeight.Bold) else MaterialTheme.typography.titleMedium,
             color = valueColor ?: if (emphasise) palette.accent else palette.contentPrimary
         )
     }
@@ -90,20 +102,38 @@ fun StatTile(
 ) {
     val palette = LocalLiquidPalette.current
     val tokens = LocalGlassTokens.current
+    val shape = RoundedCornerShape(tokens.cornerMedium)
 
-    Column(
-        modifier = modifier
-            .glassLite(
-                shape = RoundedCornerShape(tokens.cornerMedium),
-                tint = if (highlight) palette.accentContainer else palette.controlSurface,
-                borderColor = if (highlight) palette.accent else palette.glassBorderStart
+    val tileModifier = if (highlight) {
+        modifier
+            .neumorphicInset(
+                shape = shape,
+                backgroundColor = palette.accentContainer.copy(alpha = 0.55f),
+                bevelLight = palette.accent.copy(alpha = 0.6f),
+                bevelDark = palette.darkShadow.copy(alpha = 0.4f)
             )
-            .padding(horizontal = tokens.spaceMd, vertical = tokens.spaceSm)
-    ) {
+            .padding(horizontal = tokens.spaceLg, vertical = tokens.spaceMd)
+    } else {
+        modifier
+            .neumorphicSurface(
+                shape = shape,
+                lightShadowColor = palette.lightShadow,
+                darkShadowColor = palette.darkShadow,
+                surfaceGradientTop = palette.surfaceGradientTop,
+                surfaceGradientBottom = palette.surfaceGradientBottom,
+                bevelLight = palette.bevelLight,
+                bevelDark = palette.bevelDark,
+                shadowOffset = 2.5.dp,
+                blurRadius = 5.dp
+            )
+            .padding(horizontal = tokens.spaceLg, vertical = tokens.spaceMd)
+    }
+
+    Column(modifier = tileModifier) {
         Text(
             text = label,
-            style = MaterialTheme.typography.labelMedium,
-            color = palette.contentSecondary
+            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Medium),
+            color = if (highlight) palette.accent else palette.contentSecondary
         )
         Spacer(Modifier.height(tokens.spaceXs))
         Row(verticalAlignment = Alignment.Bottom) {
@@ -119,13 +149,14 @@ fun StatTile(
                 Spacer(Modifier.width(tokens.spaceSm))
                 Text(
                     text = unit,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = palette.contentSecondary,
-                    modifier = Modifier.padding(bottom = 3.dp)
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                    color = if (highlight) palette.accent else palette.contentSecondary,
+                    modifier = Modifier.padding(bottom = 4.dp)
                 )
             }
         }
         if (caption != null) {
+            Spacer(Modifier.height(tokens.spaceXs))
             Text(
                 text = caption,
                 style = MaterialTheme.typography.bodyMedium,
@@ -135,7 +166,7 @@ fun StatTile(
     }
 }
 
-/** Solid amber note list shown under every result. */
+/** Neumorphic amber note list shown under every result. */
 @Composable
 fun WarningList(
     warnings: List<String>,
@@ -148,10 +179,11 @@ fun WarningList(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .glassLite(
+            .neumorphicInset(
                 shape = RoundedCornerShape(tokens.cornerMedium),
-                tint = palette.warningContainer,
-                borderColor = palette.warningContent
+                backgroundColor = palette.warningContainer,
+                bevelLight = palette.warningContent.copy(alpha = 0.5f),
+                bevelDark = palette.darkShadow.copy(alpha = 0.35f)
             )
             .padding(tokens.spaceMd),
         verticalArrangement = Arrangement.spacedBy(tokens.spaceSm)
@@ -191,10 +223,11 @@ fun InfoBanner(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .glassLite(
+            .neumorphicInset(
                 shape = RoundedCornerShape(tokens.cornerMedium),
-                tint = if (isError) palette.dangerContainer else palette.accentContainer,
-                borderColor = if (isError) palette.dangerContent else palette.glassBorderStart
+                backgroundColor = if (isError) palette.dangerContainer else palette.accentContainer.copy(alpha = 0.55f),
+                bevelLight = if (isError) palette.dangerContent.copy(alpha = 0.6f) else palette.accent.copy(alpha = 0.6f),
+                bevelDark = palette.darkShadow.copy(alpha = 0.35f)
             )
             .padding(horizontal = tokens.spaceMd, vertical = tokens.spaceSm),
         verticalAlignment = Alignment.CenterVertically
@@ -225,23 +258,24 @@ fun InfoBanner(
     }
 }
 
-/** Small solid pill used above section titles ("MB → GB"). */
+/** Small Neumorphic pill used above section titles ("MB → GB"). */
 @Composable
 fun GlassBadge(text: String, modifier: Modifier = Modifier) {
     val palette = LocalLiquidPalette.current
     val tokens = LocalGlassTokens.current
     Box(
         modifier = modifier
-            .glassLite(
+            .neumorphicInset(
                 shape = RoundedCornerShape(percent = 50),
-                tint = palette.accentContainer,
-                borderColor = palette.glassBorderStart
+                backgroundColor = palette.accentContainer.copy(alpha = 0.55f),
+                bevelLight = palette.accent.copy(alpha = 0.5f),
+                bevelDark = palette.darkShadow.copy(alpha = 0.35f)
             )
             .padding(horizontal = tokens.spaceMd, vertical = tokens.spaceXs)
     ) {
         Text(
             text = text,
-            style = MaterialTheme.typography.labelMedium,
+            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
             color = palette.accent
         )
     }

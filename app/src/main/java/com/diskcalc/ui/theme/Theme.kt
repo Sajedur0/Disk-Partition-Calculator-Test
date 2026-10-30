@@ -88,10 +88,10 @@ private val DiskCalcTypography = Typography(
 )
 
 private val DiskCalcShapes = Shapes(
-    extraSmall = RoundedCornerShape(8.dp),
-    small = RoundedCornerShape(8.dp),
-    medium = RoundedCornerShape(12.dp),
-    large = RoundedCornerShape(16.dp),
+    extraSmall = RoundedCornerShape(6.dp),
+    small = RoundedCornerShape(10.dp),
+    medium = RoundedCornerShape(14.dp),
+    large = RoundedCornerShape(20.dp),
     extraLarge = RoundedCornerShape(28.dp)
 )
 
@@ -179,7 +179,14 @@ fun DiskCalcTheme(
         warningContent = animatedSchemeColor(palette.warningContent, spec, "paletteWarning"),
         dangerContainer = animatedSchemeColor(palette.dangerContainer, spec, "paletteErrorContainer"),
         dangerContent = animatedSchemeColor(palette.dangerContent, spec, "paletteError"),
-        controlSurface = animatedSchemeColor(palette.controlSurface, spec, "paletteControl")
+        controlSurface = animatedSchemeColor(palette.controlSurface, spec, "paletteControl"),
+        lightShadow = animatedSchemeColor(palette.lightShadow, spec, "paletteLightShadow"),
+        darkShadow = animatedSchemeColor(palette.darkShadow, spec, "paletteDarkShadow"),
+        insetSurface = animatedSchemeColor(palette.insetSurface, spec, "paletteInsetSurface"),
+        surfaceGradientTop = animatedSchemeColor(palette.surfaceGradientTop, spec, "paletteGradTop"),
+        surfaceGradientBottom = animatedSchemeColor(palette.surfaceGradientBottom, spec, "paletteGradBottom"),
+        bevelLight = animatedSchemeColor(palette.bevelLight, spec, "paletteBevelLight"),
+        bevelDark = animatedSchemeColor(palette.bevelDark, spec, "paletteBevelDark")
     )
 
     val colorScheme = targetScheme.copy(

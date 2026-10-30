@@ -1,0 +1,6 @@
+{
+  "name": "Disk Partition Calculator",
+  "description": "Calculate exact disk partition sizes and split drives with NTFS/FAT32 cluster alignment and Windows setup overhead.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

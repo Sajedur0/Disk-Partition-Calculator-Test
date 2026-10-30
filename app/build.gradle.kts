@@ -10,19 +10,18 @@ val keystoreProperties = Properties().apply {
 
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
 }
 
 android {
     namespace = "com.diskcalc"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.diskcalc"
+        applicationId = "com.aistudio.diskcalc.vmtx"
         minSdk = 24
-        targetSdk = 35
+        targetSdk = 36
         versionCode = providers.gradleProperty("versionCode").orNull?.toIntOrNull() ?: 15
         versionName = providers.gradleProperty("versionName").orNull ?: "1.1.4"
 
@@ -31,6 +30,12 @@ android {
     }
 
     signingConfigs {
+        create("debugConfig") {
+            storeFile = file("${rootDir}/debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
         create("release") {
             storeFile = rootProject.file("signkey/release-key.keystore")
             storePassword = keystoreProperties.getProperty("storePassword")
@@ -41,6 +46,7 @@ android {
 
     buildTypes {
         debug {
+            signingConfig = signingConfigs.getByName("debugConfig")
             applicationIdSuffix = ".debug"
             isMinifyEnabled = false
         }

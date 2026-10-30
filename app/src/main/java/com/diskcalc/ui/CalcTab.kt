@@ -21,6 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.unit.dp
 import com.diskcalc.domain.CalcPresets
 import com.diskcalc.domain.FileSystemType
 import com.diskcalc.domain.PartitionCalculationResult
@@ -199,7 +200,7 @@ fun CalcTab(
             }
         }
 
-        Spacer(Modifier.height(tokens.spaceSm))
+        Spacer(Modifier.height(96.dp))
     }
 }
 

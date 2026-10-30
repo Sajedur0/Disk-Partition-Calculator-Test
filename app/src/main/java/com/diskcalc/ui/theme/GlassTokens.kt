@@ -49,22 +49,36 @@ data class LiquidPalette(
     /** `error` */
     val dangerContent: Color,
     /** `surfaceVariant` — inner controls. */
-    val controlSurface: Color = glassHighlight
+    val controlSurface: Color = glassHighlight,
+    /** Neumorphic top-left light reflection. */
+    val lightShadow: Color = Color.White,
+    /** Neumorphic bottom-right dark shadow. */
+    val darkShadow: Color = Color.Black,
+    /** Recessed / debossed well surface for inputs and tracks. */
+    val insetSurface: Color = glassHighlight,
+    /** Subtle convex top sheen. */
+    val surfaceGradientTop: Color = glassTint,
+    /** Subtle convex bottom shade. */
+    val surfaceGradientBottom: Color = glassTint,
+    /** Soft top-left light bevel. */
+    val bevelLight: Color = Color.White,
+    /** Soft bottom-right dark bevel. */
+    val bevelDark: Color = glassBorderStart
 )
 
 /**
- * Spacing / shape / elevation scale from `docs/03_UI_Spec.md §5`.
+ * Spacing / shape / elevation scale for smooth Neumorphic surfaces.
  * Base grid is 4 dp; screens are padded 16 dp and content is centred at max 600 dp.
  */
 @Immutable
 data class GlassTokens(
     val cornerXl: Dp = 28.dp,          // dialogs
-    val cornerLarge: Dp = 16.dp,       // cards
-    val cornerMedium: Dp = 12.dp,      // inputs
-    val cornerSmall: Dp = 8.dp,        // chips
+    val cornerLarge: Dp = 20.dp,       // cards (smooth organic curves)
+    val cornerMedium: Dp = 14.dp,      // inputs / steppers
+    val cornerSmall: Dp = 10.dp,       // chips / badges
     val border: Dp = 1.dp,
-    val elevation: Dp = 6.dp,          // dialogs only
-    val elevationSmall: Dp = 0.dp,     // cards: tonal surface, no shadow
+    val elevation: Dp = 8.dp,          // dialogs
+    val elevationSmall: Dp = 4.dp,     // cards
     val spaceXs: Dp = 4.dp,
     val spaceSm: Dp = 8.dp,
     val spaceMd: Dp = 12.dp,
@@ -72,51 +86,69 @@ data class GlassTokens(
     val spaceXl: Dp = 24.dp,
     val spaceXxl: Dp = 32.dp,
     val screenPadding: Dp = 16.dp,
-    val cardPadding: Dp = 16.dp,
-    val cardGap: Dp = 12.dp,
+    val cardPadding: Dp = 18.dp,
+    val cardGap: Dp = 14.dp,
     val buttonHeight: Dp = 52.dp,
     val touchTarget: Dp = 48.dp,
-    val maxContentWidth: Dp = 600.dp
+    val maxContentWidth: Dp = 600.dp,
+    val shadowOffset: Dp = 4.dp,
+    val shadowBlur: Dp = 8.dp
 )
 
 val DarkLiquidPalette = LiquidPalette(
     isDark = true,
-    backdropBase = Color(0xFF0F1115),
-    glassTint = Color(0xFF171A21),
-    glassHighlight = Color(0xFF20242D),
-    glassBorderStart = Color(0xFF3A4150),
-    accent = Color(0xFF5B9DFF),
-    accentSecondary = Color(0xFF3DD6A3),
-    onAccent = Color(0xFF00214D),
-    accentContainer = Color(0xFF1B3A66),
-    onAccentContainer = Color(0xFFD6E6FF),
-    contentPrimary = Color(0xFFE6E8EE),
-    contentSecondary = Color(0xFF9AA3B2),
-    contentTertiary = Color(0xFF9AA3B2),
-    warningContainer = Color(0xFF3D2E00),
-    warningContent = Color(0xFFFFC857),
-    dangerContainer = Color(0xFFFF6B6B).copy(alpha = 0.14f),
-    dangerContent = Color(0xFFFF6B6B)
+    backdropBase = Color(0xFF1C2028),
+    glassTint = Color(0xFF1C2028),
+    glassHighlight = Color(0xFF161920),
+    glassBorderStart = Color(0xFF2C3240),
+    accent = Color(0xFF60A5FA),
+    accentSecondary = Color(0xFF34D399),
+    onAccent = Color(0xFF0F172A),
+    accentContainer = Color(0xFF1E2F4D),
+    onAccentContainer = Color(0xFF93C5FD),
+    contentPrimary = Color(0xFFF8FAFC),
+    contentSecondary = Color(0xFF94A3B8),
+    contentTertiary = Color(0xFF64748B),
+    warningContainer = Color(0xFF2E2412),
+    warningContent = Color(0xFFFBBF24),
+    dangerContainer = Color(0xFF331616),
+    dangerContent = Color(0xFFF87171),
+    controlSurface = Color(0xFF161920),
+    lightShadow = Color(0xFF2C3342),
+    darkShadow = Color(0xFF0B0D11),
+    insetSurface = Color(0xFF15181F),
+    surfaceGradientTop = Color(0xFF222732),
+    surfaceGradientBottom = Color(0xFF1B1E26),
+    bevelLight = Color(0xFF353D4D).copy(alpha = 0.7f),
+    bevelDark = Color(0xFF0D0F14).copy(alpha = 0.5f)
 )
 
 val LightLiquidPalette = LiquidPalette(
     isDark = false,
-    backdropBase = Color(0xFFF6F7FB),
-    glassTint = Color(0xFFFFFFFF),
-    glassHighlight = Color(0xFFE9ECF3),
-    glassBorderStart = Color(0xFFC5CBD8),
-    accent = Color(0xFF1F6FEB),
-    accentSecondary = Color(0xFF0E9F77),
+    backdropBase = Color(0xFFE4E9F2),
+    glassTint = Color(0xFFE4E9F2),
+    glassHighlight = Color(0xFFDAE1ED),
+    glassBorderStart = Color(0xFFFFFFFF).copy(alpha = 0.7f),
+    accent = Color(0xFF3B82F6),
+    accentSecondary = Color(0xFF10B981),
     onAccent = Color(0xFFFFFFFF),
-    accentContainer = Color(0xFFDCE9FF),
-    onAccentContainer = Color(0xFF0A2A5E),
-    contentPrimary = Color(0xFF14171F),
-    contentSecondary = Color(0xFF4A5363),
-    contentTertiary = Color(0xFF4A5363),
-    warningContainer = Color(0xFFFFF4E5),
-    warningContent = Color(0xFFB54708),
-    dangerContainer = Color(0xFFD92D20).copy(alpha = 0.08f),
-    dangerContent = Color(0xFFD92D20)
+    accentContainer = Color(0xFFD6E4F8),
+    onAccentContainer = Color(0xFF1D4ED8),
+    contentPrimary = Color(0xFF1E293B),
+    contentSecondary = Color(0xFF475569),
+    contentTertiary = Color(0xFF64748B),
+    warningContainer = Color(0xFFFEF3C7),
+    warningContent = Color(0xFFB45309),
+    dangerContainer = Color(0xFFFEE2E2),
+    dangerContent = Color(0xFFDC2626),
+    controlSurface = Color(0xFFDAE1ED),
+    lightShadow = Color(0xFFFFFFFF),
+    darkShadow = Color(0xFF9AA7BC),
+    insetSurface = Color(0xFFDAE1ED),
+    surfaceGradientTop = Color(0xFFECF1F9),
+    surfaceGradientBottom = Color(0xFFDCE2EC),
+    bevelLight = Color(0xFFFFFFFF).copy(alpha = 0.9f),
+    bevelDark = Color(0xFFBAC6D7).copy(alpha = 0.45f)
 )
 
 val LocalLiquidPalette = staticCompositionLocalOf { DarkLiquidPalette }
