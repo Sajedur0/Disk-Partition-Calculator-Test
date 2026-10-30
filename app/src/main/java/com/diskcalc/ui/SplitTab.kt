@@ -157,7 +157,7 @@ fun SplitTab(
                 }
                 Spacer(Modifier.height(tokens.spaceXs))
                 KeyValueRow("Total", "${result.totalMb} MB")
-                KeyValueRow("Usable after Setup", "${result.usableMb} MB")
+                KeyValueRow("Space for partitions", "${result.usableMb} MB")
                 Spacer(Modifier.height(tokens.spaceXs))
                 InfoBanner(
                     text = "Σ partitions = ${result.sumOfTypeMb} MB ✓ equals usable (${result.usableMb} MB)",
