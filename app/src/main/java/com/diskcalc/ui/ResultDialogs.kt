@@ -39,6 +39,7 @@ import com.diskcalc.ui.components.GlassBadge
 import com.diskcalc.ui.components.GlassButton
 import com.diskcalc.ui.components.GlassDivider
 import com.diskcalc.ui.components.GlassIconButton
+import com.diskcalc.ui.components.NoGlowContent
 import com.diskcalc.ui.components.InfoBanner
 import com.diskcalc.ui.components.KeyValueRow
 import com.diskcalc.ui.components.LiquidGlassSurface
@@ -115,7 +116,8 @@ fun CalcResultDialog(
                     clipboard.setText(AnnotatedString(ResultText.calc(result)))
                     onCopied()
                 },
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
+                glowEnabled = false
             )
             Spacer(Modifier.width(tokens.spaceSm))
             GlassButton(
@@ -208,7 +210,8 @@ fun SplitResultDialog(
                     clipboard.setText(AnnotatedString(ResultText.split(result)))
                     onCopied()
                 },
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
+                glowEnabled = false
             )
             Spacer(Modifier.width(tokens.spaceSm))
             GlassButton(text = "Close", primary = false, onClick = onDismiss, fillWidth = false)
@@ -322,6 +325,7 @@ private fun GlassDialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
+      NoGlowContent {
         Box(
             Modifier
                 .fillMaxSize()
@@ -364,5 +368,6 @@ private fun GlassDialog(
                 }
             }
         }
+      }
     }
 }

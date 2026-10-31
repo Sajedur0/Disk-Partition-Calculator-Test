@@ -49,6 +49,7 @@ import com.diskcalc.ui.components.GlassPanel
 import com.diskcalc.ui.components.GlassSegmentedControl
 import com.diskcalc.ui.components.GlassToggleRow
 import com.diskcalc.ui.components.LiquidGlassSurface
+import com.diskcalc.ui.components.NoGlowContent
 import com.diskcalc.ui.components.clickableBounce
 import com.diskcalc.ui.components.glassLite
 import com.diskcalc.ui.theme.LocalGlassTokens
@@ -246,7 +247,8 @@ private fun ClearHistoryDialog(onCancel: () -> Unit, onConfirm: () -> Unit) {
     val palette = LocalLiquidPalette.current
     val tokens = LocalGlassTokens.current
     Dialog(onDismissRequest = onCancel) {
-        LiquidGlassSurface(shape = RoundedCornerShape(tokens.cornerXl)) {
+      NoGlowContent {
+        LiquidGlassSurface(shape = RoundedCornerShape(tokens.cornerXl), elevation = tokens.elevation) {
             Column(Modifier.padding(tokens.cardPadding)) {
                 Text(
                     text = "Delete all history?",
@@ -264,11 +266,13 @@ private fun ClearHistoryDialog(onCancel: () -> Unit, onConfirm: () -> Unit) {
                     GlassButton(
                         text = "Delete",
                         onClick = onConfirm,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        glowEnabled = false
                     )
                 }
             }
         }
+      }
     }
 }
 

@@ -102,7 +102,8 @@ fun GlassButton(
     icon: ImageVector? = null,
     primary: Boolean = true,
     enabled: Boolean = true,
-    fillWidth: Boolean = true
+    fillWidth: Boolean = true,
+    glowEnabled: Boolean = true
 ) {
     val palette = LocalLiquidPalette.current
     val tokens = LocalGlassTokens.current
@@ -120,7 +121,7 @@ fun GlassButton(
             bevelDark = Color.Black.copy(alpha = 0.18f),
             shadowOffset = 2.5.dp,
             blurRadius = 10.dp,
-            glowColor = palette.accentGlow,
+            glowColor = if (glowEnabled) palette.accentGlow else Color.Transparent,
             glowBlur = 12.dp
         )
     } else {

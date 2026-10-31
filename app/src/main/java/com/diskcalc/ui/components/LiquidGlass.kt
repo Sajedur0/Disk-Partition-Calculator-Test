@@ -21,6 +21,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -131,6 +132,20 @@ private fun Modifier.softBorder(
             end = Offset(size.width, size.height)
         ),
         style = Stroke(width = borderWidth.toPx() * 2f)
+    )
+}
+
+/**
+ * Popup scope with the accent glow switched off: within [content] the palette's glow colour
+ * is transparent, so no element inside a popup (dialog or sheet) can emit a glow on any side.
+ * Only the glow is removed — accent colours, shadows and all content stay exactly the same.
+ */
+@Composable
+fun NoGlowContent(content: @Composable () -> Unit) {
+    val palette = LocalLiquidPalette.current
+    CompositionLocalProvider(
+        LocalLiquidPalette provides palette.copy(accentGlow = Color.Transparent),
+        content = content
     )
 }
 
@@ -284,8 +299,10 @@ fun LiquidGlassSurface(
             darkShadowColor = Color.Black.copy(alpha = 0.45f), // Soft elevation drop shadow
             surfaceGradientTop = tint ?: palette.surfaceGradientTop,
             surfaceGradientBottom = tint ?: palette.surfaceGradientBottom,
-            bevelLight = palette.glassBorderStart.copy(alpha = 0.35f), // Soft neutral border, no glowing edge
-            bevelDark = palette.bevelDark.copy(alpha = 0.35f),
+            // Uniform neutral border on popups: no light bevel edge on any side, so a
+            // popup can never appear to glow. Only the soft drop shadow below remains.
+            bevelLight = palette.glassBorderStart.copy(alpha = 0.25f),
+            bevelDark = palette.glassBorderStart.copy(alpha = 0.25f),
             shadowOffset = 0.dp,
             shadowOffsetY = tokens.shadowOffsetDialog,
             blurRadius = tokens.shadowBlurDialog,
