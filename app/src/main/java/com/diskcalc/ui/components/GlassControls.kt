@@ -343,12 +343,12 @@ fun GlassSwitch(
         label = "trackBg"
     )
     val animatedBevelLight by animateColorAsState(
-        targetValue = if (checked) Color.White.copy(alpha = 0.45f) else palette.bevelLight,
+        targetValue = if (checked) Color.White.copy(alpha = 0.35f) else palette.bevelLight,
         animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
         label = "trackBevelLight"
     )
     val animatedBevelDark by animateColorAsState(
-        targetValue = if (checked) Color.Black.copy(alpha = 0.25f) else palette.bevelDark,
+        targetValue = if (checked) Color.Transparent else palette.bevelDark,
         animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
         label = "trackBevelDark"
     )
@@ -360,7 +360,7 @@ fun GlassSwitch(
         label = "thumbTop"
     )
     val thumbBottomColor by animateColorAsState(
-        targetValue = if (checked) Color(0xFFF1F5F9) else palette.surfaceGradientBottom,
+        targetValue = if (checked) Color(0xFFF8FAFC) else palette.surfaceGradientBottom,
         animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
         label = "thumbBottom"
     )
@@ -368,6 +368,31 @@ fun GlassSwitch(
         targetValue = if (checked) palette.accent else palette.contentTertiary.copy(alpha = 0.45f),
         animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
         label = "switchDot"
+    )
+
+    val thumbDarkShadow by animateColorAsState(
+        targetValue = if (checked) {
+            if (palette.isDark) Color.Black.copy(alpha = 0.20f) else Color.Black.copy(alpha = 0.10f)
+        } else {
+            palette.darkShadow
+        },
+        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+        label = "thumbDarkShadow"
+    )
+    val thumbLightShadow by animateColorAsState(
+        targetValue = if (checked) Color.White.copy(alpha = 0.35f) else palette.lightShadow,
+        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+        label = "thumbLightShadow"
+    )
+    val thumbBevelDark by animateColorAsState(
+        targetValue = if (checked) Color.Transparent else palette.bevelDark,
+        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+        label = "thumbBevelDark"
+    )
+    val thumbBevelLight by animateColorAsState(
+        targetValue = if (checked) Color.White.copy(alpha = 0.85f) else palette.bevelLight,
+        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+        label = "thumbBevelLight"
     )
 
     Box(
@@ -389,14 +414,14 @@ fun GlassSwitch(
                 .size(thumbSize)
                 .neumorphicSurface(
                     shape = CircleShape,
-                    lightShadowColor = if (checked) Color.White.copy(alpha = 0.5f) else palette.lightShadow,
-                    darkShadowColor = if (checked) Color.Black.copy(alpha = 0.35f) else palette.darkShadow,
+                    lightShadowColor = thumbLightShadow,
+                    darkShadowColor = thumbDarkShadow,
                     surfaceGradientTop = thumbTopColor,
                     surfaceGradientBottom = thumbBottomColor,
-                    bevelLight = Color.White.copy(alpha = 0.65f),
-                    bevelDark = if (checked) Color.Black.copy(alpha = 0.15f) else palette.bevelDark,
-                    shadowOffset = 2.dp,
-                    blurRadius = 3.5.dp
+                    bevelLight = thumbBevelLight,
+                    bevelDark = thumbBevelDark,
+                    shadowOffset = if (checked) 1.5.dp else 2.dp,
+                    blurRadius = if (checked) 3.dp else 3.5.dp
                 ),
             contentAlignment = Alignment.Center
         ) {
