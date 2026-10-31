@@ -123,7 +123,13 @@ private fun Modifier.softBorder(
     drawContent()
     if (borderWidth <= 0.dp || size.width <= 0f || size.height <= 0f) return@drawWithContent
     val outline = shape.createOutline(size, layoutDirection, this)
-    val path = Path().apply { addOutline(outline) }
+    val path = Path().apply {
+        when (outline) {
+            is Outline.Rectangle -> addRect(outline.rect)
+            is Outline.Rounded -> addRoundRect(outline.roundRect)
+            is Outline.Generic -> addPath(outline.path)
+        }
+    }
     drawPath(
         path = path,
         brush = Brush.linearGradient(
