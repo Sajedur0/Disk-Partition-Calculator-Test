@@ -28,6 +28,8 @@ data class LiquidPalette(
     val accent: Color,
     /** `secondary` — success / sum-check. */
     val accentSecondary: Color,
+    /** Soft halo colour for accent (already-glowing) elements — glow only, never a drop shadow. */
+    val accentGlow: Color = accent.copy(alpha = 0.35f),
     /** `onPrimary` */
     val onAccent: Color,
     /** `primaryContainer` */
@@ -103,6 +105,7 @@ val DarkLiquidPalette = LiquidPalette(
     glassBorderStart = Color(0xFF2C3240),
     accent = Color(0xFF60A5FA),
     accentSecondary = Color(0xFF34D399),
+    accentGlow = Color(0xFF60A5FA).copy(alpha = 0.38f),
     onAccent = Color(0xFF0F172A),
     accentContainer = Color(0xFF1E2F4D),
     onAccentContainer = Color(0xFF93C5FD),
@@ -131,6 +134,7 @@ val LightLiquidPalette = LiquidPalette(
     glassBorderStart = Color(0xFFFFFFFF).copy(alpha = 0.7f),
     accent = Color(0xFF3B82F6),
     accentSecondary = Color(0xFF10B981),
+    accentGlow = Color(0xFF3B82F6).copy(alpha = 0.30f),
     onAccent = Color(0xFFFFFFFF),
     accentContainer = Color(0xFFD6E4F8),
     onAccentContainer = Color(0xFF1D4ED8),
