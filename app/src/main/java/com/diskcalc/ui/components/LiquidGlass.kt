@@ -3,7 +3,6 @@ package com.diskcalc.ui.components
 import android.graphics.BlurMaskFilter
 import android.graphics.Paint
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
@@ -26,13 +25,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.asAndroidPath
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
@@ -105,6 +107,34 @@ fun Modifier.accentGlow(
 }
 
 /**
+ * Dual-tone bevel border whose gradient is fitted to the element's own size: light at the
+ * top-left, dark at the bottom-right, for every element at every size. (A static gradient
+ * brush cannot know the size, so its bevel used to wash out inconsistently.)
+ * The stroke is centred on the edge; the outer half is clipped away by the surface clip,
+ * leaving exactly [borderWidth] visible inside the edge.
+ */
+private fun Modifier.softBorder(
+    shape: Shape,
+    light: Color,
+    dark: Color,
+    borderWidth: Dp
+): Modifier = this.drawWithContent {
+    drawContent()
+    if (borderWidth <= 0.dp || size.width <= 0f || size.height <= 0f) return@drawWithContent
+    val outline = shape.createOutline(size, layoutDirection, this)
+    val path = Path().apply { addOutline(outline) }
+    drawPath(
+        path = path,
+        brush = Brush.linearGradient(
+            colors = listOf(light, dark),
+            start = Offset.Zero,
+            end = Offset(size.width, size.height)
+        ),
+        style = Stroke(width = borderWidth.toPx() * 2f)
+    )
+}
+
+/**
  * Renders an extruded / raised Neumorphic surface with dual soft shadows,
  * a subtle convex gradient, and a dual-tone light bevel border.
  *
@@ -114,7 +144,7 @@ fun Modifier.accentGlow(
  * [glowColor], when set, adds the centred accent halo behind the surface (see [accentGlow]).
  */
 fun Modifier.neumorphicSurface(
-    shape: Shape = RoundedCornerShape(20.dp),
+    shape: Shape = RoundedCornerShape(24.dp),
     lightShadowColor: Color,
     darkShadowColor: Color,
     surfaceGradientTop: Color,
@@ -159,22 +189,14 @@ fun Modifier.neumorphicSurface(
         brush = Brush.verticalGradient(colors = listOf(surfaceGradientTop, surfaceGradientBottom)),
         shape = shape
     )
-    .border(
-        width = borderWidth,
-        brush = Brush.linearGradient(
-            colors = listOf(bevelLight, bevelDark),
-            start = Offset(0f, 0f),
-            end = Offset.Infinite
-        ),
-        shape = shape
-    )
+    .softBorder(shape = shape, light = bevelLight, dark = bevelDark, borderWidth = borderWidth)
 
 /**
  * Renders an indented / debossed Neumorphic well with an inverted bevel border
  * and subtle inner shadow gradient.
  */
 fun Modifier.neumorphicInset(
-    shape: Shape = RoundedCornerShape(14.dp),
+    shape: Shape = RoundedCornerShape(16.dp),
     backgroundColor: Color,
     bevelLight: Color,
     bevelDark: Color,
@@ -182,21 +204,13 @@ fun Modifier.neumorphicInset(
 ): Modifier = this
     .clip(shape)
     .background(color = backgroundColor, shape = shape)
-    .border(
-        width = borderWidth,
-        brush = Brush.linearGradient(
-            colors = listOf(bevelDark, bevelLight),
-            start = Offset(0f, 0f),
-            end = Offset.Infinite
-        ),
-        shape = shape
-    )
+    .softBorder(shape = shape, light = bevelDark, dark = bevelLight, borderWidth = borderWidth)
     .drawBehind {
         // Accurate deboss shading: the recess catches shadow along its top/left inner walls
         // (away from the top-left light) and a faint reflected highlight along bottom/right.
         val cornerPx = when (shape) {
             is RoundedCornerShape -> shape.topStart.toPx(size, this)
-            else -> 14.dp.toPx()
+            else -> 16.dp.toPx()
         }
         val corner = androidx.compose.ui.geometry.CornerRadius(cornerPx, cornerPx)
         // Proportional to the well's height, with a low floor so small wells (switch track)
@@ -273,8 +287,8 @@ fun LiquidGlassSurface(
             bevelLight = palette.glassBorderStart.copy(alpha = 0.35f), // Soft neutral border, no glowing edge
             bevelDark = palette.bevelDark.copy(alpha = 0.35f),
             shadowOffset = 0.dp,
-            shadowOffsetY = 8.dp,
-            blurRadius = 24.dp,
+            shadowOffsetY = tokens.shadowOffsetDialog,
+            blurRadius = tokens.shadowBlurDialog,
             borderWidth = borderWidth
         )
     } else {
@@ -329,8 +343,8 @@ fun Modifier.glassLite(
             surfaceGradientBottom = tint ?: palette.surfaceGradientBottom,
             bevelLight = borderColor ?: palette.bevelLight,
             bevelDark = borderColor ?: palette.bevelDark,
-            shadowOffset = 2.dp,
-            blurRadius = 7.dp,
+            shadowOffset = tokens.shadowOffsetSmall,
+            blurRadius = tokens.shadowBlurSmall,
             borderWidth = resolvedBorderWidth
         )
     }
@@ -410,6 +424,7 @@ fun GlassIconButton(
     tint: Color? = null
 ) {
     val palette = LocalLiquidPalette.current
+    val tokens = LocalGlassTokens.current
     Box(
         modifier = modifier
             .size(size)
@@ -421,8 +436,8 @@ fun GlassIconButton(
                 surfaceGradientBottom = palette.surfaceGradientBottom,
                 bevelLight = palette.bevelLight,
                 bevelDark = palette.bevelDark,
-                shadowOffset = 2.dp,
-                blurRadius = 7.dp
+                shadowOffset = tokens.shadowOffsetSmall,
+                blurRadius = tokens.shadowBlurSmall
             )
             .clickableBounce(onClick = onClick),
         contentAlignment = Alignment.Center

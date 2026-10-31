@@ -80,7 +80,7 @@ fun HistorySheet(
         sheetState = sheetState,
         modifier = modifier,
         shape = RoundedCornerShape(topStart = tokens.cornerXl, topEnd = tokens.cornerXl),
-        containerColor = palette.glassTint,
+        containerColor = palette.surfaceGradientTop,
         contentColor = palette.contentPrimary,
         scrimColor = Color.Black.copy(alpha = 0.45f),
         dragHandle = {
