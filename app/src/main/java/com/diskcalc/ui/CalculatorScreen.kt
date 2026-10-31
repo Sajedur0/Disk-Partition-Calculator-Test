@@ -2,7 +2,6 @@ package com.diskcalc.ui
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -14,7 +13,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
@@ -22,24 +20,18 @@ import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Calculate
 import androidx.compose.material.icons.rounded.Dashboard
 import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -55,12 +47,10 @@ import com.diskcalc.ui.components.GlassDivider
 import com.diskcalc.ui.components.GlassIconButton
 import com.diskcalc.ui.components.GlassTabBar
 import com.diskcalc.ui.components.GlassTabItem
-import com.diskcalc.ui.components.LiquidGlassSurface
 import com.diskcalc.ui.theme.DiskCalcTheme
 import com.diskcalc.ui.theme.LiquidBackdropHost
 import com.diskcalc.ui.theme.LocalGlassTokens
 import com.diskcalc.ui.theme.LocalLiquidPalette
-import kotlinx.coroutines.launch
 
 /**
  * Host of the three tabs. Owns the theme, solid backdrop and dialogs.
@@ -89,8 +79,6 @@ fun CalculatorScreen(
         }
     }
     var showHistory by remember { mutableStateOf(false) }
-    val snackbarHostState = remember { SnackbarHostState() }
-    val scope = rememberCoroutineScope()
 
     val tabs = remember {
         listOf(
@@ -143,9 +131,7 @@ fun CalculatorScreen(
                                 "guide" -> GuidePage(onBack = closeInfoPage)
                                 "about" -> AboutPage(
                                     onBack = closeInfoPage,
-                                    onCopied = {
-                                        scope.launch { snackbarHostState.showSnackbar("Copied") }
-                                    }
+                                    onCopied = {}
                                 )
                                 null -> when (selectedTabIndex) {
                                     0 -> CalcTab(
@@ -157,9 +143,7 @@ fun CalculatorScreen(
                                         onProfileChange = viewModel::onSetupProfileChange,
                                         onCustomOverheadChange = viewModel::onCustomOverheadChange,
                                         onCalculate = viewModel::calculate,
-                                        onCopied = {
-                                            scope.launch { snackbarHostState.showSnackbar("Copied") }
-                                        }
+                                        onCopied = {}
                                     )
 
                                     1 -> SplitTab(
@@ -168,9 +152,7 @@ fun CalculatorScreen(
                                         onPartitionCountChange = viewModel::onPartitionCountChange,
                                         onFilesystemChange = viewModel::onSplitFilesystemChange,
                                         onSplit = { viewModel.split() },
-                                        onCopied = {
-                                            scope.launch { snackbarHostState.showSnackbar("Copied") }
-                                        }
+                                        onCopied = {}
                                     )
 
                                     else -> SettingsTab(
@@ -214,52 +196,6 @@ fun CalculatorScreen(
                     }
                 }
 
-                SnackbarHost(
-                    hostState = snackbarHostState,
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .widthIn(max = tokens.maxContentWidth)
-                        .windowInsetsPadding(WindowInsets.navigationBars)
-                        .padding(
-                            bottom = if (currentInfoPage == null) 92.dp else 24.dp,
-                            start = tokens.spaceXl,
-                            end = tokens.spaceXl
-                        )
-                ) { data ->
-                    LiquidGlassSurface(
-                        shape = RoundedCornerShape(percent = 50),
-                        tint = palette.glassTint,
-                        elevation = tokens.elevationSmall
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(
-                                horizontal = tokens.spaceXl,
-                                vertical = tokens.spaceMd
-                            ),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = data.visuals.message,
-                                style = MaterialTheme.typography.labelLarge,
-                                color = palette.contentPrimary,
-                                modifier = Modifier.weight(1f, fill = false)
-                            )
-                            val actionLabel = data.visuals.actionLabel
-                            if (actionLabel != null) {
-                                Spacer(Modifier.width(tokens.spaceMd))
-                                Text(
-                                    text = actionLabel,
-                                    style = MaterialTheme.typography.labelLarge,
-                                    color = palette.accent,
-                                    modifier = Modifier
-                                        .heightIn(min = tokens.touchTarget)
-                                        .clickable { data.performAction() }
-                                        .padding(vertical = tokens.spaceMd)
-                                )
-                            }
-                        }
-                    }
-                }
             }
 
             // ------------------------------------------------------------ dialogs
@@ -267,9 +203,7 @@ fun CalculatorScreen(
                 CalcResultDialog(
                     result = result,
                     onDismiss = viewModel::dismissCalcResult,
-                    onCopied = {
-                        scope.launch { snackbarHostState.showSnackbar("Copied") }
-                    }
+                    onCopied = {}
                 )
             }
 
@@ -277,9 +211,7 @@ fun CalculatorScreen(
                 SplitResultDialog(
                     result = result,
                     onDismiss = viewModel::dismissSplitResult,
-                    onCopied = {
-                        scope.launch { snackbarHostState.showSnackbar("Copied") }
-                    }
+                    onCopied = {}
                 )
             }
 
@@ -288,22 +220,8 @@ fun CalculatorScreen(
                     history = history,
                     onDismiss = { showHistory = false },
                     onClear = viewModel::onClearHistory,
-                    onRemove = { id ->
-                        viewModel.onRemoveHistory(id)
-                        scope.launch {
-                            val result = snackbarHostState.showSnackbar(
-                                message = "Deleted",
-                                actionLabel = "Undo",
-                                duration = SnackbarDuration.Short
-                            )
-                            if (result == SnackbarResult.ActionPerformed) {
-                                viewModel.undoRemoveHistory()
-                            }
-                        }
-                    },
-                    onCopy = {
-                        scope.launch { snackbarHostState.showSnackbar("Copied") }
-                    }
+                    onRemove = viewModel::onRemoveHistory,
+                    onCopy = {}
                 )
             }
         }

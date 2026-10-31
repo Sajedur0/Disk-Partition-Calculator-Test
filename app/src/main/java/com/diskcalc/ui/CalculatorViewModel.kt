@@ -85,9 +85,6 @@ class CalculatorViewModel(
     private val _history = MutableStateFlow<List<ConversionHistory>>(emptyList())
     val history: StateFlow<List<ConversionHistory>> = _history.asStateFlow()
 
-    /** Last deleted row, kept in memory only so "Undo" can restore it. */
-    private var lastDeleted: ConversionHistory? = null
-
     /** Tracks whether the user has touched the fields, so stored defaults only seed once. */
     private var calcSeeded = false
     private var splitSeeded = false
@@ -309,7 +306,6 @@ class CalculatorViewModel(
     }
 
     fun onClearHistory() {
-        lastDeleted = null
         viewModelScope.launch {
             historyManager.clear()
             _history.value = historyManager.all()
@@ -317,18 +313,8 @@ class CalculatorViewModel(
     }
 
     fun onRemoveHistory(id: String) {
-        lastDeleted = _history.value.firstOrNull { it.id == id }
         viewModelScope.launch {
             historyManager.remove(id)
-            _history.value = historyManager.all()
-        }
-    }
-
-    fun undoRemoveHistory() {
-        val entry = lastDeleted ?: return
-        lastDeleted = null
-        viewModelScope.launch {
-            historyManager.add(entry)
             _history.value = historyManager.all()
         }
     }

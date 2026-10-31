@@ -143,14 +143,14 @@ fun Modifier.neumorphicSurface(
 
         // 1. Top-left light reflection: contact layer, then ambient layer.
         if (lightShadowColor.alpha > 0.02f && (ox > 0f || oy > 0f)) {
-            drawSilhouette(shape, lightShadowColor.copy(alpha = lightShadowColor.alpha * 0.55f), Offset(-ox * 0.45f, -oy * 0.45f), blurPx * 0.45f)
-            drawSilhouette(shape, lightShadowColor.copy(alpha = lightShadowColor.alpha * 0.5f), Offset(-ox, -oy), blurPx)
+            drawSilhouette(shape, lightShadowColor.copy(alpha = lightShadowColor.alpha * 0.45f), Offset(-ox * 0.45f, -oy * 0.45f), blurPx * 0.45f)
+            drawSilhouette(shape, lightShadowColor.copy(alpha = lightShadowColor.alpha * 0.38f), Offset(-ox, -oy), blurPx)
         }
 
         // 2. Bottom-right dark drop shadow: contact layer, then ambient layer.
         if (darkShadowColor.alpha > 0.02f) {
-            drawSilhouette(shape, darkShadowColor.copy(alpha = darkShadowColor.alpha * 0.6f), Offset(ox * 0.45f, oy * 0.45f), blurPx * 0.45f)
-            drawSilhouette(shape, darkShadowColor.copy(alpha = darkShadowColor.alpha * 0.5f), Offset(ox, oy), blurPx)
+            drawSilhouette(shape, darkShadowColor.copy(alpha = darkShadowColor.alpha * 0.5f), Offset(ox * 0.45f, oy * 0.45f), blurPx * 0.45f)
+            drawSilhouette(shape, darkShadowColor.copy(alpha = darkShadowColor.alpha * 0.38f), Offset(ox, oy), blurPx)
         }
     }
     .clip(shape)
@@ -199,11 +199,13 @@ fun Modifier.neumorphicInset(
             else -> 14.dp.toPx()
         }
         val corner = androidx.compose.ui.geometry.CornerRadius(cornerPx, cornerPx)
-        val depth = (minOf(size.width, size.height) * 0.22f).coerceIn(10.dp.toPx(), 28.dp.toPx())
+        // Proportional to the well's height, with a low floor so small wells (switch track)
+        // are not over-shaded by a minimum meant for tall input fields.
+        val depth = (minOf(size.width, size.height) * 0.22f).coerceIn(6.dp.toPx(), 28.dp.toPx())
         if (shape == CircleShape) {
             drawCircle(
                 brush = Brush.radialGradient(
-                    colors = listOf(bevelDark.copy(alpha = 0.32f), Color.Transparent),
+                    colors = listOf(bevelDark.copy(alpha = 0.24f), Color.Transparent),
                     center = Offset(size.width * 0.32f, size.height * 0.28f),
                     radius = size.minDimension * 0.62f
                 ),
@@ -213,7 +215,7 @@ fun Modifier.neumorphicInset(
             // Top inner wall shadow.
             drawRoundRect(
                 brush = Brush.verticalGradient(
-                    colors = listOf(bevelDark.copy(alpha = 0.30f), Color.Transparent),
+                    colors = listOf(bevelDark.copy(alpha = 0.22f), Color.Transparent),
                     startY = 0f, endY = depth
                 ),
                 size = size, cornerRadius = corner
@@ -221,7 +223,7 @@ fun Modifier.neumorphicInset(
             // Left inner wall shadow.
             drawRoundRect(
                 brush = Brush.horizontalGradient(
-                    colors = listOf(bevelDark.copy(alpha = 0.18f), Color.Transparent),
+                    colors = listOf(bevelDark.copy(alpha = 0.13f), Color.Transparent),
                     startX = 0f, endX = depth
                 ),
                 size = size, cornerRadius = corner
@@ -229,7 +231,7 @@ fun Modifier.neumorphicInset(
             // Bottom inner highlight (reflected light).
             drawRoundRect(
                 brush = Brush.verticalGradient(
-                    colors = listOf(Color.Transparent, bevelLight.copy(alpha = 0.16f)),
+                    colors = listOf(Color.Transparent, bevelLight.copy(alpha = 0.12f)),
                     startY = size.height - depth, endY = size.height
                 ),
                 size = size, cornerRadius = corner
@@ -237,7 +239,7 @@ fun Modifier.neumorphicInset(
             // Right inner highlight.
             drawRoundRect(
                 brush = Brush.horizontalGradient(
-                    colors = listOf(Color.Transparent, bevelLight.copy(alpha = 0.10f)),
+                    colors = listOf(Color.Transparent, bevelLight.copy(alpha = 0.08f)),
                     startX = size.width - depth, endX = size.width
                 ),
                 size = size, cornerRadius = corner
@@ -265,14 +267,14 @@ fun LiquidGlassSurface(
         modifier.neumorphicSurface(
             shape = shape,
             lightShadowColor = Color.Transparent, // No side light reflection / glow on modal dialog
-            darkShadowColor = Color.Black.copy(alpha = 0.65f), // Pure deep elevation drop shadow
+            darkShadowColor = Color.Black.copy(alpha = 0.45f), // Soft elevation drop shadow
             surfaceGradientTop = tint ?: palette.surfaceGradientTop,
             surfaceGradientBottom = tint ?: palette.surfaceGradientBottom,
             bevelLight = palette.glassBorderStart.copy(alpha = 0.35f), // Soft neutral border, no glowing edge
             bevelDark = palette.bevelDark.copy(alpha = 0.35f),
             shadowOffset = 0.dp,
-            shadowOffsetY = 10.dp,
-            blurRadius = 18.dp,
+            shadowOffsetY = 8.dp,
+            blurRadius = 24.dp,
             borderWidth = borderWidth
         )
     } else {
@@ -327,8 +329,8 @@ fun Modifier.glassLite(
             surfaceGradientBottom = tint ?: palette.surfaceGradientBottom,
             bevelLight = borderColor ?: palette.bevelLight,
             bevelDark = borderColor ?: palette.bevelDark,
-            shadowOffset = 2.5.dp,
-            blurRadius = 5.dp,
+            shadowOffset = 2.dp,
+            blurRadius = 7.dp,
             borderWidth = resolvedBorderWidth
         )
     }
@@ -419,8 +421,8 @@ fun GlassIconButton(
                 surfaceGradientBottom = palette.surfaceGradientBottom,
                 bevelLight = palette.bevelLight,
                 bevelDark = palette.bevelDark,
-                shadowOffset = 2.5.dp,
-                blurRadius = 5.dp
+                shadowOffset = 2.dp,
+                blurRadius = 7.dp
             )
             .clickableBounce(onClick = onClick),
         contentAlignment = Alignment.Center

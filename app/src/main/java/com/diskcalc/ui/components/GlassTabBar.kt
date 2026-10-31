@@ -61,7 +61,7 @@ fun GlassTabBar(
     val targetOffset = segmentWidthPx * selectedIndex.coerceIn(0, items.lastIndex)
     val offsetX by animateFloatAsState(
         targetValue = targetOffset,
-        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+        animationSpec = spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow),
         label = "tabOffset"
     )
 
@@ -79,8 +79,8 @@ fun GlassTabBar(
                 surfaceGradientBottom = palette.surfaceGradientBottom,
                 bevelLight = palette.bevelLight,
                 bevelDark = palette.bevelDark,
-                shadowOffset = 5.dp,
-                blurRadius = 14.dp
+                shadowOffset = 4.dp,
+                blurRadius = 18.dp
             )
             .padding(5.dp)
     ) {
@@ -110,14 +110,14 @@ fun GlassTabBar(
                         )
                         .neumorphicSurface(
                             shape = capsuleShape,
-                            lightShadowColor = palette.lightShadow.copy(alpha = 0.55f),
-                            darkShadowColor = palette.darkShadow.copy(alpha = 0.55f),
+                            lightShadowColor = palette.lightShadow.copy(alpha = 0.45f),
+                            darkShadowColor = palette.darkShadow.copy(alpha = 0.45f),
                             surfaceGradientTop = palette.accent.copy(alpha = 0.95f),
                             surfaceGradientBottom = palette.accent,
-                            bevelLight = Color.White.copy(alpha = 0.4f),
-                            bevelDark = Color.Black.copy(alpha = 0.25f),
+                            bevelLight = Color.White.copy(alpha = 0.32f),
+                            bevelDark = Color.Black.copy(alpha = 0.18f),
                             shadowOffset = 2.dp,
-                            blurRadius = 5.dp,
+                            blurRadius = 7.dp,
                             glowColor = palette.accentGlow,
                             glowBlur = 11.dp
                         )

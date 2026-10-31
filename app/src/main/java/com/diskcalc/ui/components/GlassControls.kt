@@ -73,8 +73,8 @@ fun Modifier.clickableBounce(
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
     val scale by animateFloatAsState(
-        targetValue = if (pressed && enabled) 0.965f else 1f,
-        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+        targetValue = if (pressed && enabled) 0.98f else 1f,
+        animationSpec = spring(dampingRatio = 0.9f, stiffness = Spring.StiffnessMediumLow),
         label = "pressScale"
     )
     return this
@@ -116,10 +116,10 @@ fun GlassButton(
             darkShadowColor = palette.darkShadow,
             surfaceGradientTop = palette.accent.copy(alpha = 0.95f),
             surfaceGradientBottom = palette.accent,
-            bevelLight = Color.White.copy(alpha = 0.35f),
-            bevelDark = Color.Black.copy(alpha = 0.25f),
-            shadowOffset = 3.dp,
-            blurRadius = 7.dp,
+            bevelLight = Color.White.copy(alpha = 0.30f),
+            bevelDark = Color.Black.copy(alpha = 0.18f),
+            shadowOffset = 2.5.dp,
+            blurRadius = 10.dp,
             glowColor = palette.accentGlow,
             glowBlur = 12.dp
         )
@@ -132,8 +132,8 @@ fun GlassButton(
             surfaceGradientBottom = palette.surfaceGradientBottom,
             bevelLight = palette.bevelLight,
             bevelDark = palette.bevelDark,
-            shadowOffset = 2.5.dp,
-            blurRadius = 5.dp
+            shadowOffset = 2.dp,
+            blurRadius = 7.dp
         )
     }
 
@@ -179,8 +179,8 @@ fun GlassChip(
             .neumorphicInset(
                 shape = shape,
                 backgroundColor = palette.accentContainer,
-                bevelLight = palette.accent.copy(alpha = 0.8f),
-                bevelDark = palette.darkShadow.copy(alpha = 0.5f)
+                bevelLight = palette.accent.copy(alpha = 0.45f),
+                bevelDark = palette.darkShadow.copy(alpha = 0.35f)
             )
             .clickableBounce(enabled = enabled, onClick = onClick)
             .padding(horizontal = tokens.spaceLg, vertical = tokens.spaceSm)
@@ -196,7 +196,7 @@ fun GlassChip(
                 bevelLight = palette.bevelLight,
                 bevelDark = palette.bevelDark,
                 shadowOffset = 2.dp,
-                blurRadius = 4.dp
+                blurRadius = 6.dp
             )
             .clickableBounce(enabled = enabled, onClick = onClick)
             .padding(horizontal = tokens.spaceLg, vertical = tokens.spaceSm)
@@ -241,7 +241,7 @@ fun <T> GlassSegmentedControl(
     val targetOffset = segmentWidthPx * index
     val offsetX by animateFloatAsState(
         targetValue = targetOffset,
-        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+        animationSpec = spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow),
         label = "segmentOffset"
     )
 
@@ -278,7 +278,7 @@ fun <T> GlassSegmentedControl(
                         bevelLight = Color.White.copy(alpha = 0.35f),
                         bevelDark = Color.Black.copy(alpha = 0.15f),
                         shadowOffset = 2.dp,
-                        blurRadius = 4.dp,
+                        blurRadius = 6.dp,
                         glowColor = palette.accentGlow,
                         glowBlur = 9.dp
                     )
@@ -334,7 +334,7 @@ fun GlassSwitch(
     val thumbOffset by animateFloatAsState(
         targetValue = if (checked) travelPx else 0f,
         animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
+            dampingRatio = 0.75f,
             stiffness = Spring.StiffnessMediumLow
         ),
         label = "thumbOffset"
@@ -352,7 +352,9 @@ fun GlassSwitch(
         label = "trackBevelLight"
     )
     val animatedBevelDark by animateColorAsState(
-        targetValue = if (checked) Color.Transparent else palette.bevelDark,
+        // ON keeps a soft inner wall shadow (deep shade over the accent fill) instead of going
+        // fully transparent — otherwise the recessed track loses its depth and the thumb floats.
+        targetValue = if (checked) Color.Black.copy(alpha = 0.28f) else palette.bevelDark,
         animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
         label = "trackBevelDark"
     )
@@ -404,42 +406,60 @@ fun GlassSwitch(
         label = "thumbBevelLight"
     )
 
+    // Track and thumb are separate layers on purpose: the recessed track clips its own
+    // inner shading to the capsule, but the raised thumb must NOT be a child of that clip —
+    // otherwise the thumb's soft shadow is sliced off by the capsule edge (only 4 dp of
+    // clearance around the thumb) and looks pasted-on instead of resting inside the track.
     Box(
         modifier = modifier
             .size(width = trackWidth, height = trackHeight)
-            .accentGlow(shape = shape, glowColor = trackGlow, glowBlur = 8.dp)
-            .neumorphicInset(
-                shape = shape,
-                backgroundColor = animatedTrackBg,
-                bevelLight = animatedBevelLight,
-                bevelDark = animatedBevelDark
-            )
-            .clickableBounce(enabled = enabled) { onCheckedChange(!checked) }
-            .padding(4.dp),
+            .clickableBounce(enabled = enabled) { onCheckedChange(!checked) },
         contentAlignment = Alignment.CenterStart
     ) {
+        // Recessed track layer (inner shadow stays clipped inside the capsule).
         Box(
-            modifier = Modifier
-                .offset { IntOffset(thumbOffset.roundToInt(), 0) }
-                .size(thumbSize)
-                .neumorphicSurface(
-                    shape = CircleShape,
-                    lightShadowColor = thumbLightShadow,
-                    darkShadowColor = thumbDarkShadow,
-                    surfaceGradientTop = thumbTopColor,
-                    surfaceGradientBottom = thumbBottomColor,
-                    bevelLight = thumbBevelLight,
-                    bevelDark = thumbBevelDark,
-                    shadowOffset = if (checked) 1.5.dp else 2.dp,
-                    blurRadius = if (checked) 3.dp else 3.5.dp
-                ),
-            contentAlignment = Alignment.Center
+            Modifier
+                .matchParentSize()
+                .accentGlow(shape = shape, glowColor = trackGlow, glowBlur = 8.dp)
+                .neumorphicInset(
+                    shape = shape,
+                    backgroundColor = animatedTrackBg,
+                    bevelLight = animatedBevelLight,
+                    bevelDark = animatedBevelDark
+                )
+        )
+        // Raised thumb layer: its shadow now falls freely onto the track floor, so it
+        // seats naturally. The shadow reach is kept within the 4 dp clearance around
+        // the thumb so it never spills past the track's outer edge.
+        Box(
+            Modifier
+                .fillMaxSize()
+                .padding(4.dp),
+            contentAlignment = Alignment.CenterStart
         ) {
             Box(
-                Modifier
-                    .size(6.dp)
-                    .background(indicatorColor, CircleShape)
-            )
+                modifier = Modifier
+                    .offset { IntOffset(thumbOffset.roundToInt(), 0) }
+                    .size(thumbSize)
+                    .neumorphicSurface(
+                        shape = CircleShape,
+                        lightShadowColor = thumbLightShadow,
+                        darkShadowColor = thumbDarkShadow,
+                        surfaceGradientTop = thumbTopColor,
+                        surfaceGradientBottom = thumbBottomColor,
+                        bevelLight = thumbBevelLight,
+                        bevelDark = thumbBevelDark,
+                        shadowOffset = 1.5.dp,
+                        blurRadius = 2.5.dp
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Box(
+                    Modifier
+                        .size(6.dp)
+                        .background(indicatorColor, CircleShape)
+                )
+            }
         }
     }
 }
@@ -518,8 +538,8 @@ private fun StepperButton(
                     surfaceGradientBottom = if (enabled) palette.surfaceGradientBottom else palette.insetSurface,
                     bevelLight = palette.bevelLight,
                     bevelDark = palette.bevelDark,
-                    shadowOffset = 2.dp,
-                    blurRadius = 3.dp
+                    shadowOffset = 1.5.dp,
+                    blurRadius = 5.dp
                 ),
             contentAlignment = Alignment.Center
         ) {
