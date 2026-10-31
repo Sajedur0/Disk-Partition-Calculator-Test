@@ -70,7 +70,7 @@ fun GlassTabBar(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(68.dp)
+            .height(tokens.tabBarHeight)
             .neumorphicSurface(
                 shape = capsuleShape,
                 lightShadowColor = palette.lightShadow,
@@ -106,7 +106,7 @@ fun GlassTabBar(
                         .offset { IntOffset(offsetX.roundToInt(), 0) }
                         .size(
                             width = with(density) { segmentWidthPx.toDp() },
-                            height = 52.dp
+                            height = tokens.tabBarHeight - 16.dp
                         )
                         .neumorphicSurface(
                             shape = capsuleShape,
