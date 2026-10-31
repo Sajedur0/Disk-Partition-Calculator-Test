@@ -12,30 +12,22 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Calculate
-import androidx.compose.material.icons.rounded.ContentCopy
-import androidx.compose.material.icons.rounded.Storage
 import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalClipboardManager
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import com.diskcalc.domain.CalcPresets
 import com.diskcalc.domain.FileSystemType
-import com.diskcalc.domain.PartitionCalculationResult
 import com.diskcalc.domain.PartitionConstants
 import com.diskcalc.domain.WindowsSetupProfile
 import com.diskcalc.ui.components.GlassButton
 import com.diskcalc.ui.components.GlassChip
-import com.diskcalc.ui.components.GlassDivider
 import com.diskcalc.ui.components.GlassPanel
 import com.diskcalc.ui.components.GlassSegmentedControl
 import com.diskcalc.ui.components.GlassTextField
 import com.diskcalc.ui.components.GlassToggleRow
-import com.diskcalc.ui.components.KeyValueRow
-import com.diskcalc.ui.components.WarningList
 import com.diskcalc.ui.theme.LocalGlassTokens
 import com.diskcalc.ui.theme.LocalLiquidPalette
 
@@ -60,7 +52,6 @@ fun CalcTab(
 ) {
     val palette = LocalLiquidPalette.current
     val tokens = LocalGlassTokens.current
-    val clipboard = LocalClipboardManager.current
 
     Column(
         modifier = modifier
@@ -178,6 +169,6 @@ fun CalcTab(
             )
         }
 
-        Spacer(Modifier.height(96.dp))
+        Spacer(Modifier.height(tokens.contentBottomInset))
     }
 }

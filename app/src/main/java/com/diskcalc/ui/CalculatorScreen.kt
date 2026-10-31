@@ -1,6 +1,9 @@
 package com.diskcalc.ui
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -120,14 +123,24 @@ fun CalculatorScreen(
                                 .weight(1f)
                                 .fillMaxWidth()
                         ) {
-                            when (currentInfoPage) {
-                                "privacy" -> PrivacyPolicyPage(onBack = closeInfoPage)
-                                "guide" -> GuidePage(onBack = closeInfoPage)
-                                "about" -> AboutPage(
-                                    onBack = closeInfoPage,
-                                    onCopied = {}
-                                )
-                                null -> when (selectedTabIndex) {
+                            // Tabs and info pages crossfade instead of snapping, so switching
+                            // screens reads as one continuous surface.
+                            Crossfade(
+                                targetState = currentInfoPage ?: selectedTabIndex,
+                                animationSpec = tween(
+                                    durationMillis = 220,
+                                    easing = FastOutSlowInEasing
+                                ),
+                                label = "screenFade"
+                            ) { screen ->
+                                when (screen) {
+                                    "privacy" -> PrivacyPolicyPage(onBack = closeInfoPage)
+                                    "guide" -> GuidePage(onBack = closeInfoPage)
+                                    "about" -> AboutPage(
+                                        onBack = closeInfoPage,
+                                        onCopied = {}
+                                    )
+
                                     0 -> CalcTab(
                                         state = calc,
                                         onVisibleGbChange = viewModel::onVisibleGbChange,
