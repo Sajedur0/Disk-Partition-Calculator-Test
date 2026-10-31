@@ -45,6 +45,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
@@ -102,7 +103,8 @@ fun GlassButton(
     icon: ImageVector? = null,
     primary: Boolean = true,
     enabled: Boolean = true,
-    fillWidth: Boolean = true
+    fillWidth: Boolean = true,
+    glowEnabled: Boolean = true
 ) {
     val palette = LocalLiquidPalette.current
     val tokens = LocalGlassTokens.current
@@ -120,7 +122,7 @@ fun GlassButton(
             bevelDark = Color.Black.copy(alpha = 0.18f),
             shadowOffset = 2.5.dp,
             blurRadius = 10.dp,
-            glowColor = palette.accentGlow,
+            glowColor = if (glowEnabled) palette.accentGlow else Color.Transparent,
             glowBlur = 12.dp
         )
     } else {
@@ -378,17 +380,12 @@ fun GlassSwitch(
 
     val thumbDarkShadow by animateColorAsState(
         targetValue = if (checked) {
-            if (palette.isDark) Color.Black.copy(alpha = 0.20f) else Color.Black.copy(alpha = 0.10f)
+            if (palette.isDark) Color.Black.copy(alpha = 0.22f) else Color.Black.copy(alpha = 0.14f)
         } else {
-            palette.darkShadow
+            palette.darkShadow.copy(alpha = 0.38f)
         },
         animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
         label = "thumbDarkShadow"
-    )
-    val thumbLightShadow by animateColorAsState(
-        targetValue = if (checked) Color.White.copy(alpha = 0.35f) else palette.lightShadow,
-        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
-        label = "thumbLightShadow"
     )
     val thumbBevelDark by animateColorAsState(
         targetValue = if (checked) Color.Transparent else palette.bevelDark,
@@ -428,12 +425,16 @@ fun GlassSwitch(
                     bevelDark = animatedBevelDark
                 )
         )
-        // Raised thumb layer: its shadow now falls freely onto the track floor, so it
-        // seats naturally. The shadow reach is kept within the 4 dp clearance around
-        // the thumb so it never spills past the track's outer edge.
+        // Raised thumb layer, clipped to the inside of the track capsule: the thumb's
+        // shadow is a shadow ON the track floor, so it must live inside the track and
+        // never spill onto the card outside. The thumb casts only one short, soft dark
+        // contact shadow (down / bottom-right, from the top-left light) — no pale light
+        // silhouette, which is only valid when object and background share one material.
+        // The light still shows on the thumb itself through its rim bevel and gradient.
         Box(
             Modifier
                 .fillMaxSize()
+                .clip(shape)
                 .padding(4.dp),
             contentAlignment = Alignment.CenterStart
         ) {
@@ -443,14 +444,15 @@ fun GlassSwitch(
                     .size(thumbSize)
                     .neumorphicSurface(
                         shape = CircleShape,
-                        lightShadowColor = thumbLightShadow,
+                        lightShadowColor = Color.Transparent,
                         darkShadowColor = thumbDarkShadow,
                         surfaceGradientTop = thumbTopColor,
                         surfaceGradientBottom = thumbBottomColor,
                         bevelLight = thumbBevelLight,
                         bevelDark = thumbBevelDark,
-                        shadowOffset = 1.5.dp,
-                        blurRadius = 2.5.dp
+                        shadowOffset = 1.dp,
+                        shadowOffsetY = 1.25.dp,
+                        blurRadius = 1.6.dp
                     ),
                 contentAlignment = Alignment.Center
             ) {

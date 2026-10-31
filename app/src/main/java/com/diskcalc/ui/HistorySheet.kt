@@ -51,6 +51,7 @@ import com.diskcalc.ui.components.GlassButton
 import com.diskcalc.ui.components.GlassDivider
 import com.diskcalc.ui.components.GlassIconButton
 import com.diskcalc.ui.components.LiquidGlassSurface
+import com.diskcalc.ui.components.NoGlowContent
 import com.diskcalc.ui.components.glassLite
 import com.diskcalc.ui.theme.LocalGlassTokens
 import com.diskcalc.ui.theme.LocalLiquidPalette
@@ -92,6 +93,7 @@ fun HistorySheet(
             )
         }
     ) {
+      NoGlowContent {
         Column(
             Modifier
                 .fillMaxWidth()
@@ -164,11 +166,13 @@ fun HistorySheet(
                 }
             }
         }
+      }
     }
 
     if (showClearConfirm) {
         Dialog(onDismissRequest = { showClearConfirm = false }) {
-            LiquidGlassSurface(shape = RoundedCornerShape(tokens.cornerXl)) {
+          NoGlowContent {
+            LiquidGlassSurface(shape = RoundedCornerShape(tokens.cornerXl), elevation = tokens.elevation) {
                 Column(Modifier.padding(tokens.cardPadding)) {
                     Text(
                         text = "Delete all history?",
@@ -189,11 +193,13 @@ fun HistorySheet(
                                 showClearConfirm = false
                                 onClear()
                             },
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(1f),
+                            glowEnabled = false
                         )
                     }
                 }
             }
+          }
         }
     }
 }
