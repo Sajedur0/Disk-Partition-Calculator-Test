@@ -119,7 +119,9 @@ fun GlassButton(
             bevelLight = Color.White.copy(alpha = 0.35f),
             bevelDark = Color.Black.copy(alpha = 0.25f),
             shadowOffset = 3.dp,
-            blurRadius = 7.dp
+            blurRadius = 7.dp,
+            glowColor = palette.accentGlow,
+            glowBlur = 12.dp
         )
     } else {
         base.neumorphicSurface(
@@ -270,13 +272,15 @@ fun <T> GlassSegmentedControl(
                     .neumorphicSurface(
                         shape = shape,
                         lightShadowColor = palette.lightShadow.copy(alpha = 0.5f),
-                        darkShadowColor = palette.accent.copy(alpha = 0.35f),
+                        darkShadowColor = palette.darkShadow.copy(alpha = 0.45f),
                         surfaceGradientTop = palette.accent.copy(alpha = 0.95f),
                         surfaceGradientBottom = palette.accent,
                         bevelLight = Color.White.copy(alpha = 0.35f),
                         bevelDark = Color.Black.copy(alpha = 0.15f),
                         shadowOffset = 2.dp,
-                        blurRadius = 4.dp
+                        blurRadius = 4.dp,
+                        glowColor = palette.accentGlow,
+                        glowBlur = 9.dp
                     )
             )
         }
@@ -389,6 +393,11 @@ fun GlassSwitch(
         animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
         label = "thumbBevelDark"
     )
+    val trackGlow by animateColorAsState(
+        targetValue = if (checked) palette.accentGlow else Color.Transparent,
+        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+        label = "trackGlow"
+    )
     val thumbBevelLight by animateColorAsState(
         targetValue = if (checked) Color.White.copy(alpha = 0.85f) else palette.bevelLight,
         animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
@@ -398,6 +407,7 @@ fun GlassSwitch(
     Box(
         modifier = modifier
             .size(width = trackWidth, height = trackHeight)
+            .accentGlow(shape = shape, glowColor = trackGlow, glowBlur = 8.dp)
             .neumorphicInset(
                 shape = shape,
                 backgroundColor = animatedTrackBg,

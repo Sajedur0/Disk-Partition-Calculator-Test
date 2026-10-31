@@ -169,6 +169,7 @@ fun DiskCalcTheme(
         glassBorderStart = animatedSchemeColor(palette.glassBorderStart, spec, "paletteOutline"),
         accent = animatedSchemeColor(palette.accent, spec, "palettePrimary"),
         accentSecondary = animatedSchemeColor(palette.accentSecondary, spec, "paletteSecondary"),
+        accentGlow = animatedSchemeColor(palette.accentGlow, spec, "paletteAccentGlow"),
         onAccent = animatedSchemeColor(palette.onAccent, spec, "paletteOnPrimary"),
         accentContainer = animatedSchemeColor(palette.accentContainer, spec, "palettePrimaryContainer"),
         onAccentContainer = animatedSchemeColor(palette.onAccentContainer, spec, "paletteOnPrimaryContainer"),
