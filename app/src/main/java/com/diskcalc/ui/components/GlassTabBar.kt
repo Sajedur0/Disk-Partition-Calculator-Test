@@ -114,7 +114,7 @@ fun GlassTabBar(
                             darkShadowColor = palette.darkShadow.copy(alpha = 0.45f),
                             surfaceGradientTop = palette.accent.copy(alpha = 0.95f),
                             surfaceGradientBottom = palette.accent,
-                            bevelLight = Color.White.copy(alpha = 0.32f),
+                            bevelLight = Color.White.copy(alpha = 0.30f),
                             bevelDark = Color.Black.copy(alpha = 0.18f),
                             shadowOffset = 2.dp,
                             blurRadius = 7.dp,

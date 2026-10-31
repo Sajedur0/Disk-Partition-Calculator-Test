@@ -272,8 +272,8 @@ private fun AppIconBadge(
     iconBitmap: ImageBitmap?
 ) {
     val palette = LocalLiquidPalette.current
-    val outerShape = RoundedCornerShape(26.dp)
-    val innerShape = RoundedCornerShape(21.dp)
+    val outerShape = RoundedCornerShape(28.dp)
+    val innerShape = RoundedCornerShape(22.dp)
 
     Box(
         modifier = Modifier

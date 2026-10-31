@@ -94,15 +94,19 @@ data class GlassTokens(
     val touchTarget: Dp = 48.dp,
     val maxContentWidth: Dp = 600.dp,
     val shadowOffset: Dp = 3.dp,
-    val shadowBlur: Dp = 12.dp
+    val shadowBlur: Dp = 12.dp,
+    val shadowOffsetSmall: Dp = 2.dp,   // small raised controls
+    val shadowBlurSmall: Dp = 7.dp,
+    val shadowOffsetDialog: Dp = 8.dp,  // modal elevation (vertical only)
+    val shadowBlurDialog: Dp = 24.dp
 )
 
 val DarkLiquidPalette = LiquidPalette(
     isDark = true,
-    backdropBase = Color(0xFF1C2028),
-    glassTint = Color(0xFF1C2028),
-    glassHighlight = Color(0xFF161920),
-    glassBorderStart = Color(0xFF2C3240),
+    backdropBase = Color(0xFF20242E),
+    glassTint = Color(0xFF20242E),
+    glassHighlight = Color(0xFF262C38),
+    glassBorderStart = Color(0xFF343C4D),
     accent = Color(0xFF60A5FA),
     accentSecondary = Color(0xFF34D399),
     accentGlow = Color(0xFF60A5FA).copy(alpha = 0.26f),
@@ -116,22 +120,22 @@ val DarkLiquidPalette = LiquidPalette(
     warningContent = Color(0xFFFBBF24),
     dangerContainer = Color(0xFF331616),
     dangerContent = Color(0xFFF87171),
-    controlSurface = Color(0xFF161920),
-    lightShadow = Color(0xFF2C3342).copy(alpha = 0.45f),
-    darkShadow = Color(0x8C000000),
-    insetSurface = Color(0xFF181B22),
-    surfaceGradientTop = Color(0xFF212630),
-    surfaceGradientBottom = Color(0xFF1D2029),
-    bevelLight = Color(0xFF353D4D).copy(alpha = 0.5f),
-    bevelDark = Color(0xFF0D0F14).copy(alpha = 0.38f)
+    controlSurface = Color(0xFF262C38),
+    lightShadow = Color(0xFF3A4358).copy(alpha = 0.48f),
+    darkShadow = Color(0xFF05070B).copy(alpha = 0.52f),
+    insetSurface = Color(0xFF1B1F28),
+    surfaceGradientTop = Color(0xFF282E3A),
+    surfaceGradientBottom = Color(0xFF21252F),
+    bevelLight = Color(0xFF465069).copy(alpha = 0.48f),
+    bevelDark = Color(0xFF11141B).copy(alpha = 0.36f)
 )
 
 val LightLiquidPalette = LiquidPalette(
     isDark = false,
-    backdropBase = Color(0xFFE4E9F2),
-    glassTint = Color(0xFFE4E9F2),
-    glassHighlight = Color(0xFFDAE1ED),
-    glassBorderStart = Color(0xFFFFFFFF).copy(alpha = 0.7f),
+    backdropBase = Color(0xFFE7EBF2),
+    glassTint = Color(0xFFE7EBF2),
+    glassHighlight = Color(0xFFDFE5EE),
+    glassBorderStart = Color(0xFFFFFFFF).copy(alpha = 0.65f),
     accent = Color(0xFF3B82F6),
     accentSecondary = Color(0xFF10B981),
     accentGlow = Color(0xFF3B82F6).copy(alpha = 0.20f),
@@ -145,14 +149,14 @@ val LightLiquidPalette = LiquidPalette(
     warningContent = Color(0xFFB45309),
     dangerContainer = Color(0xFFFEE2E2),
     dangerContent = Color(0xFFDC2626),
-    controlSurface = Color(0xFFDAE1ED),
-    lightShadow = Color(0xFFFFFFFF),
-    darkShadow = Color(0x2B1E293B),
-    insetSurface = Color(0xFFDEE4EF),
-    surfaceGradientTop = Color(0xFFEBF0F8),
-    surfaceGradientBottom = Color(0xFFE1E7F1),
-    bevelLight = Color(0xFFFFFFFF).copy(alpha = 0.75f),
-    bevelDark = Color(0xFFBAC6D7).copy(alpha = 0.34f)
+    controlSurface = Color(0xFFDFE5EE),
+    lightShadow = Color(0xFFFFFFFF).copy(alpha = 0.85f),
+    darkShadow = Color(0xFF9FB0C9).copy(alpha = 0.5f),
+    insetSurface = Color(0xFFDFE5EF),
+    surfaceGradientTop = Color(0xFFF0F3F9),
+    surfaceGradientBottom = Color(0xFFE2E8F1),
+    bevelLight = Color(0xFFFFFFFF).copy(alpha = 0.72f),
+    bevelDark = Color(0xFFA9B8CE).copy(alpha = 0.34f)
 )
 
 val LocalLiquidPalette = staticCompositionLocalOf { DarkLiquidPalette }

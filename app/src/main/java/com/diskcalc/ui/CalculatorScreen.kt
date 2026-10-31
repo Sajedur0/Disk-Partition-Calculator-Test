@@ -1,7 +1,6 @@
 package com.diskcalc.ui
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -94,14 +93,9 @@ fun CalculatorScreen(
 
     DiskCalcTheme(themeMode = settings.themeMode) {
         LiquidBackdropHost(modifier = modifier) {
-            val palette = LocalLiquidPalette.current
             val tokens = LocalGlassTokens.current
 
-            Box(
-                Modifier
-                    .fillMaxSize()
-                    .background(palette.backdropBase)
-            ) {
+            Box(Modifier.fillMaxSize()) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
                     Column(
                         Modifier
