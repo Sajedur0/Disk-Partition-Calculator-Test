@@ -74,10 +74,10 @@ data class LiquidPalette(
  */
 @Immutable
 data class GlassTokens(
-    val cornerXl: Dp = 28.dp,          // dialogs
-    val cornerLarge: Dp = 20.dp,       // cards (smooth organic curves)
-    val cornerMedium: Dp = 14.dp,      // inputs / steppers
-    val cornerSmall: Dp = 10.dp,       // chips / badges
+    val cornerXl: Dp = 32.dp,          // dialogs
+    val cornerLarge: Dp = 24.dp,       // cards (smooth organic curves)
+    val cornerMedium: Dp = 16.dp,      // inputs / steppers
+    val cornerSmall: Dp = 12.dp,       // chips / badges
     val border: Dp = 1.dp,
     val elevation: Dp = 8.dp,          // dialogs
     val elevationSmall: Dp = 4.dp,     // cards
@@ -93,8 +93,8 @@ data class GlassTokens(
     val buttonHeight: Dp = 52.dp,
     val touchTarget: Dp = 48.dp,
     val maxContentWidth: Dp = 600.dp,
-    val shadowOffset: Dp = 4.dp,
-    val shadowBlur: Dp = 8.dp
+    val shadowOffset: Dp = 3.dp,
+    val shadowBlur: Dp = 12.dp
 )
 
 val DarkLiquidPalette = LiquidPalette(
@@ -105,7 +105,7 @@ val DarkLiquidPalette = LiquidPalette(
     glassBorderStart = Color(0xFF2C3240),
     accent = Color(0xFF60A5FA),
     accentSecondary = Color(0xFF34D399),
-    accentGlow = Color(0xFF60A5FA).copy(alpha = 0.38f),
+    accentGlow = Color(0xFF60A5FA).copy(alpha = 0.26f),
     onAccent = Color(0xFF0F172A),
     accentContainer = Color(0xFF1E2F4D),
     onAccentContainer = Color(0xFF93C5FD),
@@ -117,13 +117,13 @@ val DarkLiquidPalette = LiquidPalette(
     dangerContainer = Color(0xFF331616),
     dangerContent = Color(0xFFF87171),
     controlSurface = Color(0xFF161920),
-    lightShadow = Color(0xFF2C3342).copy(alpha = 0.65f),
-    darkShadow = Color(0xD9000000),
-    insetSurface = Color(0xFF15181F),
-    surfaceGradientTop = Color(0xFF222732),
-    surfaceGradientBottom = Color(0xFF1B1E26),
-    bevelLight = Color(0xFF353D4D).copy(alpha = 0.7f),
-    bevelDark = Color(0xFF0D0F14).copy(alpha = 0.5f)
+    lightShadow = Color(0xFF2C3342).copy(alpha = 0.45f),
+    darkShadow = Color(0x8C000000),
+    insetSurface = Color(0xFF181B22),
+    surfaceGradientTop = Color(0xFF212630),
+    surfaceGradientBottom = Color(0xFF1D2029),
+    bevelLight = Color(0xFF353D4D).copy(alpha = 0.5f),
+    bevelDark = Color(0xFF0D0F14).copy(alpha = 0.38f)
 )
 
 val LightLiquidPalette = LiquidPalette(
@@ -134,7 +134,7 @@ val LightLiquidPalette = LiquidPalette(
     glassBorderStart = Color(0xFFFFFFFF).copy(alpha = 0.7f),
     accent = Color(0xFF3B82F6),
     accentSecondary = Color(0xFF10B981),
-    accentGlow = Color(0xFF3B82F6).copy(alpha = 0.30f),
+    accentGlow = Color(0xFF3B82F6).copy(alpha = 0.20f),
     onAccent = Color(0xFFFFFFFF),
     accentContainer = Color(0xFFD6E4F8),
     onAccentContainer = Color(0xFF1D4ED8),
@@ -147,12 +147,12 @@ val LightLiquidPalette = LiquidPalette(
     dangerContent = Color(0xFFDC2626),
     controlSurface = Color(0xFFDAE1ED),
     lightShadow = Color(0xFFFFFFFF),
-    darkShadow = Color(0x381E293B),
-    insetSurface = Color(0xFFDAE1ED),
-    surfaceGradientTop = Color(0xFFECF1F9),
-    surfaceGradientBottom = Color(0xFFDCE2EC),
-    bevelLight = Color(0xFFFFFFFF).copy(alpha = 0.9f),
-    bevelDark = Color(0xFFBAC6D7).copy(alpha = 0.45f)
+    darkShadow = Color(0x2B1E293B),
+    insetSurface = Color(0xFFDEE4EF),
+    surfaceGradientTop = Color(0xFFEBF0F8),
+    surfaceGradientBottom = Color(0xFFE1E7F1),
+    bevelLight = Color(0xFFFFFFFF).copy(alpha = 0.75f),
+    bevelDark = Color(0xFFBAC6D7).copy(alpha = 0.34f)
 )
 
 val LocalLiquidPalette = staticCompositionLocalOf { DarkLiquidPalette }

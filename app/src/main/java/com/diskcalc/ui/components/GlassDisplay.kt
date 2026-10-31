@@ -48,25 +48,25 @@ fun GlassDivider(
     val darkBrush = if (faded) {
         Brush.horizontalGradient(
             0.0f to Color.Transparent,
-            0.15f to palette.darkShadow.copy(alpha = 0.35f),
-            0.5f to palette.darkShadow.copy(alpha = 0.45f),
-            0.85f to palette.darkShadow.copy(alpha = 0.35f),
+            0.15f to palette.darkShadow.copy(alpha = 0.22f),
+            0.5f to palette.darkShadow.copy(alpha = 0.28f),
+            0.85f to palette.darkShadow.copy(alpha = 0.22f),
             1.0f to Color.Transparent
         )
     } else {
-        SolidColor(palette.darkShadow.copy(alpha = 0.35f))
+        SolidColor(palette.darkShadow.copy(alpha = 0.22f))
     }
 
     val lightBrush = if (faded) {
         Brush.horizontalGradient(
             0.0f to Color.Transparent,
-            0.15f to palette.lightShadow.copy(alpha = 0.65f),
-            0.5f to palette.lightShadow.copy(alpha = 0.85f),
-            0.85f to palette.lightShadow.copy(alpha = 0.65f),
+            0.15f to palette.lightShadow.copy(alpha = 0.5f),
+            0.5f to palette.lightShadow.copy(alpha = 0.65f),
+            0.85f to palette.lightShadow.copy(alpha = 0.5f),
             1.0f to Color.Transparent
         )
     } else {
-        SolidColor(palette.lightShadow.copy(alpha = 0.75f))
+        SolidColor(palette.lightShadow.copy(alpha = 0.6f))
     }
 
     Column(modifier.fillMaxWidth()) {
@@ -140,7 +140,7 @@ fun StatTile(
                 shape = shape,
                 backgroundColor = palette.accentContainer.copy(alpha = 0.45f),
                 bevelLight = palette.glassBorderStart.copy(alpha = 0.35f),
-                bevelDark = palette.darkShadow.copy(alpha = 0.35f)
+                bevelDark = palette.darkShadow.copy(alpha = 0.25f)
             )
             .padding(horizontal = tokens.spaceLg, vertical = tokens.spaceMd)
     } else {
@@ -153,8 +153,8 @@ fun StatTile(
                 surfaceGradientBottom = palette.surfaceGradientBottom,
                 bevelLight = palette.bevelLight,
                 bevelDark = palette.bevelDark,
-                shadowOffset = 2.5.dp,
-                blurRadius = 5.dp
+                shadowOffset = 2.dp,
+                blurRadius = 7.dp
             )
             .padding(horizontal = tokens.spaceLg, vertical = tokens.spaceMd)
     }
@@ -212,8 +212,8 @@ fun WarningList(
             .neumorphicInset(
                 shape = RoundedCornerShape(tokens.cornerMedium),
                 backgroundColor = palette.warningContainer,
-                bevelLight = palette.warningContent.copy(alpha = 0.5f),
-                bevelDark = palette.darkShadow.copy(alpha = 0.35f)
+                bevelLight = palette.warningContent.copy(alpha = 0.4f),
+                bevelDark = palette.darkShadow.copy(alpha = 0.25f)
             )
             .padding(tokens.spaceMd),
         verticalArrangement = Arrangement.spacedBy(tokens.spaceSm)
@@ -256,8 +256,8 @@ fun InfoBanner(
             .neumorphicInset(
                 shape = RoundedCornerShape(tokens.cornerMedium),
                 backgroundColor = if (isError) palette.dangerContainer else palette.accentContainer.copy(alpha = 0.55f),
-                bevelLight = if (isError) palette.dangerContent.copy(alpha = 0.6f) else palette.accent.copy(alpha = 0.6f),
-                bevelDark = palette.darkShadow.copy(alpha = 0.35f)
+                bevelLight = if (isError) palette.dangerContent.copy(alpha = 0.45f) else palette.accent.copy(alpha = 0.45f),
+                bevelDark = palette.darkShadow.copy(alpha = 0.25f)
             )
             .padding(horizontal = tokens.spaceMd, vertical = tokens.spaceSm),
         verticalAlignment = Alignment.CenterVertically
@@ -298,8 +298,8 @@ fun GlassBadge(text: String, modifier: Modifier = Modifier) {
             .neumorphicInset(
                 shape = RoundedCornerShape(percent = 50),
                 backgroundColor = palette.accentContainer.copy(alpha = 0.55f),
-                bevelLight = palette.accent.copy(alpha = 0.5f),
-                bevelDark = palette.darkShadow.copy(alpha = 0.35f)
+                bevelLight = palette.accent.copy(alpha = 0.38f),
+                bevelDark = palette.darkShadow.copy(alpha = 0.25f)
             )
             .padding(horizontal = tokens.spaceMd, vertical = tokens.spaceXs)
     ) {

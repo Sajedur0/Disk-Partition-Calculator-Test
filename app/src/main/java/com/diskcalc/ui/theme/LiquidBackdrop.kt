@@ -6,11 +6,13 @@ import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 
 /**
- * Solid background host. `docs/03_UI_Spec.md §1` asks for a calm, tool-like UI with no
- * decorative clutter, so the background is a single opaque `background` token — no blobs,
- * blur, timers or animated canvases (and therefore no per-frame recomposition).
+ * Background host. `docs/03_UI_Spec.md §1` asks for a calm, tool-like UI with no
+ * decorative clutter, so the background is only a barely-there vertical gradient
+ * between two existing tokens — no blobs, blur, timers or animated canvases
+ * (and therefore no per-frame recomposition).
  */
 @Composable
 fun LiquidBackdropHost(
@@ -21,7 +23,13 @@ fun LiquidBackdropHost(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(palette.backdropBase),
+            // Barely-there vertical ambience: a touch lighter at the top, settling into the
+            // base at the bottom, so raised surfaces melt into the backdrop softly.
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(palette.surfaceGradientTop, palette.backdropBase),
+                )
+            ),
         content = content
     )
 }
