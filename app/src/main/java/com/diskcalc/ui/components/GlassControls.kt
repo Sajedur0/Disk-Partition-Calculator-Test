@@ -10,6 +10,8 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.indication
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.border
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.clickable
@@ -332,6 +334,7 @@ fun GlassSwitch(
     val trackHeight = 30.dp
     val thumbSize = 22.dp
     val shape = RoundedCornerShape(percent = 50)
+    val interactionSource = remember { MutableInteractionSource() }
     val travelPx = with(density) { (trackWidth - thumbSize - 8.dp).toPx() }
     val thumbOffset by animateFloatAsState(
         targetValue = if (checked) travelPx else 0f,
@@ -350,7 +353,14 @@ fun GlassSwitch(
     Box(
         modifier = modifier
             .size(width = trackWidth, height = 48.dp)
-            .toggleable(value = checked, enabled = enabled, role = Role.Switch, onValueChange = onCheckedChange),
+            .toggleable(
+                value = checked,
+                interactionSource = interactionSource,
+                indication = null,
+                enabled = enabled,
+                role = Role.Switch,
+                onValueChange = onCheckedChange
+            ),
         contentAlignment = Alignment.Center
     ) {
         Box(
@@ -358,6 +368,7 @@ fun GlassSwitch(
                 .size(width = trackWidth, height = trackHeight)
                 .clip(shape)
                 .background(trackColor)
+                .indication(interactionSource, LocalIndication.current)
                 .border(1.dp, if (checked) palette.accent else palette.bevelLight, shape)
                 .padding(4.dp),
             contentAlignment = Alignment.CenterStart

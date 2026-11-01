@@ -9,6 +9,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -52,20 +53,23 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.diskcalc.R
-import com.diskcalc.domain.PartitionConstants
 import com.diskcalc.ui.components.GlassButton
 import com.diskcalc.ui.components.GlassDivider
 import com.diskcalc.ui.components.GlassIconButton
@@ -120,33 +124,38 @@ fun AboutPage(
         ) {
             AboutFeatureItem(
                 icon = Icons.Rounded.Calculate,
-                title = "Exact Partition Calculator",
-                description = "Converts desired GB into the exact MB to enter in Windows Setup " +
-                    "using binary sizing (${PartitionConstants.MB_PER_GB} MB/GB) plus " +
-                    "+${PartitionConstants.OVERHEAD_MB_PER_PARTITION} MB formatter slack."
+                title = "Partition Sizing",
+                description = "Find the partition size to enter in Windows Setup."
             )
             AboutItemDivider()
             AboutFeatureItem(
                 icon = Icons.Rounded.Layers,
-                title = "Equal Disk Splitter",
-                description = "Splits a whole disk into " +
-                    "${PartitionConstants.MIN_SPLIT_COUNT}–${PartitionConstants.MAX_SPLIT_COUNT} " +
-                    "integer-MB partitions and places any remainder on the final partition so zero MB is lost."
+                title = "Disk Splitting",
+                description = "Plan multiple partitions for a disk."
             )
             AboutItemDivider()
             AboutFeatureItem(
                 icon = Icons.Rounded.Tune,
-                title = "Windows Setup Profiles",
-                description = "Accounts for system partitions with presets for Windows 10 " +
-                    "(${PartitionConstants.WINDOWS_SETUP_OVERHEAD_MB} MB), Windows 11 " +
-                    "(${PartitionConstants.WINDOWS_SETUP_OVERHEAD_WIN11_MB} MB), or your own custom MB value."
+                title = "Windows Setup Simulation",
+                description = "Plan using Windows 10, Windows 11, or custom setup profiles."
+            )
+            AboutItemDivider()
+            AboutFeatureItem(
+                icon = Icons.Rounded.Storage,
+                title = "Filesystem Options",
+                description = "Choose NTFS or FAT32 for your calculations."
             )
             AboutItemDivider()
             AboutFeatureItem(
                 icon = Icons.Rounded.History,
-                title = "On-Device History & Themes",
-                description = "Stores up to ${PartitionConstants.MAX_HISTORY} recent calculations " +
-                    "and remembers your defaults and System, Light, or Dark theme locally."
+                title = "Results & History",
+                description = "Copy results and review previous calculations."
+            )
+            AboutItemDivider()
+            AboutFeatureItem(
+                icon = Icons.Rounded.Settings,
+                title = "Personalization",
+                description = "Set your preferred defaults and appearance."
             )
         }
     }
@@ -179,12 +188,30 @@ private fun AboutHeroCard(
 
             Spacer(Modifier.height(tokens.spaceLg))
 
-            Text(
-                text = appVersion.appName,
-                style = MaterialTheme.typography.headlineSmall,
-                color = palette.contentPrimary,
-                textAlign = TextAlign.Center
-            )
+            BoxWithConstraints(Modifier.fillMaxWidth()) {
+                val style = MaterialTheme.typography.headlineSmall
+                val measurer = rememberTextMeasurer()
+                val widthPx = with(LocalDensity.current) { maxWidth.roundToPx() }
+                val fontSize = (28 downTo 1).firstOrNull { size ->
+                    !measurer.measure(
+                        text = appVersion.appName,
+                        style = style.copy(fontSize = size.sp),
+                        maxLines = 1,
+                        softWrap = false,
+                        constraints = Constraints(maxWidth = widthPx)
+                    ).hasVisualOverflow
+                } ?: 1
+                Text(
+                    text = appVersion.appName,
+                    modifier = Modifier.fillMaxWidth(),
+                    style = style.copy(fontSize = fontSize.sp),
+                    color = palette.contentPrimary,
+                    textAlign = TextAlign.Center,
+                    maxLines = 1,
+                    softWrap = false,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
 
             Spacer(Modifier.height(tokens.spaceSm))
 
@@ -224,8 +251,7 @@ private fun AboutHeroCard(
             Spacer(Modifier.height(tokens.spaceMd))
 
             Text(
-                text = "Type the exact MB value Windows Setup expects — and split a whole disk " +
-                    "into equal partitions without losing a single megabyte.",
+                text = "Plan disk partitions for Windows Setup with confidence.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = palette.contentSecondary,
                 textAlign = TextAlign.Center
