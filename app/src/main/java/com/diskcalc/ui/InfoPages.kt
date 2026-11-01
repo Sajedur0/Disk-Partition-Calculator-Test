@@ -9,6 +9,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -52,16 +53,20 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.diskcalc.R
@@ -183,12 +188,30 @@ private fun AboutHeroCard(
 
             Spacer(Modifier.height(tokens.spaceLg))
 
-            Text(
-                text = appVersion.appName,
-                style = MaterialTheme.typography.headlineSmall,
-                color = palette.contentPrimary,
-                textAlign = TextAlign.Center
-            )
+            BoxWithConstraints(Modifier.fillMaxWidth()) {
+                val style = MaterialTheme.typography.headlineSmall
+                val measurer = rememberTextMeasurer()
+                val widthPx = with(LocalDensity.current) { maxWidth.roundToPx() }
+                val fontSize = (28 downTo 1).firstOrNull { size ->
+                    !measurer.measure(
+                        text = appVersion.appName,
+                        style = style.copy(fontSize = size.sp),
+                        maxLines = 1,
+                        softWrap = false,
+                        constraints = Constraints(maxWidth = widthPx)
+                    ).hasVisualOverflow
+                } ?: 1
+                Text(
+                    text = appVersion.appName,
+                    modifier = Modifier.fillMaxWidth(),
+                    style = style.copy(fontSize = fontSize.sp),
+                    color = palette.contentPrimary,
+                    textAlign = TextAlign.Center,
+                    maxLines = 1,
+                    softWrap = false,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
 
             Spacer(Modifier.height(tokens.spaceSm))
 
