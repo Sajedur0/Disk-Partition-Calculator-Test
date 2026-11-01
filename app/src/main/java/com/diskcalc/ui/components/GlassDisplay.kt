@@ -45,44 +45,7 @@ fun GlassDivider(
     faded: Boolean = true
 ) {
     val palette = LocalLiquidPalette.current
-    val darkBrush = if (faded) {
-        Brush.horizontalGradient(
-            0.0f to Color.Transparent,
-            0.15f to palette.darkShadow.copy(alpha = 0.22f),
-            0.5f to palette.darkShadow.copy(alpha = 0.28f),
-            0.85f to palette.darkShadow.copy(alpha = 0.22f),
-            1.0f to Color.Transparent
-        )
-    } else {
-        SolidColor(palette.darkShadow.copy(alpha = 0.22f))
-    }
-
-    val lightBrush = if (faded) {
-        Brush.horizontalGradient(
-            0.0f to Color.Transparent,
-            0.15f to palette.lightShadow.copy(alpha = 0.5f),
-            0.5f to palette.lightShadow.copy(alpha = 0.65f),
-            0.85f to palette.lightShadow.copy(alpha = 0.5f),
-            1.0f to Color.Transparent
-        )
-    } else {
-        SolidColor(palette.lightShadow.copy(alpha = 0.6f))
-    }
-
-    Column(modifier.fillMaxWidth()) {
-        Box(
-            Modifier
-                .fillMaxWidth()
-                .height(1.dp)
-                .background(darkBrush)
-        )
-        Box(
-            Modifier
-                .fillMaxWidth()
-                .height(1.dp)
-                .background(lightBrush)
-        )
-    }
+    Box(modifier.fillMaxWidth().height(1.dp).background(palette.glassBorderStart))
 }
 
 /** `Label ............ Value` row used by the result dialog and the split table. */
@@ -113,7 +76,7 @@ fun KeyValueRow(
         Text(
             text = value,
             style = if (emphasise) NumericMedium.copy(fontWeight = FontWeight.Bold) else MaterialTheme.typography.titleMedium,
-            color = valueColor ?: if (emphasise) palette.accent else palette.contentPrimary
+            color = valueColor ?: palette.contentPrimary
         )
     }
 }
@@ -163,14 +126,14 @@ fun StatTile(
         Text(
             text = label,
             style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Medium),
-            color = if (highlight) palette.accent else palette.contentSecondary
+            color = palette.contentSecondary
         )
         Spacer(Modifier.height(tokens.spaceXs))
         Row(verticalAlignment = Alignment.Bottom) {
             Text(
                 text = value,
                 style = MaterialTheme.typography.displayMedium,
-                color = if (highlight) palette.accent else palette.contentPrimary,
+                color = palette.contentPrimary,
                 modifier = valueContentDescription?.let { text ->
                     Modifier.semantics { contentDescription = text }
                 } ?: Modifier
@@ -180,7 +143,7 @@ fun StatTile(
                 Text(
                     text = unit,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                    color = if (highlight) palette.accent else palette.contentSecondary,
+                    color = palette.contentSecondary,
                     modifier = Modifier.padding(bottom = 4.dp)
                 )
             }

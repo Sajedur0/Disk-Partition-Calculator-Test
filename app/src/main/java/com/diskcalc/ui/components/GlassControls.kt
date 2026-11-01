@@ -46,6 +46,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
@@ -108,7 +110,7 @@ fun GlassButton(
 ) {
     val palette = LocalLiquidPalette.current
     val tokens = LocalGlassTokens.current
-    val shape = RoundedCornerShape(percent = 50)
+    val shape = RoundedCornerShape(tokens.cornerMedium)
 
     val base = if (fillWidth) modifier.fillMaxWidth() else modifier
     val container = if (primary) {
@@ -119,7 +121,7 @@ fun GlassButton(
             surfaceGradientTop = palette.accent.copy(alpha = 0.95f),
             surfaceGradientBottom = palette.accent,
             bevelLight = Color.White.copy(alpha = 0.30f),
-            bevelDark = Color.Black.copy(alpha = 0.18f),
+            bevelDark = palette.accent,
             shadowOffset = 2.5.dp,
             blurRadius = 10.dp,
             glowColor = if (glowEnabled) palette.accentGlow else Color.Transparent,
@@ -181,8 +183,8 @@ fun GlassChip(
             .neumorphicInset(
                 shape = shape,
                 backgroundColor = palette.accentContainer,
-                bevelLight = palette.accent.copy(alpha = 0.45f),
-                bevelDark = palette.darkShadow.copy(alpha = 0.35f)
+                bevelLight = palette.glassBorderStart,
+                bevelDark = palette.glassBorderStart
             )
             .clickableBounce(enabled = enabled, onClick = onClick)
             .padding(horizontal = tokens.spaceLg, vertical = tokens.spaceSm)
@@ -213,7 +215,7 @@ fun GlassChip(
             style = MaterialTheme.typography.labelLarge.copy(
                 fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium
             ),
-            color = if (selected) palette.accent else palette.contentPrimary,
+            color = palette.contentPrimary,
             maxLines = 1
         )
     }
@@ -275,10 +277,10 @@ fun <T> GlassSegmentedControl(
                         shape = shape,
                         lightShadowColor = palette.lightShadow.copy(alpha = 0.5f),
                         darkShadowColor = palette.darkShadow.copy(alpha = 0.45f),
-                        surfaceGradientTop = palette.accent.copy(alpha = 0.95f),
-                        surfaceGradientBottom = palette.accent,
-                        bevelLight = Color.White.copy(alpha = 0.30f),
-                        bevelDark = Color.Black.copy(alpha = 0.18f),
+                        surfaceGradientTop = palette.accentContainer,
+                        surfaceGradientBottom = palette.accentContainer,
+                        bevelLight = palette.glassBorderStart,
+                        bevelDark = palette.glassBorderStart,
                         shadowOffset = 2.dp,
                         blurRadius = 6.dp,
                         glowColor = palette.accentGlow,
@@ -302,7 +304,7 @@ fun <T> GlassSegmentedControl(
                         style = MaterialTheme.typography.labelLarge.copy(
                             fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium
                         ),
-                        color = if (isSelected) palette.onAccent else palette.contentSecondary,
+                        color = if (isSelected) palette.contentPrimary else palette.contentTertiary,
                         textAlign = TextAlign.Center,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
@@ -344,7 +346,7 @@ fun GlassSwitch(
 
     // Dynamic, high-contrast track background for clear ON vs OFF states
     val animatedTrackBg by animateColorAsState(
-        targetValue = if (checked) palette.accent else palette.insetSurface,
+        targetValue = if (checked) palette.contentTertiary else palette.insetSurface,
         animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
         label = "trackBg"
     )
@@ -373,7 +375,7 @@ fun GlassSwitch(
         label = "thumbBottom"
     )
     val indicatorColor by animateColorAsState(
-        targetValue = if (checked) palette.accent else palette.contentTertiary.copy(alpha = 0.45f),
+        targetValue = if (checked) palette.contentTertiary else palette.contentTertiary.copy(alpha = 0.45f),
         animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
         label = "switchDot"
     )
@@ -548,7 +550,7 @@ private fun StepperButton(
             Icon(
                 imageVector = icon,
                 contentDescription = contentDescription,
-                tint = if (enabled) palette.accent else palette.contentTertiary,
+                tint = if (enabled) palette.contentPrimary else palette.contentTertiary,
                 modifier = Modifier.size(17.dp)
             )
         }
@@ -578,6 +580,7 @@ fun GlassTextField(
     val tokens = LocalGlassTokens.current
     val shape = RoundedCornerShape(tokens.cornerMedium)
     val resolvedStyle = (textStyle ?: NumericMedium).copy(color = palette.contentPrimary)
+    var focused by remember { mutableStateOf(false) }
 
     Column(modifier) {
         if (label != null) {
@@ -594,8 +597,8 @@ fun GlassTextField(
                 .neumorphicInset(
                     shape = shape,
                     backgroundColor = if (isError) palette.dangerContainer else palette.insetSurface,
-                    bevelLight = if (isError) palette.dangerContent else palette.bevelLight,
-                    bevelDark = if (isError) palette.dangerContent else palette.bevelDark
+                    bevelLight = if (focused) palette.accent else if (isError) palette.dangerContent else palette.bevelLight,
+                    bevelDark = if (focused) palette.accent else if (isError) palette.dangerContent else palette.bevelDark
                 )
                 .padding(horizontal = tokens.cardPadding, vertical = tokens.spaceLg),
             verticalAlignment = Alignment.CenterVertically
@@ -628,7 +631,7 @@ fun GlassTextField(
                     keyboardActions = KeyboardActions(
                         onDone = { onImeAction?.invoke() }
                     ),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth().onFocusChanged { focused = it.isFocused }
                 )
             }
             if (suffix != null) {

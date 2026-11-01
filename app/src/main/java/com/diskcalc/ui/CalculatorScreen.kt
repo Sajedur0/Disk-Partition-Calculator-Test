@@ -279,7 +279,7 @@ private fun AppHeader(
             icon = Icons.Rounded.History,
             contentDescription = "History",
             onClick = onHistoryClick,
-            tint = if (historyCount > 0) palette.accent else palette.contentSecondary
+            tint = palette.contentSecondary
         )
     }
 }

@@ -65,7 +65,7 @@ fun GlassTabBar(
         label = "tabOffset"
     )
 
-    val capsuleShape = RoundedCornerShape(percent = 50)
+    val capsuleShape = RoundedCornerShape(tokens.cornerLarge)
 
     Box(
         modifier = modifier
@@ -112,10 +112,10 @@ fun GlassTabBar(
                             shape = capsuleShape,
                             lightShadowColor = palette.lightShadow.copy(alpha = 0.45f),
                             darkShadowColor = palette.darkShadow.copy(alpha = 0.45f),
-                            surfaceGradientTop = palette.accent.copy(alpha = 0.95f),
-                            surfaceGradientBottom = palette.accent,
-                            bevelLight = Color.White.copy(alpha = 0.30f),
-                            bevelDark = Color.Black.copy(alpha = 0.18f),
+                            surfaceGradientTop = palette.accentContainer,
+                            surfaceGradientBottom = palette.accentContainer,
+                            bevelLight = palette.glassBorderStart,
+                            bevelDark = palette.glassBorderStart,
                             shadowOffset = 2.dp,
                             blurRadius = 7.dp,
                             glowColor = palette.accentGlow,
@@ -138,7 +138,7 @@ fun GlassTabBar(
                         Icon(
                             imageVector = item.icon,
                             contentDescription = item.title,
-                            tint = if (selected) palette.onAccent else palette.contentSecondary,
+                            tint = if (selected) palette.contentPrimary else palette.contentTertiary,
                             modifier = Modifier.size(20.dp)
                         )
                         Spacer(Modifier.height(2.dp))
@@ -147,7 +147,7 @@ fun GlassTabBar(
                             style = MaterialTheme.typography.labelMedium.copy(
                                 fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium
                             ),
-                            color = if (selected) palette.onAccent else palette.contentSecondary,
+                            color = if (selected) palette.contentPrimary else palette.contentTertiary,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )

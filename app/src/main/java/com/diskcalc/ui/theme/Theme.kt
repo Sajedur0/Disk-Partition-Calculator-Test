@@ -32,10 +32,11 @@ import com.diskcalc.domain.ThemeMode
 
 /** `displayMedium` (mono) — the hero result value. */
 private val DisplayMono = TextStyle(
-    fontFamily = FontFamily.Monospace,
-    fontWeight = FontWeight.Bold,
+    fontFamily = FontFamily.Default,
+    fontWeight = FontWeight.SemiBold,
     fontSize = 40.sp,
-    lineHeight = 48.sp
+    lineHeight = 46.sp,
+    letterSpacing = (-1).sp
 )
 
 /** `numericMedium` (mono) — per-row MB values and numeric inputs. */
@@ -52,8 +53,9 @@ private val DiskCalcTypography = Typography(
     headlineSmall = TextStyle(
         fontFamily = FontFamily.Default,
         fontWeight = FontWeight.SemiBold,
-        fontSize = 24.sp,
-        lineHeight = 32.sp
+        fontSize = 28.sp,
+        lineHeight = 34.sp,
+        letterSpacing = (-0.6).sp
     ),
     titleMedium = TextStyle(
         fontFamily = FontFamily.Default,
@@ -88,11 +90,11 @@ private val DiskCalcTypography = Typography(
 )
 
 private val DiskCalcShapes = Shapes(
-    extraSmall = RoundedCornerShape(8.dp),
-    small = RoundedCornerShape(12.dp),
-    medium = RoundedCornerShape(16.dp),
-    large = RoundedCornerShape(24.dp),
-    extraLarge = RoundedCornerShape(32.dp)
+    extraSmall = RoundedCornerShape(4.dp),
+    small = RoundedCornerShape(6.dp),
+    medium = RoundedCornerShape(8.dp),
+    large = RoundedCornerShape(12.dp),
+    extraLarge = RoundedCornerShape(16.dp)
 )
 
 private fun schemeFor(palette: LiquidPalette, dark: Boolean) = if (dark) {
