@@ -34,13 +34,11 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.diskcalc.domain.PartitionCalculationResult
 import com.diskcalc.domain.SplitResult
-import com.diskcalc.domain.Units
 import com.diskcalc.ui.components.GlassBadge
 import com.diskcalc.ui.components.GlassButton
 import com.diskcalc.ui.components.GlassDivider
 import com.diskcalc.ui.components.GlassIconButton
 import com.diskcalc.ui.components.NoGlowContent
-import com.diskcalc.ui.components.InfoBanner
 import com.diskcalc.ui.components.KeyValueRow
 import com.diskcalc.ui.components.LiquidGlassSurface
 import com.diskcalc.ui.components.StatTile
@@ -61,9 +59,6 @@ fun CalcResultDialog(
     val tokens = LocalGlassTokens.current
 
     GlassDialog(onDismiss = onDismiss, title = "Single partition", icon = Icons.Rounded.CheckCircle) {
-        GlassBadge(text = "${result.filesystem.label} · ${Units.VISIBLE_GB} → ${Units.REQUIRED_MB}")
-
-        Spacer(Modifier.height(tokens.spaceLg))
         StatTile(
             label = "Type in Setup",
             value = result.requiredInputMb.toString(),
@@ -189,11 +184,6 @@ fun SplitResultDialog(
         }
 
         Spacer(Modifier.height(tokens.spaceMd))
-        InfoBanner(
-            text = "Σ partitions = ${result.sumOfTypeMb} MB ✓ equals usable (${result.usableMb} MB)",
-            icon = Icons.Rounded.CheckCircle
-        )
-        Spacer(Modifier.height(tokens.spaceSm))
         KeyValueRow("Filesystem", result.filesystem.label)
 
         Spacer(Modifier.height(tokens.spaceMd))
