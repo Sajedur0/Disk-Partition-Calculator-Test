@@ -10,6 +10,8 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -54,6 +56,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -182,9 +185,9 @@ fun GlassChip(
             .heightIn(min = tokens.touchTarget)
             .neumorphicInset(
                 shape = shape,
-                backgroundColor = palette.accentContainer,
-                bevelLight = palette.glassBorderStart,
-                bevelDark = palette.glassBorderStart
+                backgroundColor = palette.accent,
+                bevelLight = palette.accent,
+                bevelDark = palette.accent
             )
             .clickableBounce(enabled = enabled, onClick = onClick)
             .padding(horizontal = tokens.spaceLg, vertical = tokens.spaceSm)
@@ -215,7 +218,7 @@ fun GlassChip(
             style = MaterialTheme.typography.labelLarge.copy(
                 fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium
             ),
-            color = palette.contentPrimary,
+            color = if (selected) palette.onAccent else palette.contentPrimary,
             maxLines = 1
         )
     }
@@ -277,10 +280,10 @@ fun <T> GlassSegmentedControl(
                         shape = shape,
                         lightShadowColor = palette.lightShadow.copy(alpha = 0.5f),
                         darkShadowColor = palette.darkShadow.copy(alpha = 0.45f),
-                        surfaceGradientTop = palette.accentContainer,
-                        surfaceGradientBottom = palette.accentContainer,
-                        bevelLight = palette.glassBorderStart,
-                        bevelDark = palette.glassBorderStart,
+                        surfaceGradientTop = palette.accent,
+                        surfaceGradientBottom = palette.accent,
+                        bevelLight = palette.accent,
+                        bevelDark = palette.accent,
                         shadowOffset = 2.dp,
                         blurRadius = 6.dp,
                         glowColor = palette.accentGlow,
@@ -304,7 +307,7 @@ fun <T> GlassSegmentedControl(
                         style = MaterialTheme.typography.labelLarge.copy(
                             fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium
                         ),
-                        color = if (isSelected) palette.contentPrimary else palette.contentTertiary,
+                        color = if (isSelected) palette.onAccent else palette.contentTertiary,
                         textAlign = TextAlign.Center,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
@@ -315,11 +318,7 @@ fun <T> GlassSegmentedControl(
     }
 }
 
-/**
- * Authentic Neumorphic tactile switch:
- * - Recessed/inset well track that smoothly transitions between neutral deboss (OFF) and vibrant accent fill (ON).
- * - Convex 3D tactile circular thumb with soft directional shadows, spring physics, and center pip indicator.
- */
+/** Switch with a colored active track and a neutral inactive state. */
 @Composable
 fun GlassSwitch(
     checked: Boolean,
@@ -329,141 +328,46 @@ fun GlassSwitch(
 ) {
     val palette = LocalLiquidPalette.current
     val density = LocalDensity.current
-    val trackWidth = 54.dp
-    val trackHeight = 32.dp
-    val thumbSize = 24.dp
+    val trackWidth = 52.dp
+    val trackHeight = 30.dp
+    val thumbSize = 22.dp
     val shape = RoundedCornerShape(percent = 50)
-
     val travelPx = with(density) { (trackWidth - thumbSize - 8.dp).toPx() }
     val thumbOffset by animateFloatAsState(
         targetValue = if (checked) travelPx else 0f,
-        animationSpec = spring(
-            dampingRatio = 0.75f,
-            stiffness = Spring.StiffnessMediumLow
-        ),
+        animationSpec = spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow),
         label = "thumbOffset"
     )
-
-    // Dynamic, high-contrast track background for clear ON vs OFF states
-    val animatedTrackBg by animateColorAsState(
-        targetValue = if (checked) palette.contentTertiary else palette.insetSurface,
-        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
-        label = "trackBg"
+    val trackColor by animateColorAsState(
+        targetValue = if (checked) palette.accent else palette.insetSurface,
+        label = "switchTrack"
     )
-    val animatedBevelLight by animateColorAsState(
-        targetValue = if (checked) Color.White.copy(alpha = 0.35f) else palette.bevelLight,
-        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
-        label = "trackBevelLight"
-    )
-    val animatedBevelDark by animateColorAsState(
-        // ON keeps a soft inner wall shadow (deep shade over the accent fill) instead of going
-        // fully transparent — otherwise the recessed track loses its depth and the thumb floats.
-        targetValue = if (checked) Color.Black.copy(alpha = 0.28f) else palette.bevelDark,
-        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
-        label = "trackBevelDark"
+    val thumbColor by animateColorAsState(
+        targetValue = if (checked) palette.onAccent else palette.contentTertiary,
+        label = "switchThumb"
     )
 
-    // Dynamic thumb colors for clear physical contrast
-    val thumbTopColor by animateColorAsState(
-        targetValue = if (checked) Color.White else palette.surfaceGradientTop,
-        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
-        label = "thumbTop"
-    )
-    val thumbBottomColor by animateColorAsState(
-        targetValue = if (checked) Color(0xFFF8FAFC) else palette.surfaceGradientBottom,
-        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
-        label = "thumbBottom"
-    )
-    val indicatorColor by animateColorAsState(
-        targetValue = if (checked) palette.contentTertiary else palette.contentTertiary.copy(alpha = 0.45f),
-        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
-        label = "switchDot"
-    )
-
-    val thumbDarkShadow by animateColorAsState(
-        targetValue = if (checked) {
-            if (palette.isDark) Color.Black.copy(alpha = 0.22f) else Color.Black.copy(alpha = 0.14f)
-        } else {
-            palette.darkShadow.copy(alpha = 0.38f)
-        },
-        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
-        label = "thumbDarkShadow"
-    )
-    val thumbBevelDark by animateColorAsState(
-        targetValue = if (checked) Color.Transparent else palette.bevelDark,
-        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
-        label = "thumbBevelDark"
-    )
-    val trackGlow by animateColorAsState(
-        targetValue = if (checked) palette.accentGlow else Color.Transparent,
-        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
-        label = "trackGlow"
-    )
-    val thumbBevelLight by animateColorAsState(
-        targetValue = if (checked) Color.White.copy(alpha = 0.85f) else palette.bevelLight,
-        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
-        label = "thumbBevelLight"
-    )
-
-    // Track and thumb are separate layers on purpose: the recessed track clips its own
-    // inner shading to the capsule, but the raised thumb must NOT be a child of that clip —
-    // otherwise the thumb's soft shadow is sliced off by the capsule edge (only 4 dp of
-    // clearance around the thumb) and looks pasted-on instead of resting inside the track.
     Box(
         modifier = modifier
-            .size(width = trackWidth, height = trackHeight)
-            .clickableBounce(enabled = enabled) { onCheckedChange(!checked) },
-        contentAlignment = Alignment.CenterStart
+            .size(width = trackWidth, height = 48.dp)
+            .toggleable(value = checked, enabled = enabled, role = Role.Switch, onValueChange = onCheckedChange),
+        contentAlignment = Alignment.Center
     ) {
-        // Recessed track layer (inner shadow stays clipped inside the capsule).
         Box(
             Modifier
-                .matchParentSize()
-                .accentGlow(shape = shape, glowColor = trackGlow, glowBlur = 8.dp)
-                .neumorphicInset(
-                    shape = shape,
-                    backgroundColor = animatedTrackBg,
-                    bevelLight = animatedBevelLight,
-                    bevelDark = animatedBevelDark
-                )
-        )
-        // Raised thumb layer, clipped to the inside of the track capsule: the thumb's
-        // shadow is a shadow ON the track floor, so it must live inside the track and
-        // never spill onto the card outside. The thumb casts only one short, soft dark
-        // contact shadow (down / bottom-right, from the top-left light) — no pale light
-        // silhouette, which is only valid when object and background share one material.
-        // The light still shows on the thumb itself through its rim bevel and gradient.
-        Box(
-            Modifier
-                .fillMaxSize()
+                .size(width = trackWidth, height = trackHeight)
                 .clip(shape)
+                .background(trackColor)
+                .border(1.dp, if (checked) palette.accent else palette.bevelLight, shape)
                 .padding(4.dp),
             contentAlignment = Alignment.CenterStart
         ) {
             Box(
-                modifier = Modifier
+                Modifier
                     .offset { IntOffset(thumbOffset.roundToInt(), 0) }
                     .size(thumbSize)
-                    .neumorphicSurface(
-                        shape = CircleShape,
-                        lightShadowColor = Color.Transparent,
-                        darkShadowColor = thumbDarkShadow,
-                        surfaceGradientTop = thumbTopColor,
-                        surfaceGradientBottom = thumbBottomColor,
-                        bevelLight = thumbBevelLight,
-                        bevelDark = thumbBevelDark,
-                        shadowOffset = 1.dp,
-                        shadowOffsetY = 1.25.dp,
-                        blurRadius = 1.6.dp
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Box(
-                    Modifier
-                        .size(6.dp)
-                        .background(indicatorColor, CircleShape)
-                )
-            }
+                    .background(thumbColor, CircleShape)
+            )
         }
     }
 }
