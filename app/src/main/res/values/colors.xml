@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Window colours mirror the `background` tokens in docs/03_UI_Spec.md §2. -->
-    <color name="backdrop_base_dark">#FF0F1115</color>
-    <color name="backdrop_base_light">#FFF6F7FB</color>
+    <color name="backdrop_base_dark">#FF010102</color>
+    <color name="backdrop_base_light">#FFFFFFFF</color>
 
     <color name="ic_launcher_background">#FF0F172A</color>
 </resources>

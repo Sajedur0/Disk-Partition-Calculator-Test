@@ -74,10 +74,10 @@ data class LiquidPalette(
  */
 @Immutable
 data class GlassTokens(
-    val cornerXl: Dp = 32.dp,          // dialogs
-    val cornerLarge: Dp = 24.dp,       // cards (smooth organic curves)
-    val cornerMedium: Dp = 16.dp,      // inputs / steppers
-    val cornerSmall: Dp = 12.dp,       // chips / badges
+    val cornerXl: Dp = 16.dp,          // dialogs
+    val cornerLarge: Dp = 12.dp,       // cards (smooth organic curves)
+    val cornerMedium: Dp = 8.dp,      // inputs / steppers
+    val cornerSmall: Dp = 6.dp,       // chips / badges
     val border: Dp = 1.dp,
     val elevation: Dp = 8.dp,          // dialogs
     val elevationSmall: Dp = 4.dp,     // cards
@@ -88,12 +88,12 @@ data class GlassTokens(
     val spaceXl: Dp = 24.dp,
     val spaceXxl: Dp = 32.dp,
     val screenPadding: Dp = 16.dp,
-    val cardPadding: Dp = 18.dp,
-    val cardGap: Dp = 14.dp,
+    val cardPadding: Dp = 24.dp,
+    val cardGap: Dp = 16.dp,
     val buttonHeight: Dp = 52.dp,
     val touchTarget: Dp = 48.dp,
     /** Outer height of the floating tab bar (tab content + its own padding). */
-    val tabBarHeight: Dp = 68.dp,
+    val tabBarHeight: Dp = 64.dp,
     /** Scrollable tabs end with this much slack so the floating tab bar never covers content. */
     val contentBottomInset: Dp = 96.dp,
     val maxContentWidth: Dp = 600.dp,
@@ -107,60 +107,61 @@ data class GlassTokens(
 
 val DarkLiquidPalette = LiquidPalette(
     isDark = true,
-    backdropBase = Color(0xFF20242E),
-    glassTint = Color(0xFF20242E),
-    glassHighlight = Color(0xFF262C38),
-    glassBorderStart = Color(0xFF343C4D),
-    accent = Color(0xFF60A5FA),
-    accentSecondary = Color(0xFF34D399),
-    accentGlow = Color(0xFF60A5FA).copy(alpha = 0.26f),
-    onAccent = Color(0xFF0F172A),
-    accentContainer = Color(0xFF1E2F4D),
-    onAccentContainer = Color(0xFF93C5FD),
-    contentPrimary = Color(0xFFF8FAFC),
-    contentSecondary = Color(0xFFA8B6C8),
-    contentTertiary = Color(0xFF8A97A8),
-    warningContainer = Color(0xFF2E2412),
-    warningContent = Color(0xFFFBBF24),
-    dangerContainer = Color(0xFF331616),
-    dangerContent = Color(0xFFF87171),
-    controlSurface = Color(0xFF262C38),
-    lightShadow = Color(0xFF3A4358).copy(alpha = 0.48f),
-    darkShadow = Color(0xFF05070B).copy(alpha = 0.52f),
-    insetSurface = Color(0xFF1B1F28),
-    surfaceGradientTop = Color(0xFF282E3A),
-    surfaceGradientBottom = Color(0xFF21252F),
-    bevelLight = Color(0xFF465069).copy(alpha = 0.48f),
-    bevelDark = Color(0xFF11141B).copy(alpha = 0.36f)
+    backdropBase = Color(0xFF010102),
+    glassTint = Color(0xFF0F1011),
+    glassHighlight = Color(0xFF141516),
+    glassBorderStart = Color(0xFF23252A),
+    accent = Color(0xFF5E6AD2),
+    accentSecondary = Color(0xFF27A644),
+    accentGlow = Color.Transparent,
+    onAccent = Color.White,
+    accentContainer = Color(0xFF18191A),
+    onAccentContainer = Color(0xFFF7F8F8),
+    contentPrimary = Color(0xFFF7F8F8),
+    contentSecondary = Color(0xFFD0D6E0),
+    contentTertiary = Color(0xFF8A8F98),
+    warningContainer = Color(0xFF141516),
+    warningContent = Color(0xFFD0D6E0),
+    dangerContainer = Color(0xFF18191A),
+    dangerContent = Color(0xFFD0D6E0),
+    controlSurface = Color(0xFF141516),
+    lightShadow = Color.Transparent,
+    darkShadow = Color(0xFF23252A),
+    insetSurface = Color(0xFF141516),
+    surfaceGradientTop = Color(0xFF0F1011),
+    surfaceGradientBottom = Color(0xFF0F1011),
+    bevelLight = Color(0xFF34343A),
+    bevelDark = Color(0xFF23252A)
 )
 
+// Retain the existing light-mode setting using the design's inverse surfaces.
 val LightLiquidPalette = LiquidPalette(
     isDark = false,
-    backdropBase = Color(0xFFE7EBF2),
-    glassTint = Color(0xFFE7EBF2),
-    glassHighlight = Color(0xFFDFE5EE),
-    glassBorderStart = Color(0xFFFFFFFF).copy(alpha = 0.65f),
-    accent = Color(0xFF1D4ED8),
-    accentSecondary = Color(0xFF10B981),
-    accentGlow = Color(0xFF1D4ED8).copy(alpha = 0.22f),
-    onAccent = Color(0xFFFFFFFF),
-    accentContainer = Color(0xFFD6E4F8),
-    onAccentContainer = Color(0xFF1D4ED8),
-    contentPrimary = Color(0xFF1E293B),
-    contentSecondary = Color(0xFF475569),
-    contentTertiary = Color(0xFF5A6678),
-    warningContainer = Color(0xFFFEF3C7),
-    warningContent = Color(0xFFB45309),
-    dangerContainer = Color(0xFFFEE2E2),
-    dangerContent = Color(0xFFDC2626),
-    controlSurface = Color(0xFFDFE5EE),
-    lightShadow = Color(0xFFFFFFFF).copy(alpha = 0.85f),
-    darkShadow = Color(0xFF9FB0C9).copy(alpha = 0.5f),
-    insetSurface = Color(0xFFDFE5EF),
-    surfaceGradientTop = Color(0xFFF0F3F9),
-    surfaceGradientBottom = Color(0xFFE2E8F1),
-    bevelLight = Color(0xFFFFFFFF).copy(alpha = 0.72f),
-    bevelDark = Color(0xFFA9B8CE).copy(alpha = 0.34f)
+    backdropBase = Color(0xFFFFFFFF),
+    glassTint = Color(0xFFF5F6F6),
+    glassHighlight = Color(0xFFF6F7F7),
+    glassBorderStart = Color(0xFFD0D6E0),
+    accent = Color(0xFF5E6AD2),
+    accentSecondary = Color(0xFF27A644),
+    accentGlow = Color.Transparent,
+    onAccent = Color.White,
+    accentContainer = Color(0xFFE9EAED),
+    onAccentContainer = Color.Black,
+    contentPrimary = Color.Black,
+    contentSecondary = Color(0xFF34343A),
+    contentTertiary = Color(0xFF62666D),
+    warningContainer = Color(0xFFF6F7F7),
+    warningContent = Color(0xFF34343A),
+    dangerContainer = Color(0xFFF6F7F7),
+    dangerContent = Color(0xFF34343A),
+    controlSurface = Color(0xFFF6F7F7),
+    lightShadow = Color.Transparent,
+    darkShadow = Color(0xFFD0D6E0),
+    insetSurface = Color(0xFFFFFFFF),
+    surfaceGradientTop = Color(0xFFF5F6F6),
+    surfaceGradientBottom = Color(0xFFF5F6F6),
+    bevelLight = Color(0xFFD0D6E0),
+    bevelDark = Color(0xFFD0D6E0)
 )
 
 val LocalLiquidPalette = staticCompositionLocalOf { DarkLiquidPalette }
